@@ -1,0 +1,9 @@
+{
+  "id": "my-little-guy",
+  "name": "My Little Guy",
+  "version": "1.10.0",
+  "minAppVersion": "1.4.0",
+  "description": "Parses your hand-formatted character sheet tables into live frontmatter on every edit, then gives you a full paginated widget view: Combat, Abilities/Saves/Senses, Skills, Actions, Inventory, Spells & Spell Slots, Speed & Defenses, Features & Traits, Proficiencies, Background, Notes, Creatures, Rest, and Level Up.",
+  "author": "Glen",
+  "isDesktopOnly": false
+}
