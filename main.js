@@ -1,6 +1,19 @@
-const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer } = require('obsidian');
+const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer, addIcon } = require('obsidian');
 
 const VIEW_TYPE = 'my-little-guy-view';
+const RIBBON_ICON_ID = 'my-little-guy-sword';
+const RIBBON_ICON_SVG = `
+<path d="M46 4 L54 4 L58 62 L50 73 L42 62 Z" fill="#cbd5e1"/>
+<path d="M49 4 L51 4 L52 60 L50 67 L48 60 Z" fill="#f8fafc"/>
+<rect x="29" y="62" width="42" height="10" rx="3" fill="#e8b923"/>
+<rect x="29" y="62" width="42" height="10" rx="3" fill="none" stroke="#8a6d1f" stroke-width="1.6"/>
+<rect x="43" y="72" width="14" height="21" rx="3" fill="#8a5a2b"/>
+<line x1="43" y1="77.5" x2="57" y2="77.5" stroke="#5c3517" stroke-width="1.6"/>
+<line x1="43" y1="83" x2="57" y2="83" stroke="#5c3517" stroke-width="1.6"/>
+<line x1="43" y1="88.5" x2="57" y2="88.5" stroke="#5c3517" stroke-width="1.6"/>
+<circle cx="50" cy="95" r="5.5" fill="#e8b923"/>
+<circle cx="50" cy="95" r="2.2" fill="#e11d48"/>
+`;
 const MILESTONE_LEVELS = [4, 8, 12, 16, 19];
 const STANDARD_CONDITIONS = [
   'Blinded', 'Charmed', 'Deafened', 'Frightened', 'Grappled', 'Incapacitated',
@@ -1586,7 +1599,8 @@ module.exports = class CharacterSheetHubPlugin extends Plugin {
       }
     });
 
-    this.addRibbonIcon('user', 'Open My Little Guy', () => this.activateView());
+    addIcon(RIBBON_ICON_ID, RIBBON_ICON_SVG);
+    this.addRibbonIcon(RIBBON_ICON_ID, 'Open My Little Guy', () => this.activateView());
 
     this.addCommand({
       id: 'open-my-little-guy',
