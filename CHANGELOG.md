@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.1
+- No functional change. Documents and locks in that the plugin's command id (`open-my-little-guy`) is permanent, so a mobile toolbar pin survives updates, restarts, and syncs.
+
 ## 1.11.0
 - New ribbon icon: a colorful sword (steel blade, gold crossguard/pommel, wrapped grip) instead of the plain generic person icon.
 - README now covers pinning "Open My Little Guy" to the mobile bottom toolbar.

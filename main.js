@@ -1602,6 +1602,9 @@ module.exports = class CharacterSheetHubPlugin extends Plugin {
     addIcon(RIBBON_ICON_ID, RIBBON_ICON_SVG);
     this.addRibbonIcon(RIBBON_ICON_ID, 'Open My Little Guy', () => this.activateView());
 
+    // 'open-my-little-guy' is referenced by users' pinned mobile toolbar buttons
+    // (Settings -> Configure toolbar) — never rename this id, it would silently
+    // break their pin on update.
     this.addCommand({
       id: 'open-my-little-guy',
       name: 'Open My Little Guy',

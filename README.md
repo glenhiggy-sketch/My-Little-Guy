@@ -45,7 +45,9 @@ The plugin adds a colorful sword icon to Obsidian's ribbon, but on mobile that r
 1. Tap the **⋯** (more) icon at the right end of the bottom toolbar, or long-press anywhere on the toolbar.
 2. Choose **"Configure toolbar"** (on some versions: **Settings → Options → Mobile → Toolbar**).
 3. Add the **"Open My Little Guy"** command (search for "My Little Guy" if the list is long).
-4. Drag it into place, then close the editor. The sword icon now sits permanently in your bottom toolbar.
+4. Drag it into place, then close the editor.
+
+This is a one-time step, and it sticks — the toolbar remembers the pin by the plugin's command id, which this project treats as a stable, never-renamed identifier. It survives app restarts, vault syncs, and plugin updates via BRAT. The only way to lose it is uninstalling the plugin entirely.
 
 ## Usage
 
