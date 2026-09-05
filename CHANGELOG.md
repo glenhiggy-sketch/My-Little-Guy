@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.12.0
+- Pact Magic (Warlock multiclass) is now actually wired up: a new `**Pact Magic (Charisma):** Save DC N  Attack +N  Slots: LvlN []` line is parsed into its own slot pool, kept separate from a character's other spellcasting, and the Spells page shows the ability/DC/Attack text next to the pips.
+- Parse-quality warnings: a sheet that clearly has an Ability Scores table but is missing the `**Class Features (X):**` / `**Species Traits (X):**` labels, or has spellcasting stats with no matching Spell Card callouts, or only `.png` card embeds with no `.md` spell embeds, now shows an explicit ⚠️ warning on the Features & Traits or Spells page naming exactly what's wrong, instead of silently rendering empty.
+
+## 1.11.1
+- No functional change. Documents and locks in that the plugin's command id (`open-my-little-guy`) is permanent, so a mobile toolbar pin survives updates, restarts, and syncs.
+
+## 1.11.0
+- New ribbon icon: a colorful sword (steel blade, gold crossguard/pommel, wrapped grip) instead of the plain generic person icon.
+- README now covers pinning "Open My Little Guy" to the mobile bottom toolbar.
+
 ## 1.10.0
 - Renamed to **My Little Guy**.
 - Auto-open the panel once on first vault load, and pre-seed settings so a freshly downloaded vault shows a working example immediately.

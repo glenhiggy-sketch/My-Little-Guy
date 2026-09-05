@@ -1,6 +1,19 @@
-const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer } = require('obsidian');
+const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer, addIcon } = require('obsidian');
 
 const VIEW_TYPE = 'my-little-guy-view';
+const RIBBON_ICON_ID = 'my-little-guy-sword';
+const RIBBON_ICON_SVG = `
+<path d="M46 4 L54 4 L58 62 L50 73 L42 62 Z" fill="#cbd5e1"/>
+<path d="M49 4 L51 4 L52 60 L50 67 L48 60 Z" fill="#f8fafc"/>
+<rect x="29" y="62" width="42" height="10" rx="3" fill="#e8b923"/>
+<rect x="29" y="62" width="42" height="10" rx="3" fill="none" stroke="#8a6d1f" stroke-width="1.6"/>
+<rect x="43" y="72" width="14" height="21" rx="3" fill="#8a5a2b"/>
+<line x1="43" y1="77.5" x2="57" y2="77.5" stroke="#5c3517" stroke-width="1.6"/>
+<line x1="43" y1="83" x2="57" y2="83" stroke="#5c3517" stroke-width="1.6"/>
+<line x1="43" y1="88.5" x2="57" y2="88.5" stroke="#5c3517" stroke-width="1.6"/>
+<circle cx="50" cy="95" r="5.5" fill="#e8b923"/>
+<circle cx="50" cy="95" r="2.2" fill="#e11d48"/>
+`;
 const MILESTONE_LEVELS = [4, 8, 12, 16, 19];
 const STANDARD_CONDITIONS = [
   'Blinded', 'Charmed', 'Deafened', 'Frightened', 'Grappled', 'Incapacitated',
@@ -303,6 +316,28 @@ function parseSheetBody(body) {
     }
   } catch (e) { /* ignore */ }
 
+  // Pact Magic (Warlock) — a separate resource from the shared Spellcasting Ability/DC/Attack/
+  // Spell Slots block above, per 5e's own multiclassing rules: always Charisma, always its own
+  // slot count, always short-rest recharge. See the template's own comment on this line for why
+  // it must never be folded into the shared block.
+  try {
+    const pactLine = body.match(/Pact Magic[^:]*:\*\*[ \t]*(.+)/i);
+    if (pactLine) {
+      const dcM = pactLine[1].match(/Save DC[ \t]*(\d+)/i);
+      const atkM = pactLine[1].match(/Attack[ \t]*([+-]?\d+)/i);
+      const slotsM = pactLine[1].match(/Lvl(\d+)\s*((?:\[[xX ]?\]\s*)+)/i);
+      if (dcM) out.pact_magic_dc = Number(dcM[1]);
+      if (atkM) out.pact_magic_attack = Number(atkM[1].replace('+', ''));
+      out.pact_magic_ability = 'Charisma';
+      if (slotsM) {
+        const rest = slotsM[2];
+        const max = (rest.match(/\[/g) || []).length;
+        const used = (rest.match(/\[[xX]\]/g) || []).length;
+        if (max) out.pact_slots = { max, used, level: Number(slotsM[1]) };
+      }
+    }
+  } catch (e) { /* ignore */ }
+
   try {
     // "Spell cards" callouts: > [!note]+ Cantrips ... / > [!note]+ Level N ...
     // followed by ![[embed]] lines for each spell in that group.
@@ -425,6 +460,34 @@ function parseSheetBody(body) {
     }
     const exLine = body.match(/Exhaustion Level:\*\*[ \t]*(.*)/i);
     if (exLine) out.exhaustion = (exLine[1].match(/☑/g) || []).length;
+  } catch (e) { /* ignore */ }
+
+  // Sheet-quality warnings — this is the fix for a real failure mode: a sheet that's clearly a
+  // Kadria character sheet (it has an Ability Scores table) but uses the wrong label text for a
+  // section silently parses that section as empty, with zero indication anything's wrong. A
+  // hand-built or off-template sheet has hit this exact way for both Class Features and Spell
+  // Cards in the past. Surface it instead of failing silently — see renderFeaturesTraitsWidget
+  // and renderSpellsWidget, which display parse_warnings prominently when present.
+  try {
+    const warnings = [];
+    const looksLikeKadriaSheet = /\|\s*Strength\s*\|/i.test(body);
+    if (looksLikeKadriaSheet) {
+      if (!/\*\*Class Features \([^)]+\):\*\*/i.test(body)) {
+        warnings.push('No "**Class Features (X):**" line found — class features won\'t show on the Features & Traits page. Check the exact label format against the Kadria Character Sheet Template.');
+      }
+      if (!/\*\*Species Traits \([^)]+\):\*\*/i.test(body)) {
+        warnings.push('No "**Species Traits (X):**" line found — species traits (including Darkvision/Languages) won\'t show. Check the exact label format against the Kadria Character Sheet Template.');
+      }
+      const hasSpellSlotsLine = /Spell Slots:\*\*/i.test(body);
+      const hasSpellCardCallouts = /\[!note\]\+\s*(Cantrips|Level\s*\d+)/i.test(body);
+      const hasPngCardEmbeds = /!\[\[(?:.*\/)?[^/\]]+\.png\]\]/i.test(body);
+      if (hasSpellSlotsLine && !hasSpellCardCallouts) {
+        warnings.push('Spellcasting stats found but no "> [!note]+ Cantrips / Level N" spell card callouts — known spells won\'t show on the Spells page.');
+      } else if (hasSpellSlotsLine && hasPngCardEmbeds && !/!\[\[(?:.*\/)?[^/\]]+\.md\]\]/i.test(body)) {
+        warnings.push('Spell Cards use image (.png) embeds only — the Spells page needs a .md embed of the spell\'s own note to actually display it (the .png is fine to keep alongside, but add the .md too).');
+      }
+    }
+    if (warnings.length) out._parse_warnings = warnings;
   } catch (e) { /* ignore */ }
 
   return out;
@@ -990,6 +1053,10 @@ class CharacterHubView extends ItemView {
   renderSpellsWidget(root, fm) {
     const sec = root.createDiv({ cls: 'csh-section' });
 
+    (fm._parse_warnings || []).forEach((w) => {
+      if (/spell/i.test(w)) sec.createEl('div', { cls: 'csh-warning', text: `⚠️ ${w}` });
+    });
+
     if (fm.spellcasting_ability || fm.spell_save_dc !== undefined || fm.spell_attack_bonus !== undefined) {
       const parts = [];
       if (fm.spellcasting_ability) parts.push(`🔮 ${fm.spellcasting_ability}`);
@@ -1047,6 +1114,10 @@ class CharacterHubView extends ItemView {
 
     if (fm.pact_slots) {
       const p = fm.pact_slots;
+      const pactParts = [`🔺 Pact Magic (${fm.pact_magic_ability || 'Charisma'})`];
+      if (fm.pact_magic_dc !== undefined) pactParts.push(`Save DC ${fm.pact_magic_dc}`);
+      if (fm.pact_magic_attack !== undefined) pactParts.push(`Attack ${fmtMod(fm.pact_magic_attack)}`);
+      sec.createEl('div', { cls: 'csh-muted', text: pactParts.join(' · ') + ' — separate from the spellcasting above, always recharges on a Short Rest' });
       const row = sec.createDiv({ cls: 'csh-slot-row' });
       row.createEl('span', { text: '🔺 Pact', cls: 'csh-slot-label' });
       const pips = row.createDiv({ cls: 'csh-pips' });
@@ -1334,6 +1405,11 @@ class CharacterHubView extends ItemView {
 
   renderFeaturesTraitsWidget(root, fm) {
     const sec = root.createDiv({ cls: 'csh-section' });
+
+    (fm._parse_warnings || []).forEach((w) => {
+      if (/class features|species traits/i.test(w)) sec.createEl('div', { cls: 'csh-warning', text: `⚠️ ${w}` });
+    });
+
     const traits = fm.traits || [];
     if (!traits.length) sec.createEl('div', { cls: 'csh-muted', text: 'No traits recorded yet.' });
 
@@ -1586,8 +1662,12 @@ module.exports = class CharacterSheetHubPlugin extends Plugin {
       }
     });
 
-    this.addRibbonIcon('user', 'Open My Little Guy', () => this.activateView());
+    addIcon(RIBBON_ICON_ID, RIBBON_ICON_SVG);
+    this.addRibbonIcon(RIBBON_ICON_ID, 'Open My Little Guy', () => this.activateView());
 
+    // 'open-my-little-guy' is referenced by users' pinned mobile toolbar buttons
+    // (Settings -> Configure toolbar) — never rename this id, it would silently
+    // break their pin on update.
     this.addCommand({
       id: 'open-my-little-guy',
       name: 'Open My Little Guy',

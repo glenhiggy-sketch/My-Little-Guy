@@ -38,10 +38,21 @@ iOS in particular hides the `.obsidian` folder from Files app by default, which 
 4. BRAT downloads and installs My Little Guy directly. Enable it in **Settings → Community plugins** if it isn't already.
 5. BRAT will also check this repo for updates going forward.
 
+### Pinning it to the mobile bottom toolbar
+
+The plugin adds a colorful sword icon to Obsidian's ribbon, but on mobile that ribbon lives behind the hamburger menu by default. To put it in the bottom toolbar instead, where it's one tap away:
+
+1. Tap the **⋯** (more) icon at the right end of the bottom toolbar, or long-press anywhere on the toolbar.
+2. Choose **"Configure toolbar"** (on some versions: **Settings → Options → Mobile → Toolbar**).
+3. Add the **"Open My Little Guy"** command (search for "My Little Guy" if the list is long).
+4. Drag it into place, then close the editor.
+
+This is a one-time step, and it sticks — the toolbar remembers the pin by the plugin's command id, which this project treats as a stable, never-renamed identifier. It survives app restarts, vault syncs, and plugin updates via BRAT. The only way to lose it is uninstalling the plugin entirely.
+
 ## Usage
 
 1. Open a character note (or use the plugin's Settings tab to point it at one — the top bar shows a **"Pin this file"** button too).
-2. Click the person icon in the ribbon, or run **"Open My Little Guy"** from the command palette. It opens as its own full tab.
+2. Click the colorful sword icon in the ribbon (or the mobile bottom toolbar, once pinned — see above), or run **"Open My Little Guy"** from the command palette. It opens as its own full tab.
 3. First run: if the note has no frontmatter yet but has a recognizable table/checkbox format, the plugin generates frontmatter for it automatically.
 
 ### Frontmatter schema
