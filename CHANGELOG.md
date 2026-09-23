@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.13.0
+- New command, "Send test report" — testing-only, for the pre-release device-testing phase. Logs structural events only (panel opened, page viewed, dice rolled, edit saved, any caught error) with no character data, and hands a plain-text summary to the OS share sheet on mobile (same mechanism as Kadria Snapshot) or saves it into the vault on desktop. Clears its own log after a successful send.
+
 ## 1.12.0
 - Pact Magic (Warlock multiclass) is now actually wired up: a new `**Pact Magic (Charisma):** Save DC N  Attack +N  Slots: LvlN []` line is parsed into its own slot pool, kept separate from a character's other spellcasting, and the Spells page shows the ability/DC/Attack text next to the pips.
 - Parse-quality warnings: a sheet that clearly has an Ability Scores table but is missing the `**Class Features (X):**` / `**Species Traits (X):**` labels, or has spellcasting stats with no matching Spell Card callouts, or only `.png` card embeds with no `.md` spell embeds, now shows an explicit ⚠️ warning on the Features & Traits or Spells page naming exactly what's wrong, instead of silently rendering empty.

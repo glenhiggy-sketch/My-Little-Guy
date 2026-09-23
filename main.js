@@ -1,4 +1,12 @@
-const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer, addIcon } = require('obsidian');
+const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer, addIcon, Platform } = require('obsidian');
+
+// Set by the plugin instance in onload()/onunload() -- lets the two module-level
+// roll functions below log a structural event without threading a plugin
+// reference through every call site in the 14 widget pages. Testing-only
+// instrumentation (see logEvent() on the plugin class for what "structural
+// event" means here): event name + minimal detail, never full roll results
+// or character data.
+let _testLogHook = null;
 
 const VIEW_TYPE = 'my-little-guy-view';
 const RIBBON_ICON_ID = 'my-little-guy-sword';
@@ -113,6 +121,7 @@ function rollFreeform(formula) {
     : `${result.rolls[0]}`;
   const label = `${result.count}d${result.sides}${result.mod ? (result.mod >= 0 ? '+' + result.mod : result.mod) : ''}`;
   showRollResult(`🎲 ${result.total}`, `${label}: ${breakdown}`);
+  if (_testLogHook) _testLogHook('dice_rolled', label);
 }
 
 // d20 check/save/attack roll with a flat modifier, called out with nat 1/20 flavor text.
@@ -121,6 +130,7 @@ function rollCheck(label, modifier) {
   const total = roll + modifier;
   const flavor = roll === 20 ? ' 🎉 Nat 20!' : roll === 1 ? ' 💀 Nat 1!' : '';
   showRollResult(`🎲 ${total}${flavor}`, `${label}: ${roll} ${modifier >= 0 ? '+' : ''}${modifier}`);
+  if (_testLogHook) _testLogHook('dice_rolled', label);
 }
 
 function getProficiencyBonus(fm) {
@@ -654,6 +664,7 @@ class CharacterHubView extends ItemView {
     if (!this.file) return;
     this.isSyncing = true;
     await this.app.fileManager.processFrontMatter(this.file, mutator);
+    if (this.plugin.logEvent) this.plugin.logEvent('edit_saved', 'widget');
     await this.render();
   }
 
@@ -670,6 +681,7 @@ class CharacterHubView extends ItemView {
     if (!parsed || !Object.keys(parsed).length) return;
 
     new Notice('Character sheet edited — regenerating data, one moment…');
+    if (this.plugin.logEvent) this.plugin.logEvent('edit_saved', 'sheet_body');
     this.isLoading = true;
     await this.render();
 
@@ -796,6 +808,13 @@ class CharacterHubView extends ItemView {
     });
 
     const pageBody = root.createDiv({ cls: 'csh-page-body' });
+    // render() runs on every widget interaction, not just page navigation --
+    // only log when the page actually changed, so the test report reflects
+    // real navigation, not a duplicate entry per click on the current page.
+    if (this.plugin.logEvent && this._lastLoggedPageIndex !== this.pageIndex) {
+      this._lastLoggedPageIndex = this.pageIndex;
+      this.plugin.logEvent('page_viewed', this.pages[this.pageIndex].title);
+    }
     this.pages[this.pageIndex].render(pageBody, fm);
   }
 
@@ -1637,6 +1656,19 @@ module.exports = class CharacterSheetHubPlugin extends Plugin {
     await this.loadSettings();
     this.lastActiveFile = null;
 
+    // Testing-only instrumentation (see "Send test report" command below).
+    // Structural events only -- event name, a short detail string, a
+    // timestamp. Never the character's actual data. Capped so a long
+    // session can't grow this unboundedly.
+    this.testLog = [];
+    _testLogHook = (event, detail) => this.logEvent(event, detail);
+    this._onError = (e) => this.logEvent('error', (e && e.message) || String(e));
+    this._onRejection = (e) => this.logEvent(
+      'error', 'unhandled promise: ' + ((e && e.reason && e.reason.message) || String(e && e.reason)));
+    window.addEventListener('error', this._onError);
+    window.addEventListener('unhandledrejection', this._onRejection);
+    this.logEvent('plugin_loaded', this.manifest.version);
+
     this.registerView(VIEW_TYPE, (leaf) => new CharacterHubView(leaf, this));
 
     this.registerEvent(this.app.workspace.on('active-leaf-change', (leaf) => {
@@ -1687,11 +1719,71 @@ module.exports = class CharacterSheetHubPlugin extends Plugin {
       },
     });
 
+    this.addCommand({
+      id: 'send-my-little-guy-test-report',
+      name: 'Send test report',
+      callback: () => this.sendTestReport(),
+    });
+
     this.addSettingTab(new CharacterHubSettingTab(this.app, this));
+  }
+
+  onunload() {
+    _testLogHook = null;
+    if (this._onError) window.removeEventListener('error', this._onError);
+    if (this._onRejection) window.removeEventListener('unhandledrejection', this._onRejection);
+  }
+
+  logEvent(event, detail) {
+    this.testLog.push({ ts: Date.now(), event, detail: detail || '' });
+    if (this.testLog.length > 500) this.testLog.shift();
+  }
+
+  // Testing-only: packages the structural event log into a small text report
+  // and hands it to the OS share sheet on mobile (same mechanism Kadria
+  // Snapshot's mobile version already uses, since iOS won't allow a silent
+  // background upload) -- falls back to saving a file into the vault on
+  // desktop, where there's no share sheet to hand off to. Clears the log
+  // after a successful send so the next report only covers what's new.
+  async sendTestReport() {
+    const platform = Platform.isMobile ? (Platform.isIosApp ? 'iOS' : 'Android') : 'Desktop';
+    const lines = this.testLog.map((e) => `${new Date(e.ts).toISOString()}  ${e.event}${e.detail ? '  ' + e.detail : ''}`);
+    const report = [
+      'My Little Guy test report',
+      `Version: ${this.manifest.version}`,
+      `Platform: ${platform}`,
+      `Generated: ${new Date().toISOString()}`,
+      '',
+      `Events (${this.testLog.length}):`,
+      ...lines,
+    ].join('\n');
+    const filename = `my-little-guy-test-report-${Date.now()}.txt`;
+
+    if (Platform.isMobile && navigator.share) {
+      try {
+        const file = new File([report], filename, { type: 'text/plain' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'My Little Guy test report' });
+        } else {
+          await navigator.share({ text: report, title: 'My Little Guy test report' });
+        }
+        this.testLog = [];
+        new Notice('Test report shared.');
+      } catch (e) {
+        if (e && e.name === 'AbortError') return; // user cancelled the share sheet
+        new Notice('Share failed: ' + (e && e.message ? e.message : e));
+      }
+      return;
+    }
+
+    await this.app.vault.create(filename.replace(/\.txt$/, '') + '.md', '```\n' + report + '\n```\n');
+    this.testLog = [];
+    new Notice(`Test report saved to ${filename.replace(/\.txt$/, '')}.md`);
   }
 
   async activateView() {
     const { workspace } = this.app;
+    this.logEvent('panel_opened');
     const existing = workspace.getLeavesOfType(VIEW_TYPE)[0];
     if (existing) {
       workspace.revealLeaf(existing);
