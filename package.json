@@ -1,0 +1,18 @@
+{
+  "name": "my-little-guy",
+  "version": "1.14.0",
+  "private": true,
+  "description": "My Little Guy - an Obsidian plugin for D&D 5e character sheets, synced with the Kadria Character Intake Google Sheet.",
+  "scripts": {
+    "test": "npm run test:server && npm run test:sync && npm run sim",
+    "test:server": "node test/vendor/appscript/Sync.test.js && node test/vendor/appscript/Publish.test.js && node test/vendor/appscript/TestHook.test.js",
+    "test:sync": "node test/sync.test.js",
+    "sim": "node sim/run.js",
+    "sim:ios": "node sim/run.js --device ios",
+    "vendor": "node scripts/vendor-appscript.mjs",
+    "release": "node scripts/release.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.2"
+  }
+}

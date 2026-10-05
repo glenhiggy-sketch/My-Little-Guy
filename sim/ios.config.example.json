@@ -1,0 +1,8 @@
+{
+  "appium": "http://127.0.0.1:4723",
+  "udid": "<the test iPhone's UDID>",
+  "xcodeOrgId": "<Apple developer Team ID used to sign WebDriverAgent>",
+  "wdaBundleId": "com.kadria.wda",
+  "bundleId": "md.obsidian",
+  "vault": "<the vault name on the phone>"
+}

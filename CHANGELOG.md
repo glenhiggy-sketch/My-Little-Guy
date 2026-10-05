@@ -8,6 +8,7 @@
   - New "Notes from your DM" block on the Notes page and a Party line in the header.
   - Offline-safe: a failed send changes nothing on your device and says so; "Restore from sheet" asks before discarding unsent changes.
   - Sheets without the hidden link behave exactly as before.
+- Accessibility labels on HP, AC, Gold, item names, quantity buttons, spell-slot pips and the page arrows (screen readers, and so automated end-user testing can find them by name).
 
 ## 1.13.0
 - New command, "Send test report" — testing-only, for the pre-release device-testing phase. Logs structural events only (panel opened, page viewed, dice rolled, edit saved, any caught error) with no character data, and hands a plain-text summary to the OS share sheet on mobile (same mechanism as Kadria Snapshot) or saves it into the vault on desktop. Clears its own log after a successful send.

@@ -1,3 +1,6 @@
 .DS_Store
 data.json
 node_modules/
+sim/reports/
+sim/ios.config.json
+sim/.env.local

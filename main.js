@@ -1073,7 +1073,7 @@ class CharacterHubView extends ItemView {
 
     const statRow = el.createDiv({ cls: 'csh-hp-row' });
     statRow.createEl('span', { text: '❤️ HP: ' });
-    const hpCur = statRow.createEl('input', { type: 'number', cls: 'csh-hp-input' });
+    const hpCur = statRow.createEl('input', { type: 'number', cls: 'csh-hp-input', attr: { 'aria-label': 'HP' } });
     hpCur.value = String(fm.hp ?? fm.hp_max ?? 0);
     statRow.createEl('span', { text: ' / ' + String(fm.hp_max ?? 0) });
     hpCur.addEventListener('change', () => {
@@ -1082,7 +1082,7 @@ class CharacterHubView extends ItemView {
     });
 
     statRow.createEl('span', { text: '   🛡️ AC: ' });
-    const acInput = statRow.createEl('input', { type: 'number', cls: 'csh-hp-input' });
+    const acInput = statRow.createEl('input', { type: 'number', cls: 'csh-hp-input', attr: { 'aria-label': 'AC' } });
     acInput.value = String(fm.ac ?? 10);
     acInput.addEventListener('change', () => {
       this.updateFrontmatter((f) => { f.ac = Number(acInput.value) || 10; });
@@ -1106,11 +1106,11 @@ class CharacterHubView extends ItemView {
 
   renderPager(root, fm) {
     const nav = root.createDiv({ cls: 'csh-page-nav' });
-    const prevBtn = nav.createEl('button', { text: '‹', cls: 'csh-page-arrow' });
+    const prevBtn = nav.createEl('button', { text: '‹', cls: 'csh-page-arrow', attr: { 'aria-label': 'Previous page' } });
     const titleWrap = nav.createDiv({ cls: 'csh-page-title-wrap' });
     titleWrap.createEl('div', { cls: 'csh-page-title', text: this.pages[this.pageIndex].title });
     titleWrap.createEl('div', { cls: 'csh-page-counter', text: `${this.pageIndex + 1} / ${this.pages.length}` });
-    const nextBtn = nav.createEl('button', { text: '›', cls: 'csh-page-arrow' });
+    const nextBtn = nav.createEl('button', { text: '›', cls: 'csh-page-arrow', attr: { 'aria-label': 'Next page' } });
 
     prevBtn.addEventListener('click', () => {
       this.pageIndex = (this.pageIndex - 1 + this.pages.length) % this.pages.length;
@@ -1428,7 +1428,7 @@ class CharacterHubView extends ItemView {
       } else if (slot) {
         const pips = headerRow.createDiv({ cls: 'csh-pips' });
         for (let i = 0; i < (slot.max || 0); i++) {
-          const pip = pips.createEl('button', { cls: 'csh-pip' + (i < (slot.used || 0) ? ' used' : '') });
+          const pip = pips.createEl('button', { cls: 'csh-pip' + (i < (slot.used || 0) ? ' used' : ''), attr: { 'aria-label': `Level ${lvl} slot ${i + 1}` } });
           pip.addEventListener('click', () => {
             this.updateFrontmatter((f) => {
               const cur = (f.spell_slots || {})[lvl];
@@ -1503,7 +1503,7 @@ class CharacterHubView extends ItemView {
     // show up below as pending: the sheet never adds them for you.
     const goldRow = sec.createDiv({ cls: 'csh-gold-row' });
     goldRow.createEl('span', { text: '🪙 Gold: ' });
-    const goldInput = goldRow.createEl('input', { type: 'number', cls: 'csh-hp-input csh-gold-input' });
+    const goldInput = goldRow.createEl('input', { type: 'number', cls: 'csh-hp-input csh-gold-input', attr: { 'aria-label': 'Gold' } });
     goldInput.value = String(fm.gold ?? 0);
     goldInput.addEventListener('change', () => {
       this.updateFrontmatter((f) => { f.gold = Math.round((Number(goldInput.value) || 0) * 100) / 100; });
@@ -1525,16 +1525,16 @@ class CharacterHubView extends ItemView {
     const items = fm.inventory || [];
     items.forEach((item, idx) => {
       const row = list.createDiv({ cls: 'csh-inventory-row' });
-      const nameInput = row.createEl('input', { type: 'text', cls: 'csh-item-name' });
+      const nameInput = row.createEl('input', { type: 'text', cls: 'csh-item-name', attr: { 'aria-label': 'Item name' } });
       nameInput.value = item.name || '';
       nameInput.addEventListener('change', () => {
         this.updateFrontmatter((f) => { f.inventory[idx].name = nameInput.value; });
       });
 
       const qtyWrap = row.createDiv({ cls: 'csh-qty-wrap' });
-      const minus = qtyWrap.createEl('button', { text: '-' });
+      const minus = qtyWrap.createEl('button', { text: '-', attr: { 'aria-label': 'Decrease quantity' } });
       qtyWrap.createEl('span', { text: String(item.qty ?? 1), cls: 'csh-qty' });
-      const plus = qtyWrap.createEl('button', { text: '+' });
+      const plus = qtyWrap.createEl('button', { text: '+', attr: { 'aria-label': 'Increase quantity' } });
       minus.addEventListener('click', () => {
         this.updateFrontmatter((f) => {
           f.inventory[idx].qty = Math.max(0, (f.inventory[idx].qty || 1) - 1);

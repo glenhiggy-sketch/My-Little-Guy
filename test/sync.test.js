@@ -1,96 +1,23 @@
-// End-to-end test of My Little Guy's sheet sync WITHOUT a device or a network:
-// the plugin's real view code (rendered into jsdom) talks, through an injected requestUrl, to the REAL
-// Sync.js + Publish.js server logic (from the Apps Script project) running on an in-memory fake of Google Sheets.
-// So field names, formats and ownership rules are checked on both sides of the wire.
-//
-// Run: node sync.test.js      (APPSCRIPT_DIR overrides where the Apps Script project lives)
+// End-to-end test of My Little Guy's sheet sync WITHOUT a device or a network (see harness.js).
+// Run: node test/sync.test.js
 "use strict";
-const fs = require("fs");
-const path = require("path");
-const vm = require("vm");
 const assert = require("assert");
-const { JSDOM } = require("jsdom");
+const { makeHarness, J } = require("./harness");
 
-const APPSCRIPT_DIR = process.env.APPSCRIPT_DIR || "B:/New folder/plugin test.vault/Kadria Character Intake Clasp";
-const SAMPLE_SHEET = process.env.SAMPLE_SHEET || "B:/New folder/Kadria Archive Sandbox/kadria.vault/PCs/Character Intake/Aelen - Erin.md";
-if (!fs.existsSync(APPSCRIPT_DIR + "/Sync.js") || !fs.existsSync(SAMPLE_SHEET)) { console.log("SKIPPED: Apps Script project or sample sheet not found"); process.exit(0); }
-
-// ---------------------------------------------------------------- server: the real Apps Script logic on fakes
-const { makeEnv } = require(APPSCRIPT_DIR + "/test_fakes.js");
-const env = makeEnv();
-vm.runInContext(fs.readFileSync(APPSCRIPT_DIR + "/Sync.js", "utf8"), env.ctx);
-vm.runInContext(fs.readFileSync(APPSCRIPT_DIR + "/Publish.js", "utf8"), env.ctx);
-const SV = vm.runInContext("({upsertDatabaseRow_, pullCharacter_, doPost, publishDmChanges, withSyncComment_, getCharactersSheet_, getAwardsSheet_, getPublishedSheet_, CHARACTERS_HEADERS})", env.ctx);
-const J = (x) => JSON.parse(JSON.stringify(x));
-
-// ---------------------------------------------------------------- DOM + obsidian stubs
-const dom = new JSDOM("<!doctype html><body></body>");
-const { window } = dom;
-const P = window.HTMLElement.prototype;
-P.createEl = function (tag, o) { o = o || {}; const e = this.ownerDocument.createElement(tag); if (o.cls) e.className = [].concat(o.cls).join(" "); if (o.text !== undefined) e.textContent = o.text; if (o.type) e.type = o.type; if (o.placeholder) e.placeholder = o.placeholder; if (o.title) e.title = o.title; this.appendChild(e); return e; };
-P.createDiv = function (o) { return this.createEl("div", o); };
-P.createSpan = function (o) { return this.createEl("span", o); };
-P.empty = function () { this.textContent = ""; };
-P.addClass = function (c) { this.classList.add(c); };
-P.removeClass = function (c) { this.classList.remove(c); };
-P.toggleClass = function (c, on) { this.classList.toggle(c, on === undefined ? undefined : !!on); };
-P.setAttr = function (k, v) { this.setAttribute(k, v); };
-P.setText = function (s) { this.textContent = s; };
-P.createSvg = function (tag, o) { return this.createEl(tag, o); };
-
-const notices = [];
-let netDown = false;
-const obsidian = {
-	Plugin: class {}, PluginSettingTab: class {}, Setting: class {}, MarkdownView: class {}, MarkdownRenderer: {}, addIcon() {},
-	Platform: { isMobile: false, isIosApp: false },
-	Notice: class { constructor(m) { notices.push(String(m)); } },
-	ItemView: class { constructor(leaf) { this.leaf = leaf; this.app = leaf.app; this.contentEl = window.document.createElement("div"); } registerEvent() {} },
-	Modal: class { constructor(app) { this.app = app; this.contentEl = window.document.createElement("div"); } open() { Modal.last = this; this.onOpen(); } close() { this.onClose && this.onClose(); } },
-	// routes the plugin's HTTP calls to the real server logic, like Apps Script's redirecting web app would
-	requestUrl: async ({ url, method, body }) => {
-		if (netDown) throw new Error("net::ERR_INTERNET_DISCONNECTED");
-		const u = new URL(url);
-		const res = method === "POST" ? SV.doPost({ postData: { contents: body } }) : u.searchParams.get("action") === "pull" ? SV.pullCharacter_(Object.fromEntries(u.searchParams)) : { ok: false, error: "unknown" };
-		const text = JSON.stringify(J(res));
-		return { status: 200, text, get json() { return JSON.parse(text); } };
-	},
-};
-const Modal = obsidian.Modal;
-const src = fs.readFileSync("C:/Users/glenh/My-Little-Guy/main.js", "utf8");
-const mod = { exports: {} };
-global.window = window; global.document = window.document;
-new Function("module", "exports", "require", src)(mod, mod.exports, (n) => (n === "obsidian" ? obsidian : require(n)));
-const { __sync: C, __CharacterHubView: View } = mod.exports;
-
-// ---------------------------------------------------------------- a character, a vault file and a fake app around it
-const character = SV.upsertDatabaseRow_({ characterName: "Aelen", playerName: "Erin", species: "Tortle", background: "Sage", className: "Wizard", alignment: "Neutral Good" },
-	{ level: 3, hp: 20, ac: 11, subclassName: "School of Abjuration", equipment: ["a quarterstaff", "a spellbook"], spellSlots: [4, 2, 0, 0, 0, 0, 0, 0, 0] });
-const sheetText = SV.withSyncComment_(fs.readFileSync(SAMPLE_SHEET, "utf8"), character);
-const file = { path: "Aelen - Erin.md", basename: "Aelen - Erin", extension: "md" };
-const fm = {};
-const app = {
-	vault: { read: async () => sheetText, cachedRead: async () => sheetText, getAbstractFileByPath: () => file, on: () => ({}) },
-	metadataCache: { getFileCache: () => ({ frontmatter: fm }) },
-	fileManager: { processFrontMatter: async (f, fn) => { await fn(fm); } },
-	workspace: { getActiveFile: () => file, getLeaf() { return { openFile() {} }; } },
-};
-const events = [];
-const plugin = { settings: { sheetPath: file.path }, lastActiveFile: file, logEvent: (e, d) => events.push(e + (d ? ":" + d : "")) };
-const view = new View({ app }, plugin);
-
-const row = () => { const sh = SV.getCharactersSheet_(); const H = SV.CHARACTERS_HEADERS; for (let r = 2; r <= sh.getLastRow(); r++) if (sh.cell(r, 1) === character.id) return Object.fromEntries(H.map((h, i) => [h, sh.cell(r, i + 1)])); };
-const setCell = (header, v) => { const sh = SV.getCharactersSheet_(); const H = SV.CHARACTERS_HEADERS; for (let r = 2; r <= sh.getLastRow(); r++) if (sh.cell(r, 1) === character.id) sh.set(r, H.indexOf(header) + 1, v); };
+const H = makeHarness();
+const { C, SV, env, view, fm, notices, window, sheetText, app, plugin, View } = H;
+const row = H.sheetRow, setCell = H.setCell, tick = H.tick;
 const text = () => view.contentEl.textContent;
 const buttons = () => [...view.contentEl.querySelectorAll("button")].map((b) => b.textContent);
 const click = (label) => { const b = [...view.contentEl.querySelectorAll("button")].find((x) => x.textContent === label); assert(b, "no button " + label); b.dispatchEvent(new window.Event("click")); };
 const lastNotice = () => notices[notices.length - 1];
-const tick = () => new Promise((r) => setTimeout(r, 15));
 let n = 0; const ok = async (name, fn) => { await fn(); n++; console.log("  ok  " + name); };
+const Modal = { get last() { return H.modal; } };
 
 (async () => {
 	// ---- pure mapping layer
 	await ok("sync comment parses; junk, wrong version and non-https are refused", () => {
-		const i = C.parseSyncInfo(sheetText); assert(i && i.id === character.id && i.token === character.token && i.endpoint.startsWith("https://"));
+		const i = C.parseSyncInfo(sheetText); assert(i && i.id === H.row.id && i.token === H.row.token && i.endpoint.startsWith("https://"));
 		assert.strictEqual(C.parseSyncInfo("<!-- kadria-sync {not json} -->"), null);
 		assert.strictEqual(C.parseSyncInfo('<!-- kadria-sync {"v":2,"endpoint":"https://x","id":"a","token":"b"} -->'), null);
 		assert.strictEqual(C.parseSyncInfo('<!-- kadria-sync {"v":1,"endpoint":"http://x","id":"a","token":"b"} -->'), null);
@@ -112,7 +39,7 @@ let n = 0; const ok = async (name, fn) => { await fn(); n++; console.log("  ok  
 		assert(buttons().includes("Send to sheet") && buttons().includes("Get from sheet"));
 		assert(text().includes("Not synced yet") || text().includes("Linked to the sheet"), text());
 		assert(fm.sync_last_pull_at && !fm.sync_dirty);
-		assert(events.some((e) => e.startsWith("sync_pull_ok:auto")));
+		assert(H.events.some((e) => e.startsWith("sync_pull_ok:auto")));
 		assert.strictEqual(fm.hp_max > 0, true);
 	});
 	await ok("a widget edit marks the character as having unsent changes, and the body re-parse can't undo it", async () => {
@@ -175,10 +102,10 @@ let n = 0; const ok = async (name, fn) => { await fn(); n++; console.log("  ok  
 		await view.syncGet({ auto: false }); assert.strictEqual(fm.sync_pending_awards.length, 0, "a resolved award does not come back");
 	});
 	await ok("offline: Send fails kindly, nothing is lost, the flag stays", async () => {
-		await view.updateFrontmatter((f) => { f.hp = 11; }); netDown = true;
+		await view.updateFrontmatter((f) => { f.hp = 11; }); H.netDown = true;
 		await view.syncSend(); assert(/Couldn't reach the sheet/.test(lastNotice())); assert.strictEqual(fm.hp, 11); assert.strictEqual(fm.sync_dirty, true);
 		await view.syncGet({ auto: true }); // an automatic pull offline is silent
-		const n0 = notices.length; await view.syncGet({ auto: true }); assert.strictEqual(notices.length, n0); netDown = false;
+		const n0 = notices.length; await view.syncGet({ auto: true }); assert.strictEqual(notices.length, n0); H.netDown = false;
 	});
 	await ok("Restore discards unsent changes only after confirmation", async () => {
 		await view.syncRestore(); const m = Modal.last; assert(m && m.contentEl.textContent.includes("Anything you haven't sent will be lost"));
