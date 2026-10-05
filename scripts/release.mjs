@@ -22,7 +22,7 @@ if (process.argv.includes("--check")) process.exit(0);
 const run = (cmd, args) => execFileSync(cmd, args, { stdio: "inherit" });
 const out = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8" }).trim();
 if (out("git", ["status", "--porcelain"])) { console.error("Commit your changes first (working tree is dirty)."); process.exit(1); }
-run("npm", ["test"]);
+execFileSync("npm test", { stdio: "inherit", shell: true });
 if (out("git", ["tag", "--list", v])) { console.error(`Tag ${v} already exists.`); process.exit(1); }
 run("git", ["tag", v]);
 run("git", ["push", "origin", "main", v]);
