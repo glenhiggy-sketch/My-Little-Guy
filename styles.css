@@ -715,3 +715,28 @@
     width: auto;
   }
 }
+
+/* ---- sheet sync (1.14.0) ---- */
+.csh-sync-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 4px 0 8px;
+}
+.csh-sync-status { flex: 1 1 auto; min-width: 8em; }
+.csh-sync-dirty { color: var(--text-warning, var(--text-accent)); font-weight: 600; }
+.csh-sync-btn { padding: 2px 10px; }
+
+.csh-gold-row { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+.csh-gold-input { width: 6em; }
+.csh-awards {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 10px;
+}
+.csh-award-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 3px 0; }
+.csh-award-row span { flex: 1 1 10em; }
+.csh-dm-notes { white-space: pre-wrap; margin-bottom: 10px; }
+.csh-confirm-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }

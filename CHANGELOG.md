@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.14.0
+- **Sheet sync.** Character sheets made by Character Intake now carry a hidden link to the campaign Google Sheet. A new bar under the character header shows sync status with **Send to sheet** and **Get from sheet** buttons (also commands: "Send to sheet", "Get from sheet", "Restore from sheet").
+  - Players own HP, AC, gold, inventory and spell slots: **Send to sheet** writes exactly those and nothing else. The DM owns party, conditions and DM notes: they only ever arrive from the sheet, and only once the DM has published them.
+  - Opening a character pulls automatically. If you have unsent changes your device wins and they are never overwritten; if you don't, the sheet's saved values are restored (which also fixes HP/inventory being reset by the printed sheet when the panel reopens).
+  - New **Gold** field on the Inventory page. When the DM awards gold you get a pending award with **Add to my gold** / **Already added**: the sheet never adds gold for you, you update it yourself.
+  - New "Notes from your DM" block on the Notes page and a Party line in the header.
+  - Offline-safe: a failed send changes nothing on your device and says so; "Restore from sheet" asks before discarding unsent changes.
+  - Sheets without the hidden link behave exactly as before.
+
 ## 1.13.0
 - New command, "Send test report" — testing-only, for the pre-release device-testing phase. Logs structural events only (panel opened, page viewed, dice rolled, edit saved, any caught error) with no character data, and hands a plain-text summary to the OS share sheet on mobile (same mechanism as Kadria Snapshot) or saves it into the vault on desktop. Clears its own log after a successful send.
 

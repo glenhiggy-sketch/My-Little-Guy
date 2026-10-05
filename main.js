@@ -1,4 +1,4 @@
-const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer, addIcon, Platform } = require('obsidian');
+const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer, addIcon, Platform, requestUrl } = require('obsidian');
 
 // Set by the plugin instance in onload()/onunload() -- lets the two module-level
 // roll functions below log a structural event without threading a plugin
@@ -503,7 +503,182 @@ function parseSheetBody(body) {
   return out;
 }
 
+// ============================================================================
+// Sheet sync. The Character Intake Google Sheet is the source of truth for the
+// table-side data; this plugin talks to it only through the token-checked web
+// app whose address and token are stamped into each generated sheet as an HTML
+// comment: <!-- kadria-sync {"v":1,"endpoint":"https://…/exec","id":"…","token":"…"} -->
+//
+// Ownership (decided with Glen, 2026-10-05):
+//   player-owned, SENT by "Send to sheet":  hp, hp_max, ac, gold, inventory, spell_slots
+//   DM-owned, only ever RECEIVED (published values): party, conditions, dm_notes
+//   form-owned (level, class, species…): never touched by sync (change = resubmit the form)
+// While `sync_dirty` is true this device's values win; while it is false the sheet's win.
+// ============================================================================
+const SYNC_COMMENT_RE = /<!--\s*kadria-sync\s+(\{[\s\S]*?\})\s*-->/;
+const SYNC_PLAYER_KEYS = ['hp', 'hp_max', 'ac', 'gold', 'inventory', 'spell_slots'];
+
+function toInt(v, fallback) {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? n : fallback;
+}
+function hasNum(v) { return v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v)); }
+
+function parseSyncInfo(text) {
+  const m = SYNC_COMMENT_RE.exec(String(text || ''));
+  if (!m) return null;
+  let info;
+  try { info = JSON.parse(m[1]); } catch (e) { return null; }
+  if (!info || info.v !== 1 || typeof info.endpoint !== 'string' || !/^https:\/\//.test(info.endpoint) || !info.id || !info.token) return null;
+  return { endpoint: info.endpoint, id: String(info.id), token: String(info.token) };
+}
+
+// The plugin keeps inventory as [{name, qty}]; the Sheet keeps one line per item, "Name" or "Name x3".
+function inventoryToText(items) {
+  return (Array.isArray(items) ? items : [])
+    .filter((i) => i && String(i.name || '').trim() && toInt(i.qty, 1) > 0)
+    .map((i) => { const n = String(i.name).trim(); const q = toInt(i.qty, 1); return q > 1 ? `${n} x${q}` : n; })
+    .join('\n');
+}
+function textToInventory(text) {
+  return String(text || '').split('\n').map((s) => s.trim()).filter(Boolean).map((line) => {
+    const m = /^(.*\S)\s+x(\d+)$/i.exec(line);
+    return m ? { name: m[1], qty: Number(m[2]) } : { name: line, qty: 1 };
+  });
+}
+
+function normSlots(slots) {
+  const out = {};
+  Object.keys(slots && typeof slots === 'object' ? slots : {}).sort().forEach((lvl) => {
+    if (!/^[1-9]$/.test(lvl)) return;
+    const s = slots[lvl] || {};
+    const max = Math.min(99, Math.max(0, toInt(s.max, 0)));
+    if (max > 0) out[lvl] = { used: Math.min(max, Math.max(0, toInt(s.used, 0))), max };
+  });
+  return out;
+}
+
+// Exactly the fields "Send to sheet" writes. Key order is fixed so pushHash is stable.
+function buildPushFields(fm) {
+  const hpMax = Math.max(0, toInt(fm.hp_max, 0));
+  return {
+    hp: Math.max(0, toInt(fm.hp, hpMax)),
+    hpMax,
+    ac: Math.max(0, toInt(fm.ac, 10)),
+    gold: Math.round((Number(fm.gold) || 0) * 100) / 100,
+    inventory: inventoryToText(fm.inventory),
+    spellSlots: JSON.stringify(normSlots(fm.spell_slots)),
+  };
+}
+function pushHash(fields) { return JSON.stringify(fields); }
+
+// Restore this device's player-owned values from the sheet's copy.
+function applyPlayerOwned(fm, po) {
+  if (!po) return;
+  if (hasNum(po.hp)) fm.hp = Number(po.hp);
+  if (hasNum(po.hpMax)) fm.hp_max = Number(po.hpMax);
+  if (hasNum(po.ac)) fm.ac = Number(po.ac);
+  if (hasNum(po.gold)) fm.gold = Number(po.gold);
+  if (typeof po.inventory === 'string') fm.inventory = textToInventory(po.inventory);
+  if (typeof po.spellSlots === 'string') {
+    try {
+      const s = JSON.parse(po.spellSlots);
+      if (s && typeof s === 'object' && !Array.isArray(s)) fm.spell_slots = normSlots(s);
+    } catch (e) { /* keep local value */ }
+  }
+}
+
+// DM-owned published values. Applied only when the published version moved on, so a player's
+// own local toggles are not overwritten on every open. Returns what changed (for the notice).
+function applyDmPublished(fm, dm) {
+  const v = Number(dm && dm.version) || 0;
+  if (!dm || v <= (Number(fm.sync_dm_version) || 0)) return [];
+  const changed = [];
+  const party = String(dm.party || '');
+  const notes = String(dm.notes || '');
+  const conditions = String(dm.conditions || '').split(',').map((s) => s.trim()).filter(Boolean);
+  if ((fm.party || '') !== party) { fm.party = party; changed.push('party'); }
+  if ((fm.dm_notes || '') !== notes) { fm.dm_notes = notes; changed.push('notes'); }
+  if (JSON.stringify(fm.conditions || []) !== JSON.stringify(conditions)) { fm.conditions = conditions; changed.push('conditions'); }
+  fm.sync_dm_version = v;
+  return changed;
+}
+
+// Published gold awards the player hasn't dealt with yet become "pending": the sheet NEVER adds
+// them to the player's gold; the player presses "Add to my gold" (or dismisses if already added).
+function mergeAwards(fm, awards) {
+  const seen = new Set(fm.sync_seen_awards || []);
+  const pending = Array.isArray(fm.sync_pending_awards) ? fm.sync_pending_awards : [];
+  const have = new Set(pending.map((a) => a.id));
+  const fresh = (Array.isArray(awards) ? awards : []).filter((a) => a && a.id && !seen.has(a.id) && !have.has(a.id) && Number(a.amount));
+  fm.sync_pending_awards = pending.concat(fresh.map((a) => ({ id: String(a.id), amount: Number(a.amount), reason: String(a.reason || ''), date: String(a.date || '') })));
+  return fresh;
+}
+function resolveAward(fm, id, addToGold) {
+  const pending = Array.isArray(fm.sync_pending_awards) ? fm.sync_pending_awards : [];
+  const a = pending.find((x) => x.id === id);
+  if (!a) return;
+  if (addToGold) fm.gold = Math.round(((Number(fm.gold) || 0) + a.amount) * 100) / 100;
+  fm.sync_pending_awards = pending.filter((x) => x.id !== id);
+  fm.sync_seen_awards = (fm.sync_seen_awards || []).concat([id]).slice(-50);
+}
+
+function syncStatusText(fm, now) {
+  if (fm.sync_dirty) return 'Unsent changes';
+  if (!fm.sync_last_push_at) return fm.sync_last_pull_at ? 'Linked to the sheet' : 'Not synced yet';
+  const mins = Math.max(0, Math.round(((now || Date.now()) - Date.parse(fm.sync_last_push_at)) / 60000));
+  return mins < 1 ? 'Sent just now' : mins < 60 ? `Sent ${mins} min ago` : `Sent ${Math.round(mins / 60)} h ago`;
+}
+
+// `request` is injected: ({url, method, body, contentType}) -> {status, json}. In the plugin it wraps
+// Obsidian's requestUrl (which isn't subject to CORS and follows Apps Script's redirect).
+async function syncPull(request, info) {
+  const url = new URL(info.endpoint);
+  url.searchParams.set('action', 'pull');
+  url.searchParams.set('id', info.id);
+  url.searchParams.set('token', info.token);
+  const res = await request({ url: url.toString(), method: 'GET' });
+  if (!res || !res.json) throw new Error('The sheet gave an unreadable answer (HTTP ' + (res && res.status) + ')');
+  return res.json;
+}
+async function syncPush(request, info, fields) {
+  const res = await request({
+    url: info.endpoint, method: 'POST', contentType: 'text/plain',
+    body: JSON.stringify({ action: 'push', id: info.id, token: info.token, fields }),
+  });
+  if (!res || !res.json) throw new Error('The sheet gave an unreadable answer (HTTP ' + (res && res.status) + ')');
+  return res.json;
+}
+
+const SYNC_CORE = {
+  parseSyncInfo, inventoryToText, textToInventory, normSlots, buildPushFields, pushHash, applyPlayerOwned,
+  applyDmPublished, mergeAwards, resolveAward, syncStatusText, syncPull, syncPush, SYNC_PLAYER_KEYS,
+};
+
 const STANDARD_DICE = [4, 6, 8, 10, 12, 20, 100];
+
+class ConfirmModal extends Modal {
+  constructor(app, title, message, confirmText, onConfirm) {
+    super(app);
+    this.titleText = title;
+    this.message = message;
+    this.confirmText = confirmText;
+    this.onConfirm = onConfirm;
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl('h3', { text: this.titleText });
+    contentEl.createEl('p', { text: this.message });
+    const row = contentEl.createDiv({ cls: 'csh-confirm-row' });
+    row.createEl('button', { text: 'Cancel' }).addEventListener('click', () => this.close());
+    const ok = row.createEl('button', { text: this.confirmText, cls: 'mod-warning' });
+    ok.addEventListener('click', async () => { this.close(); await this.onConfirm(); });
+  }
+
+  onClose() { this.contentEl.empty(); }
+}
 
 class DiceModal extends Modal {
   constructor(app, defaultFormula) {
@@ -617,6 +792,9 @@ class CharacterHubView extends ItemView {
     this.pageIndex = 0;
     this.isSyncing = false;
     this.isLoading = false;
+    this.syncInfo = null;       // {endpoint, id, token} parsed from the tracked file's kadria-sync comment, or null
+    this._autoPulledFor = null; // path we last auto-pulled for, so opening a file pulls once, not on every render
+    this._opened = false;       // true once onOpen has finished its body re-parse (a pull before that would be overwritten)
     this.pages = [
       { title: '⚔️ Combat', render: (root, fm) => this.renderCombatWidget(root, fm) },
       { title: '💪 Abilities, Saves & Senses', render: (root, fm) => this.renderAbilitiesWidget(root, fm) },
@@ -642,11 +820,13 @@ class CharacterHubView extends ItemView {
   async onOpen() {
     this.contentEl.addClass('csh-root');
     await this.render();
-    await this.syncFrontmatterFromBody();
+    await this.syncFrontmatterFromBody(false);
+    this._opened = true;
+    this.autoPullIfNeeded();
     this.registerEvent(this.app.vault.on('modify', async (f) => {
       if (!this.file || f.path !== this.file.path) return;
       if (this.isSyncing) { this.isSyncing = false; return; }
-      await this.syncFrontmatterFromBody();
+      await this.syncFrontmatterFromBody(true);
     }));
   }
 
@@ -660,11 +840,18 @@ class CharacterHubView extends ItemView {
     return this.app.workspace.getActiveFile();
   }
 
-  async updateFrontmatter(mutator) {
+  // `quiet` is for the sync code's own bookkeeping writes: no dirty tracking, no edit event.
+  async updateFrontmatter(mutator, opts) {
     if (!this.file) return;
+    const quiet = !!(opts && opts.quiet);
     this.isSyncing = true;
-    await this.app.fileManager.processFrontMatter(this.file, mutator);
-    if (this.plugin.logEvent) this.plugin.logEvent('edit_saved', 'widget');
+    await this.app.fileManager.processFrontMatter(this.file, (f) => {
+      const before = quiet ? null : pushHash(buildPushFields(f));
+      mutator(f);
+      // A player edit to anything the sheet owns for the player means "unsent changes".
+      if (!quiet && this.syncInfo && pushHash(buildPushFields(f)) !== before) f.sync_dirty = true;
+    });
+    if (!quiet && this.plugin.logEvent) this.plugin.logEvent('edit_saved', 'widget');
     await this.render();
   }
 
@@ -673,7 +860,10 @@ class CharacterHubView extends ItemView {
   // live widget state (HP, used spell slots, conditions, etc.) that isn't also
   // reflected in the printed sheet gets reverted to the sheet's values — that's
   // the accepted tradeoff of keeping the printed sheet as the source of truth.
-  async syncFrontmatterFromBody() {
+  // `fromEdit` is true when the player actually edited the file (a vault modify event), false for the
+  // refresh on open. With a sheet link, unsent device values are protected from the body re-parse, and a
+  // real body edit to a player-owned value counts as an unsent change.
+  async syncFrontmatterFromBody(fromEdit) {
     if (!this.file) return;
     const content = await this.app.vault.read(this.file);
     const body = content.replace(/^---\n[\s\S]*?\n---\n?/, '');
@@ -686,8 +876,15 @@ class CharacterHubView extends ItemView {
     await this.render();
 
     this.isSyncing = true;
+    const linked = !!parseSyncInfo(content);
     await this.app.fileManager.processFrontMatter(this.file, (fm) => {
-      Object.entries(parsed).forEach(([k, v]) => { fm[k] = v; });
+      const before = linked ? pushHash(buildPushFields(fm)) : null;
+      const guard = linked && fm.sync_dirty;
+      Object.entries(parsed).forEach(([k, v]) => {
+        if (guard && SYNC_PLAYER_KEYS.includes(k)) return;
+        fm[k] = v;
+      });
+      if (linked && fromEdit && pushHash(buildPushFields(fm)) !== before) fm.sync_dirty = true;
     });
 
     this.isLoading = false;
@@ -713,6 +910,8 @@ class CharacterHubView extends ItemView {
       return;
     }
     this.file = file;
+    this.syncInfo = parseSyncInfo(await this.app.vault.cachedRead(file));
+    if (this._opened) this.autoPullIfNeeded();
 
     const cache = this.app.metadataCache.getFileCache(file);
     const fm = (cache && cache.frontmatter) || {};
@@ -721,6 +920,126 @@ class CharacterHubView extends ItemView {
     root.createEl('h2', { text: fm.character || file.basename });
     this.renderHeader(root, fm);
     this.renderPager(root, fm);
+  }
+
+  // ---- sheet sync (see the SYNC block near the top of this file) ----
+
+  renderSyncBar(el, fm) {
+    if (!this.syncInfo) return;
+    const bar = el.createDiv({ cls: 'csh-sync-bar' });
+    bar.createEl('span', { cls: 'csh-muted csh-sync-status' + (fm.sync_dirty ? ' csh-sync-dirty' : ''), text: '☁️ ' + syncStatusText(fm) });
+    const send = bar.createEl('button', { text: 'Send to sheet', cls: 'csh-sync-btn' + (fm.sync_dirty ? ' mod-cta' : '') });
+    send.addEventListener('click', () => this.syncSend());
+    const get = bar.createEl('button', { text: 'Get from sheet', cls: 'csh-sync-btn' });
+    get.addEventListener('click', () => this.syncGet({ auto: false }));
+  }
+
+  currentFm() {
+    const cache = this.file && this.app.metadataCache.getFileCache(this.file);
+    return (cache && cache.frontmatter) || {};
+  }
+
+  async syncRequest(req) {
+    const r = await requestUrl({ url: req.url, method: req.method, body: req.body, contentType: req.contentType, throw: false });
+    let json = null;
+    try { json = r.json; } catch (e) { try { json = JSON.parse(r.text); } catch (e2) { json = null; } }
+    return { status: r.status, json };
+  }
+
+  autoPullIfNeeded() {
+    if (!this.file || !this.syncInfo || this._autoPulledFor === this.file.path) return;
+    this._autoPulledFor = this.file.path;
+    this.syncGet({ auto: true });
+  }
+
+  log(event, detail) { if (this.plugin.logEvent) this.plugin.logEvent(event, detail); }
+
+  async syncSend() {
+    const info = this.syncInfo;
+    if (!info) { new Notice('This character has no sheet link. Resubmit it through Character Intake to get a linked sheet.'); return; }
+    const fields = buildPushFields(this.currentFm());
+    let res;
+    try {
+      res = await syncPush((r) => this.syncRequest(r), info, fields);
+    } catch (e) {
+      this.log('sync_send_failed', (e && e.message) || String(e));
+      new Notice("Couldn't reach the sheet. Your changes are saved on this device; press Send to sheet again when you're online.");
+      return;
+    }
+    if (!res.ok) {
+      this.log('sync_send_refused', res.error || 'unknown');
+      new Notice('The sheet did not accept this character link. Ask your DM to check it.');
+      return;
+    }
+    const rejected = Array.isArray(res.rejected) ? res.rejected : [];
+    await this.updateFrontmatter((f) => {
+      f.sync_dirty = rejected.length > 0;
+      if (!rejected.length || (res.updated && res.updated.length)) f.sync_last_push_at = res.pushedAt || new Date().toISOString();
+    }, { quiet: true });
+    this.log('sync_send_ok', `${(res.updated || []).length} field(s)`);
+    new Notice(rejected.length ? 'Sent, but the sheet did not accept: ' + rejected.join('; ') : 'Sent to the sheet.');
+  }
+
+  async syncGet(opts) {
+    const auto = !!(opts && opts.auto);
+    const info = this.syncInfo;
+    if (!info) { if (!auto) new Notice('This character has no sheet link. Resubmit it through Character Intake to get a linked sheet.'); return; }
+    let res;
+    try {
+      res = await syncPull((r) => this.syncRequest(r), info);
+    } catch (e) {
+      this.log('sync_pull_failed', (e && e.message) || String(e));
+      if (!auto) new Notice("Couldn't reach the sheet. Your changes are safe on this device.");
+      return;
+    }
+    if (!res.ok) {
+      this.log('sync_pull_refused', res.error || 'unknown');
+      if (!auto) new Notice('The sheet did not accept this character link. Ask your DM to check it.');
+      return;
+    }
+    const wasDirty = !!this.currentFm().sync_dirty;
+    let dmChanged = [];
+    let fresh = [];
+    let restored = false;
+    await this.updateFrontmatter((f) => {
+      dmChanged = applyDmPublished(f, res.dm);
+      if (!f.sync_dirty && res.lastPushed) { applyPlayerOwned(f, res.playerOwned); restored = true; }
+      fresh = mergeAwards(f, res.awards);
+      f.sync_last_pull_at = new Date().toISOString();
+      if (restored && res.lastPushed) f.sync_last_push_at = res.lastPushed;
+    }, { quiet: true });
+    this.log('sync_pull_ok', `${auto ? 'auto' : 'manual'} dm:${dmChanged.length} awards:${fresh.length}`);
+    if (dmChanged.length) new Notice(`Your DM updated: ${dmChanged.join(', ')}.`);
+    if (fresh.length) {
+      const total = fresh.reduce((s, a) => s + Number(a.amount), 0);
+      new Notice(`Your DM awarded ${total} gp. The sheet doesn't add it for you: add it on the Inventory page.`);
+    }
+    if (!auto) {
+      if (wasDirty) new Notice('You have unsent changes, so your HP, gold and inventory were left alone. Send them, or use "Restore from sheet" to discard them.');
+      else if (!dmChanged.length && !fresh.length) new Notice('Up to date with the sheet.');
+    }
+  }
+
+  async syncRestore() {
+    const info = this.syncInfo;
+    if (!info) { new Notice('This character has no sheet link.'); return; }
+    let res;
+    try {
+      res = await syncPull((r) => this.syncRequest(r), info);
+    } catch (e) { new Notice("Couldn't reach the sheet."); return; }
+    if (!res.ok) { new Notice('The sheet did not accept this character link.'); return; }
+    if (!res.lastPushed) { new Notice("The sheet has no saved values for this character yet, so there's nothing to restore."); return; }
+    new ConfirmModal(this.app, 'Restore from the sheet?',
+      "This replaces this device's HP, AC, gold, inventory and spell slots with the sheet's copy. Anything you haven't sent will be lost.",
+      'Restore', async () => {
+        await this.updateFrontmatter((f) => {
+          applyPlayerOwned(f, res.playerOwned);
+          f.sync_dirty = false;
+          f.sync_last_push_at = res.lastPushed;
+        }, { quiet: true });
+        this.log('sync_restore_ok');
+        new Notice('Restored from the sheet.');
+      }).open();
   }
 
   renderTrackBar(root, file) {
@@ -749,6 +1068,8 @@ class CharacterHubView extends ItemView {
       cls: 'csh-subtitle',
       text: `${classText} — Level ${totalLevel}${fm.species ? ' · ' + fm.species : ''}`,
     });
+    if (fm.party) el.createEl('div', { cls: 'csh-muted', text: `Party: ${fm.party}` });
+    this.renderSyncBar(el, fm);
 
     const statRow = el.createDiv({ cls: 'csh-hp-row' });
     statRow.createEl('span', { text: '❤️ HP: ' });
@@ -1178,6 +1499,28 @@ class CharacterHubView extends ItemView {
   renderInventoryWidget(root, fm) {
     const sec = root.createDiv({ cls: 'csh-section' });
 
+    // Gold is player-owned (sent to the sheet with HP and inventory). Awards the DM has published
+    // show up below as pending: the sheet never adds them for you.
+    const goldRow = sec.createDiv({ cls: 'csh-gold-row' });
+    goldRow.createEl('span', { text: '🪙 Gold: ' });
+    const goldInput = goldRow.createEl('input', { type: 'number', cls: 'csh-hp-input csh-gold-input' });
+    goldInput.value = String(fm.gold ?? 0);
+    goldInput.addEventListener('change', () => {
+      this.updateFrontmatter((f) => { f.gold = Math.round((Number(goldInput.value) || 0) * 100) / 100; });
+    });
+    goldRow.createEl('span', { text: ' gp' });
+    const pendingAwards = Array.isArray(fm.sync_pending_awards) ? fm.sync_pending_awards : [];
+    if (pendingAwards.length) {
+      const box = sec.createDiv({ cls: 'csh-awards' });
+      box.createEl('div', { cls: 'csh-muted', text: "Your DM awarded gold. The sheet doesn't add it for you, so add it here." });
+      pendingAwards.forEach((a) => {
+        const row = box.createDiv({ cls: 'csh-award-row' });
+        row.createEl('span', { text: `${a.amount > 0 ? '+' : ''}${a.amount} gp${a.reason ? ' — ' + a.reason : ''}` });
+        row.createEl('button', { text: 'Add to my gold' }).addEventListener('click', () => this.updateFrontmatter((f) => resolveAward(f, a.id, true)));
+        row.createEl('button', { text: 'Already added' }).addEventListener('click', () => this.updateFrontmatter((f) => resolveAward(f, a.id, false)));
+      });
+    }
+
     const list = sec.createDiv({ cls: 'csh-inventory-list' });
     const items = fm.inventory || [];
     items.forEach((item, idx) => {
@@ -1510,6 +1853,11 @@ class CharacterHubView extends ItemView {
   renderNotesWidget(root, fm) {
     const sec = root.createDiv({ cls: 'csh-section' });
 
+    if (fm.dm_notes) {
+      sec.createEl('h4', { text: '📌 Notes from your DM' });
+      sec.createEl('div', { cls: 'csh-dm-notes', text: String(fm.dm_notes) });
+    }
+
     sec.createEl('h4', { text: '🗓️ Session Notes' });
     const sessionNotes = fm.session_notes || [];
     const list = sec.createDiv({ cls: 'csh-session-list' });
@@ -1725,6 +2073,10 @@ module.exports = class CharacterSheetHubPlugin extends Plugin {
       callback: () => this.sendTestReport(),
     });
 
+    this.addCommand({ id: 'send-to-sheet', name: 'Send to sheet', callback: () => this.withHubView((v) => v.syncSend()) });
+    this.addCommand({ id: 'get-from-sheet', name: 'Get from sheet', callback: () => this.withHubView((v) => v.syncGet({ auto: false })) });
+    this.addCommand({ id: 'restore-from-sheet', name: 'Restore from sheet (discard unsent changes)', callback: () => this.withHubView((v) => v.syncRestore()) });
+
     this.addSettingTab(new CharacterHubSettingTab(this.app, this));
   }
 
@@ -1781,6 +2133,19 @@ module.exports = class CharacterSheetHubPlugin extends Plugin {
     new Notice(`Test report saved to ${filename.replace(/\.txt$/, '')}.md`);
   }
 
+  // Runs a sync action against the open My Little Guy panel (opening it first if needed).
+  async withHubView(fn) {
+    let leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
+    if (!leaf) {
+      await this.activateView();
+      leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
+    }
+    if (!leaf || !leaf.view) { new Notice('Open My Little Guy first.'); return; }
+    if (!leaf.view.syncInfo) await leaf.view.render();
+    if (!leaf.view.file) { new Notice('Open My Little Guy on a character sheet first.'); return; }
+    await fn(leaf.view);
+  }
+
   async activateView() {
     const { workspace } = this.app;
     this.logEvent('panel_opened');
@@ -1808,3 +2173,6 @@ module.exports = class CharacterSheetHubPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 };
+
+module.exports.__sync = SYNC_CORE;
+module.exports.__CharacterHubView = CharacterHubView;
