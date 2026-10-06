@@ -48,6 +48,13 @@ class IosDevice {
 		return Object.values(els[nth])[0];
 	}
 	async elements(label) { return this.sess("POST", "/elements", { using: "accessibility id", value: label }); }
+	/** Fresh install of the character note, the way the live world delivers it: Obsidian's own obsidian://new link creates the
+	 *  note with the generated sheet's full text (proven on the phone 2026-10-06, ~9KB URL is fine). */
+	async install(file, text) {
+		await this.start();
+		const url = `obsidian://new?vault=${encodeURIComponent(this.cfg.vault)}&name=${encodeURIComponent(file.replace(/\.md$/, ""))}&content=${encodeURIComponent(text)}`;
+		await this.script("mobile: deepLink", { url, bundleId: this.cfg.bundleId }); await this.wait(2500);
+	}
 	/** Opens the character panel from a cold start: relaunch Obsidian, then open the character note by deep link. */
 	async open() {
 		await this.start();
