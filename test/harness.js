@@ -75,9 +75,10 @@ function makeHarness(opts) {
 		vault: { read: async () => sheetText, cachedRead: async () => sheetText, getAbstractFileByPath: () => file, on: () => ({}) },
 		metadataCache: { getFileCache: () => ({ frontmatter: fm }) },
 		fileManager: { processFrontMatter: async (f, fn) => { await fn(fm); } },
-		workspace: { getActiveFile: () => file, getLeaf() { return { openFile() {} }; } },
+		workspace: { getActiveFile: () => (h.noteOpen ? file : null), getLeaf() { return { openFile() {} }; } },
 	};
-	const plugin = { settings: { sheetPath: file.path }, lastActiveFile: file, logEvent: (e, d) => h.events.push(e + (d ? ":" + d : "")) };
+	h.noteOpen = !opts.panelFirst; // panelFirst: the panel is open (as after a fresh install) before the player opens their character note
+	const plugin = { settings: { sheetPath: opts.panelFirst ? "" : file.path }, lastActiveFile: opts.panelFirst ? null : file, logEvent: (e, d) => h.events.push(e + (d ? ":" + d : "")) };
 	const view = new View({ app }, plugin);
 
 	// ---- sheet-side helpers (what a DM sees in Google Sheets)

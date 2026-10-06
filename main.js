@@ -794,6 +794,8 @@ class CharacterHubView extends ItemView {
     this.isLoading = false;
     this.syncInfo = null;       // {endpoint, id, token} parsed from the tracked file's kadria-sync comment, or null
     this._autoPulledFor = null; // path we last auto-pulled for, so opening a file pulls once, not on every render
+    this._parsedFor = null;     // path whose printed sheet was last parsed into frontmatter
+    this._parsing = false;
     this._opened = false;       // true once onOpen has finished its body re-parse (a pull before that would be overwritten)
     this.pages = [
       { title: '⚔️ Combat', render: (root, fm) => this.renderCombatWidget(root, fm) },
@@ -822,6 +824,7 @@ class CharacterHubView extends ItemView {
     await this.render();
     await this.syncFrontmatterFromBody(false);
     this._opened = true;
+    this._parsedFor = this.file ? this.file.path : null;
     this.autoPullIfNeeded();
     this.registerEvent(this.app.vault.on('modify', async (f) => {
       if (!this.file || f.path !== this.file.path) return;
@@ -911,7 +914,14 @@ class CharacterHubView extends ItemView {
     }
     this.file = file;
     this.syncInfo = parseSyncInfo(await this.app.vault.cachedRead(file));
-    if (this._opened) this.autoPullIfNeeded();
+    // A note first tracked after the panel was already open (e.g. the player opens their character after the
+    // panel auto-opened on install) was never parsed: parse its printed sheet once, then pull.
+    if (this._opened && this._parsedFor !== file.path) {
+      this._parsedFor = file.path;
+      this._parsing = true;
+      this.syncFrontmatterFromBody(false).finally(() => { this._parsing = false; this.autoPullIfNeeded(); });
+    }
+    if (this._opened && !this._parsing) this.autoPullIfNeeded();
 
     const cache = this.app.metadataCache.getFileCache(file);
     const fm = (cache && cache.frontmatter) || {};

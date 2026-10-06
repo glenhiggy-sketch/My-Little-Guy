@@ -27,6 +27,20 @@ module.exports = [
 		},
 	},
 	{
+		name: "note-opened-while-panel-open",
+		story: "I install the plugin (the panel opens by itself), then open my character note: the panel must show my character, not a blank one.",
+		world: { panelFirst: true },
+		async run({ device, world, step }) {
+			await device.open();
+			await step("with no note open the panel says so", async () => has(await device.text(), "No character sheet selected"));
+			await step("opening my note fills the panel with my character", async () => {
+				await device.openNote();
+				const t = await device.text(); lacks(t, "Class ?"); has(t, "Wizard");
+				assert.strictEqual(Number(await device.value("HP")), Number((await world.sheetRow()).hpMax), "HP should be my character's max, not 0");
+			});
+		},
+	},
+	{
 		name: "play-a-fight",
 		story: "I get hit, change my HP, see it's unsent, press Send, and the DM's sheet shows my HP.",
 		async run({ device, world, step }) {

@@ -65,6 +65,8 @@ class IosDevice {
 		await this.wait();
 	}
 	async reopen() { return this.open(); }
+	/** Open the character note (obsidian://open) while the panel is already open. */
+	async openNote() { await this.script("mobile: deepLink", { url: `obsidian://open?vault=${encodeURIComponent(this.cfg.vault)}&file=${encodeURIComponent(this.character.file)}`, bundleId: this.cfg.bundleId }); await this.wait(2500); }
 	wait(ms = 1200) { return new Promise((r) => setTimeout(r, ms)); }
 	/** All visible text: the label/value attributes of the accessibility tree. */
 	async readText() {

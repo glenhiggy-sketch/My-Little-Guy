@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.14.1
+- Fix: if the My Little Guy panel was already open (it opens itself after install) and you then opened your character note, the panel showed a blank character (Class ?, HP 0) until you closed and reopened it. A note that becomes the tracked sheet is now parsed once, then pulled from the sheet. Found by the end-user simulation on the test iPhone; regression scenario `note-opened-while-panel-open`.
+
 ## 1.14.0
 - **Sheet sync.** Character sheets made by Character Intake now carry a hidden link to the campaign Google Sheet. A new bar under the character header shows sync status with **Send to sheet** and **Get from sheet** buttons (also commands: "Send to sheet", "Get from sheet", "Restore from sheet").
   - Players own HP, AC, gold, inventory and spell slots: **Send to sheet** writes exactly those and nothing else. The DM owns party, conditions and DM notes: they only ever arrive from the sheet, and only once the DM has published them.

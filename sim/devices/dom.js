@@ -39,13 +39,15 @@ class DomDevice {
 		dot.dispatchEvent(new this.h.window.Event("click")); await this.settle();
 	}
 	async runCommand(name) { if (!COMMANDS[name]) throw new Error("unknown command " + name); await COMMANDS[name](this.view); await this.settle(); }
+	/** The player opens their character note while the panel is already open (the plugin's active-leaf-change). */
+	async openNote() { this.h.noteOpen = true; this.h.plugin.lastActiveFile = this.h.file; await this.view.render(); await this.settle(); }
 	async setOffline(off) { this.h.netDown = !!off; }
 	async screenshot() { return null; }
 }
 
 /** One fresh world: a new Sheet with a new character, a new vault file, a new device. */
-function makeDomWorld() {
-	const h = makeHarness();
+function makeDomWorld(opts) {
+	const h = makeHarness(opts);
 	const world = {
 		kind: "fake",
 		character: { name: h.character.name, player: h.character.player },

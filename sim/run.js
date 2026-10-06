@@ -21,8 +21,8 @@ function checkBugsFile() {
 	return [...fs.readFileSync(f, "utf8").matchAll(/scenario:\s*`([^`]+)`/g)].map((m) => m[1]).filter((n) => !names.has(n));
 }
 
-async function makeWorld() {
-	if (deviceKind === "dom") return require("./devices/dom").makeDomWorld();
+async function makeWorld(sc) {
+	if (deviceKind === "dom") return require("./devices/dom").makeDomWorld(sc.world);
 	if (deviceKind === "ios") return require("./devices/ios").makeIosWorld({ runId, outDir });
 	throw new Error("unknown --device " + deviceKind);
 }
@@ -37,7 +37,7 @@ async function makeWorld() {
 		const res = { scenario: sc.name, story: sc.story, steps: [], status: "pass" };
 		let w;
 		try {
-			w = await makeWorld();
+			w = await makeWorld(sc);
 			const missingCaps = (sc.needs || []).filter((c) => !w.device.capabilities.has(c));
 			if (missingCaps.length) { res.status = "skip"; res.reason = "device lacks: " + missingCaps.join(", "); }
 			else {
