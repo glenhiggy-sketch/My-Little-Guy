@@ -15,7 +15,7 @@ function loadConfig() {
 	const f = path.join(__dirname, "..", "ios.config.json");
 	const c = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : {};
 	return {
-		appium: process.env.APPIUM_URL || c.appium || "http://127.0.0.1:4723",
+		appium: process.env.WDA_URL || process.env.APPIUM_URL || c.appium || "http://127.0.0.1:4723", direct: !!process.env.WDA_URL,
 		udid: process.env.SIM_UDID || c.udid, xcodeOrgId: process.env.SIM_TEAM_ID || c.xcodeOrgId, wdaBundleId: c.wdaBundleId || "com.kadria.wda",
 		bundleId: c.bundleId || "md.obsidian", vault: process.env.SIM_VAULT || c.vault || "Kadria",
 	};
@@ -33,6 +33,10 @@ class IosDevice {
 	async start() {
 		if (this.sid) return;
 		const c = this.cfg;
+		if (c.direct) { // wireless: talk to an already-running WebDriverAgent (see iphone-bridge README "Wireless")
+			const r = await this.call("POST", "/session", { capabilities: { alwaysMatch: { bundleId: c.bundleId } } });
+			this.sid = r.sessionId; return;
+		}
 		const v = await this.call("POST", "/session", { capabilities: { alwaysMatch: {
 			platformName: "iOS", "appium:automationName": "XCUITest", "appium:udid": c.udid, "appium:bundleId": c.bundleId, "appium:noReset": true,
 			"appium:newCommandTimeout": 3600, "appium:xcodeOrgId": c.xcodeOrgId, "appium:xcodeSigningId": "Apple Development", "appium:updatedWDABundleId": c.wdaBundleId,
@@ -41,7 +45,16 @@ class IosDevice {
 		this.sid = v.sessionId;
 	}
 	async close() { if (this.sid) { await this.call("DELETE", "/session/" + this.sid).catch(() => {}); this.sid = null; } }
-	async script(name, args) { return this.sess("POST", "/execute/sync", { script: name, args: [args || {}] }); }
+	async script(name, args) {
+		args = args || {};
+		if (this.cfg.direct) { // WDA's own endpoints instead of Appium's "mobile:" scripts
+			const m = { "mobile: launchApp": ["/wda/apps/launch", { bundleId: args.bundleId }], "mobile: terminateApp": ["/wda/apps/terminate", { bundleId: args.bundleId }],
+				"mobile: deepLink": ["/url", { url: args.url }], "mobile: keys": ["/wda/keys", { value: args.keys }], "mobile: hideKeyboard": ["/wda/keyboard/dismiss", { keyNames: args.keys || ["Done"] }] }[name];
+			if (!m) throw new Error("no direct-WDA mapping for " + name);
+			return this.sess("POST", m[0], m[1]);
+		}
+		return this.sess("POST", "/execute/sync", { script: name, args: [args] });
+	}
 	async element(label, nth = 0) {
 		const els = await this.sess("POST", "/elements", { using: "accessibility id", value: label });
 		if (!els[nth]) throw new Error(`nothing on screen called "${label}"${nth ? " #" + nth : ""}`);
@@ -55,14 +68,21 @@ class IosDevice {
 		const url = `obsidian://new?vault=${encodeURIComponent(this.cfg.vault)}&name=${encodeURIComponent(file.replace(/\.md$/, ""))}&content=${encodeURIComponent(text)}`;
 		await this.script("mobile: deepLink", { url, bundleId: this.cfg.bundleId }); await this.wait(2500);
 	}
-	/** Opens the character panel from a cold start: relaunch Obsidian, then open the character note by deep link. */
+	/** Cold start, then open the character note and the My Little Guy panel through the command palette
+	 *  (palette results are not accessibility elements, so the first result is tapped by position; iPhone 13: 390x844 pt). */
 	async open() {
 		await this.start();
 		await this.script("mobile: terminateApp", { bundleId: this.cfg.bundleId }).catch(() => {});
-		await this.script("mobile: launchApp", { bundleId: this.cfg.bundleId });
-		if (this.character) await this.script("mobile: deepLink", { url: `obsidian://open?vault=${encodeURIComponent(this.cfg.vault)}&file=${encodeURIComponent(this.character.file)}`, bundleId: this.cfg.bundleId });
-		await this.runCommand("My Little Guy: Open character panel").catch(() => {}); // best effort; the panel may already be open
-		await this.wait();
+		await this.script("mobile: launchApp", { bundleId: this.cfg.bundleId }); await this.wait(2500);
+		if (this.character) await this.script("mobile: deepLink", { url: `obsidian://open?vault=${encodeURIComponent(this.cfg.vault)}&file=${encodeURIComponent(this.character.file.replace(/\.md$/, ""))}`, bundleId: this.cfg.bundleId });
+		await this.wait(2500);
+		await this.tapAt(320, 786); await this.wait(1200);          // bottom toolbar menu
+		await this.tap("Open command palette");
+		await this.script("mobile: keys", { keys: [..."Open My Little Guy"] }); await this.wait(1200);
+		await this.tapAt(148, 133); await this.wait(3500);         // first palette result
+	}
+	async tapAt(x, y) {
+		await this.sess("POST", "/actions", { actions: [{ type: "pointer", id: "finger", parameters: { pointerType: "touch" }, actions: [{ type: "pointerMove", duration: 0, x, y }, { type: "pointerDown", button: 0 }, { type: "pause", duration: 80 }, { type: "pointerUp", button: 0 }] }] });
 	}
 	async reopen() { return this.open(); }
 	/** Open the character note (obsidian://open) while the panel is already open. */
@@ -102,6 +122,7 @@ async function makeIosWorld({ runId, outDir }) {
 	const device = new IosDevice(cfg, outDir);
 	const world = await makeLiveWorld({ runId });
 	device.character = world.character; // the note the phone must open
+	await device.install(world.character.file, require("fs").readFileSync(world.character.path, "utf8"));
 	return { device, world };
 }
 
