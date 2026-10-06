@@ -21,8 +21,12 @@ function secret() {
 }
 
 async function post(body) {
-	const r = await fetch(ENDPOINT, { method: "POST", body: JSON.stringify(body), headers: { "Content-Type": "text/plain" }, redirect: "follow" });
-	return r.json();
+	// Apps Script occasionally answers with an HTML error page (busy right after a submit); retry a couple of times.
+	for (let attempt = 0; ; attempt++) {
+		const r = await fetch(ENDPOINT, { method: "POST", body: JSON.stringify(body), headers: { "Content-Type": "text/plain" }, redirect: "follow" });
+		const text = await r.text();
+		try { return JSON.parse(text); } catch (e) { if (attempt >= 3) throw new Error(`Apps Script answered ${r.status} with a non-JSON page: ${text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 160)}`); await new Promise((res) => setTimeout(res, 3000)); }
+	}
 }
 const hook = async (op, extra) => { const r = await post({ action: "testhook", secret: secret(), op, ...extra }); if (!r.ok) throw new Error(`test hook ${op}: ${r.error || JSON.stringify(r)}`); return r; };
 
