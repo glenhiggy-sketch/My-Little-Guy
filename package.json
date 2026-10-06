@@ -10,6 +10,7 @@
     "sim": "node sim/run.js",
     "sim:ios": "node sim/run.js --device ios",
     "vendor": "node scripts/vendor-appscript.mjs",
+    "candidate": "node scripts/candidate.mjs",
     "release": "node scripts/release.mjs"
   },
   "devDependencies": {

@@ -28,5 +28,5 @@ Reports: `sim/reports/<run id>/report.md|json` (+ a screenshot per failed step o
 ## First run on the phone
 
 One-time: Mac side per `iphone-bridge/mac-handoff` (Appium on 127.0.0.1:4723, WebDriverAgent signed), SSH tunnel `ssh -N -L 4723:127.0.0.1:4723 mac-delegate`, phone on USB and unlocked, trust the developer profile (Settings > General > VPN & Device Management).
-Then copy `ios.config.example.json` to `ios.config.json` and fill it in; put `TEST_HOOK_SECRET=...` in `sim/.env.local` (the same value set as a Script Property); `npm i --no-save playwright`.
+Install the candidate on the phone via BRAT (docs/release.md step 2). Then copy `ios.config.example.json` to `ios.config.json` and fill it in; put `TEST_HOOK_SECRET=...` in `sim/.env.local` (the same value set as a Script Property); `npm i --no-save playwright`.
 **`devices/ios.js` is untested on a device**: expect small fixes in locating elements, toast reading (`notices()`), keyboard dismissal, and how the new character's note reaches the phone's vault (`SIM_DRIVE_DIR` mirror -> vault sync). Fix those with the phone in hand, then the same scenarios run unchanged.

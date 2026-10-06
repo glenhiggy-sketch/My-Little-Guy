@@ -67,6 +67,10 @@ async function makeWorld() {
 	});
 	fs.writeFileSync(path.join(outDir, "report.md"), md.join("\n"));
 	fs.writeFileSync(path.join(outDir, "report.json"), JSON.stringify({ runId, device: deviceKind, results }, null, 2));
+	if (deviceKind === "ios" && !only.length && !count("fail") && count("pass")) { // the release gate (scripts/release.mjs) reads this
+		fs.writeFileSync(path.join(__dirname, "last-device-pass.json"), JSON.stringify({ device: "ios", at: new Date().toISOString(), buildHash: require("../scripts/build-hash")(), passed: results.filter((r) => r.status === "pass").map((r) => r.scenario), skipped: results.filter((r) => r.status === "skip").map((r) => r.scenario) }, null, 2) + "\n");
+		console.log("Recorded sim/last-device-pass.json for this build -- commit it, then npm run release.");
+	}
 	console.log(`\n${count("pass")} passed, ${count("fail")} failed, ${count("skip")} skipped. Report: ${path.relative(process.cwd(), outDir)}`);
 	process.exit(count("fail") ? 1 : 0);
 })();
