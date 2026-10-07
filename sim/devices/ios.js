@@ -107,7 +107,7 @@ class IosDevice {
 	// The scenarios call text()/value() synchronously on the dom device; here they are async, so the runner awaits them.
 	async text() { return this.readText(); }
 	async notices() { return []; } // TODO(phone): Obsidian notices are toasts; read them from the source right after the action
-	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.sess("POST", `/element/${e}/click`, {}); await this.wait(); }
+	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.sess("POST", `/element/${e}/click`, {}); await this.wait(/ sheet$/.test(label) ? 5000 : 1200); } // sheet buttons make a real round trip to Google
 	async type(label, value, o = {}) {
 		for (let attempt = 0; ; attempt++) { // the panel may re-render between find and use; a player would just tap again
 			try {
@@ -115,10 +115,14 @@ class IosDevice {
 				if (!el) throw new Error(`no field called "${label}"`);
 				await this.sess("POST", `/element/${el}/click`, {}); await this.wait(500);
 				const again = await this.elements(label); const el2 = Object.values(o.nth === "last" ? again[again.length - 1] : again[o.nth || 0] || {})[0];
-				await this.sess("POST", `/element/${el2}/clear`, {});
+				const r = await this.sess("GET", `/element/${el2}/rect`);       // like a player: tap the end of the number, delete it, type the new one
+				await this.tapAt(Math.round(r.x + r.width - 3), Math.round(r.y + r.height / 2)); await this.wait(500);
+				const dels = await this.sess("POST", "/elements", { using: "predicate string", value: "name == 'delete' OR label == 'Delete' OR name == 'Delete'" });
+				const del = Object.values(dels[0] || {})[0];
+				if (del) for (let i = 0; i < 6; i++) await this.sess("POST", `/element/${del}/click`, {});
 				await this.sess("POST", `/element/${el2}/value`, { text: String(value) });
-				await this.script("mobile: hideKeyboard", { keys: ["Done", "Return"] }).catch(() => {}); // blur => the plugin's change handler runs
-				await this.wait(1000); return;
+				await this.tapAt(195, 69); // tap the tab title: the field loses focus and the plugin's change handler runs
+				await this.wait(1200); return;
 			} catch (e) { if (attempt >= 2) throw e; await this.wait(1500); }
 		}
 	}
