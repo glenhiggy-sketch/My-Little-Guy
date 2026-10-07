@@ -625,6 +625,7 @@ function resolveAward(fm, id, addToGold) {
 
 function syncStatusText(fm, now) {
   if (fm.sync_dirty) return 'Unsent changes';
+  if (!fm.sync_last_push_at && !fm.sync_last_pull_at && fm.sync_last_error) return `Not synced yet (${fm.sync_last_error})`;
   if (!fm.sync_last_push_at) return fm.sync_last_pull_at ? 'Linked to the sheet' : 'Not synced yet';
   const mins = Math.max(0, Math.round(((now || Date.now()) - Date.parse(fm.sync_last_push_at)) / 60000));
   return mins < 1 ? 'Sent just now' : mins < 60 ? `Sent ${mins} min ago` : `Sent ${Math.round(mins / 60)} h ago`;
@@ -990,6 +991,11 @@ class CharacterHubView extends ItemView {
     new Notice(rejected.length ? 'Sent, but the sheet did not accept: ' + rejected.join('; ') : 'Sent to the sheet.');
   }
 
+  // Remember why the last automatic pull failed, so the status line can say so instead of staying silent.
+  noteSyncError(msg) {
+    this.updateFrontmatter((f) => { f.sync_last_error = msg; }, { quiet: true }).catch(() => {});
+  }
+
   // A failed automatic pull is retried a few times, so a cold start before the network is up doesn't leave the sheet unsynced.
   retryAutoPull() {
     if ((this._pullRetries = (this._pullRetries || 0) + 1) > 4) return;
@@ -1011,13 +1017,14 @@ class CharacterHubView extends ItemView {
     } catch (e) {
       this.log('sync_pull_failed', (e && e.message) || String(e));
       if (!auto) new Notice("Couldn't reach the sheet. Your changes are safe on this device.");
-      else this.retryAutoPull(); // e.g. the phone's network isn't up yet right after launching the app
+      else { this.retryAutoPull(); this.noteSyncError("couldn't reach the sheet: " + ((e && e.message) || String(e)).slice(0, 60)); } // e.g. the phone's network isn't up yet right after launching the app
       return;
     }
     this._pullRetries = 0;
     if (!res.ok) {
       this.log('sync_pull_refused', res.error || 'unknown');
       if (!auto) new Notice('The sheet did not accept this character link. Ask your DM to check it.');
+      else this.noteSyncError('the sheet did not accept this link');
       return;
     }
     const wasDirty = !!this.currentFm().sync_dirty;
@@ -1029,6 +1036,7 @@ class CharacterHubView extends ItemView {
       if (!f.sync_dirty && res.lastPushed) { applyPlayerOwned(f, res.playerOwned); restored = true; }
       fresh = mergeAwards(f, res.awards);
       f.sync_last_pull_at = new Date().toISOString();
+      delete f.sync_last_error;
       if (restored && res.lastPushed) f.sync_last_push_at = res.lastPushed;
     }, { quiet: true });
     this.log('sync_pull_ok', `${auto ? 'auto' : 'manual'} dm:${dmChanged.length} awards:${fresh.length}`);
