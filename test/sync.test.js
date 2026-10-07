@@ -61,9 +61,9 @@ const Modal = { get last() { return H.modal; } };
 		assert.strictEqual(r["Level"], 3); assert.strictEqual(r["Party"], ""); // untouched
 		assert.strictEqual(fm.sync_dirty, false); assert(fm.sync_last_push_at); assert(lastNotice() === "Sent to the sheet.", lastNotice());
 	});
-	await ok("when clean, the sheet wins: a body re-parse resets HP, the next auto-pull restores it", async () => {
+	await ok("once synced, reopening keeps the last sent values (the printed sheet no longer puts old numbers back) and the pull still agrees", async () => {
 		await view.syncFrontmatterFromBody(false);
-		assert.notStrictEqual(fm.hp, 3, "the open-time re-parse resets HP from the printed sheet (existing behaviour)");
+		assert.strictEqual(fm.hp, 3, "a re-parse on open must not revert HP to the printed sheet once it has synced");
 		view._autoPulledFor = null; view.autoPullIfNeeded(); await tick(); await tick();
 		assert.strictEqual(fm.hp, 3); assert.strictEqual(fm.gold, 25);
 		assert.deepStrictEqual(J(fm.inventory), [{ name: "rope", qty: 2 }, { name: "a torch", qty: 1 }]);

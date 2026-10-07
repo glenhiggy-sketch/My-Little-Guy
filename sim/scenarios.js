@@ -195,6 +195,18 @@ module.exports = [
 		},
 	},
 	{
+		name: "reopen-offline-keeps-what-i-sent",
+		story: "I send my HP, close the app, and reopen it somewhere with no signal: my HP must still be what I sent, not the number on the printed sheet.",
+		needs: ["offline"],
+		async run({ device, step }) {
+			await device.open(); await device.type("HP", 9); await device.tap("Send to sheet");
+			await device.setOffline(true);
+			await step("after a restart with no signal the HP is still what I sent", async () => {
+				await device.reopen(); assert.strictEqual(Number(await device.value("HP")), 9);
+			});
+		},
+	},
+	{
 		name: "restore-asks-first",
 		story: "I mess up and run Restore from sheet: it warns me, and only on Restore are my unsent changes replaced.",
 		needs: ["commands"],

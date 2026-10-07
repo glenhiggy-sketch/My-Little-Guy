@@ -907,9 +907,12 @@ class CharacterHubView extends ItemView {
     const linked = !!parseSyncInfo(content);
     await this.writeFrontmatter((fm) => {
       const before = linked ? pushHash(buildPushFields(fm)) : null;
-      const guard = linked && fm.sync_dirty;
+      // Once a character has synced with the sheet, its player-owned values in the note ARE the last known sheet values: the
+      // printed sheet must not put the old numbers back on open (that showed stale HP whenever the sheet was slow or offline).
+      const synced = linked && (fm.sync_dirty || fm.sync_last_pull_at || fm.sync_last_push_at);
+      const guard = synced && (fm.sync_dirty || !fromEdit);
       Object.entries(parsed).forEach(([k, v]) => {
-        if (guard && SYNC_PLAYER_KEYS.includes(k)) return;
+        if (guard && SYNC_PLAYER_KEYS.includes(k) && fm[k] !== undefined) return;
         fm[k] = v;
       });
       if (linked && fromEdit && pushHash(buildPushFields(fm)) !== before) fm.sync_dirty = true;
@@ -975,7 +978,7 @@ class CharacterHubView extends ItemView {
   async syncRequest(req) {
     // A request can stall with no error (typically right after the app is launched, before the network is up); without a
     // timeout nothing would ever retry it.
-    const ms = this.plugin.syncTimeoutMs || 60000; // the Apps Script endpoint can take close to a minute to answer after sitting idle
+    const ms = this.plugin.syncTimeoutMs || 90000; // the Apps Script endpoint can take close to a minute to answer after sitting idle
     let timer;
     const r = await Promise.race([
       requestUrl({ url: req.url, method: req.method, body: req.body, contentType: req.contentType, throw: false }),
