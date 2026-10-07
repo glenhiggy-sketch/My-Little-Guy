@@ -52,6 +52,15 @@ module.exports = [
 		},
 	},
 	{
+		name: "first-pull-survives-a-stalled-request",
+		story: "Right after the app launches the first request to the sheet never answers: it must time out and retry on its own, not leave me 'Not synced yet'.",
+		world: { hangFirstRequest: true },
+		async run({ device, step }) {
+			await device.open();
+			await step("it links to the sheet by itself without me touching anything", async () => device.waitForText("Linked to the sheet", 20000));
+		},
+	},
+	{
 		name: "play-a-fight",
 		story: "I get hit, change my HP, see it's unsent, press Send, and the DM's sheet shows my HP.",
 		async run({ device, world, step }) {

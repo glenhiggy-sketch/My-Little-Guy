@@ -53,6 +53,7 @@ function makeHarness(opts) {
 		Modal: class { constructor(app) { this.app = app; this.contentEl = window.document.createElement("div"); } open() { h.modal = this; this.onOpen(); } close() { this.onClose && this.onClose(); h.modal = null; } },
 		// routes the plugin's HTTP calls to the server logic, like Apps Script's redirecting web app would
 		requestUrl: async ({ url, method, body }) => {
+			if (opts.hangFirstRequest && !h.hung) { h.hung = true; return new Promise(() => {}); } // stalls forever, like a request right after app launch
 			if (h.netDown) throw new Error("net::ERR_INTERNET_DISCONNECTED");
 			const u = new URL(url);
 			const res = method === "POST" ? SV.doPost({ postData: { contents: body } }) : u.searchParams.get("action") === "pull" ? SV.pullCharacter_(Object.fromEntries(u.searchParams)) : { ok: false, error: "unknown" };
@@ -79,7 +80,7 @@ function makeHarness(opts) {
 	};
 	h.noteOpen = !opts.panelFirst; // panelFirst: the panel is open (as after a fresh install) before the player opens their character note
 	h.netDown = !!opts.startOffline;
-	const plugin = { syncRetryMs: 20, settings: { sheetPath: opts.panelFirst ? "" : file.path }, lastActiveFile: opts.panelFirst ? null : file, logEvent: (e, d) => h.events.push(e + (d ? ":" + d : "")) };
+	const plugin = { syncRetryMs: 20, syncTimeoutMs: 100, settings: { sheetPath: opts.panelFirst ? "" : file.path }, lastActiveFile: opts.panelFirst ? null : file, logEvent: (e, d) => h.events.push(e + (d ? ":" + d : "")) };
 	const view = new View({ app }, plugin);
 
 	// ---- sheet-side helpers (what a DM sees in Google Sheets)

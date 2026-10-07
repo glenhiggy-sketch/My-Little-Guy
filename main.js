@@ -951,7 +951,14 @@ class CharacterHubView extends ItemView {
   }
 
   async syncRequest(req) {
-    const r = await requestUrl({ url: req.url, method: req.method, body: req.body, contentType: req.contentType, throw: false });
+    // A request can stall with no error (typically right after the app is launched, before the network is up); without a
+    // timeout nothing would ever retry it.
+    const ms = this.plugin.syncTimeoutMs || 15000;
+    let timer;
+    const r = await Promise.race([
+      requestUrl({ url: req.url, method: req.method, body: req.body, contentType: req.contentType, throw: false }),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timed out after ' + Math.round(ms / 1000) + 's')), ms); }),
+    ]).finally(() => clearTimeout(timer));
     let json = null;
     try { json = r.json; } catch (e) { try { json = JSON.parse(r.text); } catch (e2) { json = null; } }
     return { status: r.status, json };
