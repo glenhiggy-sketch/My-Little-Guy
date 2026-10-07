@@ -47,7 +47,7 @@ function makeHarness(opts) {
 	const getCache = {};
 	const h = { cacheSnapshot: {}, notices: [], netDown: false, events: [], window, env, SV, J, modal: null };
 	const obsidian = {
-		Plugin: class {}, PluginSettingTab: class {}, Setting: class {}, MarkdownView: class {}, MarkdownRenderer: { render: async (_app, md, el) => { el.textContent = md; } }, addIcon() {},
+		parseYaml: (t) => JSON.parse(t), Plugin: class {}, PluginSettingTab: class {}, Setting: class {}, MarkdownView: class {}, MarkdownRenderer: { render: async (_app, md, el) => { el.textContent = md; } }, addIcon() {},
 		Platform: { isMobile: false, isIosApp: false },
 		Notice: class { constructor(m) { h.notices.push(String(m)); } },
 		ItemView: class { constructor(leaf) { this.leaf = leaf; this.app = leaf.app; this.contentEl = window.document.createElement("div"); } registerEvent() {} },
@@ -77,7 +77,8 @@ function makeHarness(opts) {
 	const file = { path: character.name + " - " + character.player + ".md", basename: character.name + " - " + character.player, extension: "md" };
 	const fm = {};
 	const app = {
-		vault: { read: async () => sheetText, cachedRead: async () => sheetText, getAbstractFileByPath: () => file, on: () => ({}) },
+		// staleCache: the note on disk carries the real saved values (as YAML front matter; JSON is valid YAML) while Obsidian's cache lags
+		vault: { read: async () => (opts.staleCache ? "---\n" + JSON.stringify(fm) + "\n---\n" + sheetText : sheetText), cachedRead: async () => (opts.staleCache ? "---\n" + JSON.stringify(fm) + "\n---\n" + sheetText : sheetText), getAbstractFileByPath: () => file, on: () => ({}) },
 		// staleCache: like iOS, the metadata cache does not reflect our own writes until much later (here: never)
 		metadataCache: { getFileCache: () => ({ frontmatter: opts.staleCache ? h.cacheSnapshot : fm }) },
 		fileManager: { processFrontMatter: async (f, fn) => { await fn(fm); } },

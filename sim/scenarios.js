@@ -223,6 +223,18 @@ module.exports = [
 		},
 	},
 	{
+		name: "reopen-with-a-stale-index-keeps-unsent-changes",
+		story: "I change my HP and close the app without sending. On reopening, Obsidian's note index has not caught up: my HP must still be what I typed, still flagged unsent.",
+		world: { staleCache: true },
+		needs: ["fake-world"], // the real phone shows this as the index lagging after a cold start
+		async run({ device, step }) {
+			await device.open(); await device.type("HP", 4);
+			await step("after a restart the HP is still mine and still unsent", async () => {
+				await device.reopen(); assert.strictEqual(Number(await device.value("HP")), 4); has(await device.text(), "Unsent changes");
+			});
+		},
+	},
+	{
 		name: "restore-asks-first",
 		story: "I mess up and run Restore from sheet: it warns me, and only on Restore are my unsent changes replaced.",
 		needs: ["commands"],

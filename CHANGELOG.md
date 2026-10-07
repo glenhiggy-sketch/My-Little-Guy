@@ -8,6 +8,7 @@
 - Fix: Get from sheet could occasionally be answered from the phone's own cache and miss a DM update that had just been published. Each request to the sheet is now unique. Regression scenario `dm-update-is-not-hidden-by-a-cached-answer`.
 - Fix: once a character has synced with the sheet, reopening it no longer puts the old numbers from the printed sheet back (it showed the original HP again until the sheet answered, and for good if you were offline). Regression scenario `reopen-offline-keeps-what-i-sent`.
 - Fix: a late "file changed" notice from Obsidian after your own save could make the plugin re-read the printed sheet and mark your just-sent HP as unsent again. It now only re-reads the printed sheet when its text actually changed. Regression scenario `late-file-event-does-not-undo-my-send`.
+- Fix (iPhone): the panel now reads the note's saved values from the file itself, not only from Obsidian's index, so the very first screen after the app starts shows your real HP, status and gold instead of zeros. Scenario `reopen-with-a-stale-index-keeps-unsent-changes`.
 
 ## 1.14.0
 - **Sheet sync.** Character sheets made by Character Intake now carry a hidden link to the campaign Google Sheet. A new bar under the character header shows sync status with **Send to sheet** and **Get from sheet** buttons (also commands: "Send to sheet", "Get from sheet", "Restore from sheet").

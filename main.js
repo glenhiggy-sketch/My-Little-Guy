@@ -1,4 +1,4 @@
-const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer, addIcon, Platform, requestUrl } = require('obsidian');
+const { Plugin, ItemView, PluginSettingTab, Setting, Notice, Modal, MarkdownView, MarkdownRenderer, addIcon, Platform, requestUrl, parseYaml } = require('obsidian');
 
 // Set by the plugin instance in onload()/onunload() -- lets the two module-level
 // roll functions below log a structural event without threading a plugin
@@ -859,13 +859,26 @@ class CharacterHubView extends ItemView {
     let snapshot = null;
     await this.app.fileManager.processFrontMatter(file, (f) => { mutator(f); snapshot = JSON.parse(JSON.stringify(f)); });
     if (snapshot) this._shadow = { path: file.path, fm: snapshot, at: Date.now() };
+    this._fileFm = null; // re-read the file on the next draw
   }
 
+  // Where the panel gets the note's saved values, best first: the file itself (read just now), our own last write, and only
+  // then Obsidian's metadata cache, which can be stale for a long time on iOS (right after a cold start, and after writes).
   liveFm(file) {
+    if (file && this._fileFm && this._fileFm.path === file.path && this._fileFm.fm) return this._fileFm.fm;
     const sh = this._shadow;
     if (file && sh && sh.path === file.path && Date.now() - sh.at < 10 * 60 * 1000) return sh.fm;
     const cache = file && this.app.metadataCache.getFileCache(file);
     return (cache && cache.frontmatter) || {};
+  }
+
+  async readFileFm(file) {
+    try {
+      const text = await this.app.vault.read(file);
+      const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+      if (m && typeof parseYaml === 'function') { const o = parseYaml(m[1]); if (o && typeof o === 'object') return o; }
+    } catch (e) { /* fall back to our own write or the cache */ }
+    return null;
   }
 
   // `quiet` is for the sync code's own bookkeeping writes: no dirty tracking, no edit event.
@@ -955,6 +968,7 @@ class CharacterHubView extends ItemView {
     }
     if (this._opened && !this._parsing) this.autoPullIfNeeded();
 
+    this._fileFm = { path: file.path, fm: await this.readFileFm(file) };
     const fm = this.liveFm(file);
 
     this.renderTrackBar(root, file);

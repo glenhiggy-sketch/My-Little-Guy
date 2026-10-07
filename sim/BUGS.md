@@ -14,3 +14,4 @@ Format: `- YYYY-MM-DD <what went wrong> -- scenario: \`name\``
 - 2026-10-07 Get from sheet intermittently missed a just-published DM update on the iPhone (suspected HTTP cache) -- scenario: `dm-update-is-not-hidden-by-a-cached-answer`
 - 2026-10-07 After a restart the HP/AC reverted to the printed sheet's numbers until a pull landed (forever when offline) -- scenario: `reopen-offline-keeps-what-i-sent`
 - 2026-10-07 After Send the screen sometimes still said 'Unsent changes' (a late file event re-parsed the printed sheet) -- scenario: `late-file-event-does-not-undo-my-send`
+- 2026-10-07 First screen after a cold start showed HP 0 / default values (stale Obsidian index) on the iPhone -- scenario: `reopen-with-a-stale-index-keeps-unsent-changes`
