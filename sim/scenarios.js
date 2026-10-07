@@ -61,6 +61,18 @@ module.exports = [
 		},
 	},
 	{
+		name: "screen-keeps-up-when-obsidians-cache-lags",
+		story: "Obsidian on the phone updates its note index slowly: what I just typed, and the sheet link status, must still show straight away.",
+		world: { staleCache: true },
+		async run({ device, step }) {
+			await device.open();
+			await step("the first automatic sync shows as linked even though the index has not caught up", async () => device.waitForText("Linked to the sheet", 20000));
+			await step("an HP change shows immediately as an unsent change", async () => {
+				await device.type("HP", 7); has(await device.text(), "Unsent changes"); assert.strictEqual(Number(await device.value("HP")), 7);
+			});
+		},
+	},
+	{
 		name: "play-a-fight",
 		story: "I get hit, change my HP, see it's unsent, press Send, and the DM's sheet shows my HP.",
 		async run({ device, world, step }) {

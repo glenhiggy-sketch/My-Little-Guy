@@ -10,3 +10,4 @@ Format: `- YYYY-MM-DD <what went wrong> -- scenario: \`name\``
 - 2026-10-06 Panel already open when the character note is opened showed a blank character (found on the iPhone) -- scenario: `note-opened-while-panel-open`
 - 2026-10-07 First automatic pull failed silently on a cold start and never retried, leaving the sheet 'Not synced yet' (found on the iPhone) -- scenario: `first-pull-survives-a-network-blip`
 - 2026-10-07 First request after a cold start stalled with no error and was never retried (iPhone) -- scenario: `first-pull-survives-a-stalled-request`
+- 2026-10-07 Panel drew from Obsidian's lagging metadata cache on the iPhone: edits and the first sync were saved but not shown -- scenario: `screen-keeps-up-when-obsidians-cache-lags`

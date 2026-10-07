@@ -44,7 +44,7 @@ function makeHarness(opts) {
 	P.setText = function (s) { this.textContent = s; };
 	P.createSvg = function (tag, o) { return this.createEl(tag, o); };
 
-	const h = { notices: [], netDown: false, events: [], window, env, SV, J, modal: null };
+	const h = { cacheSnapshot: {}, notices: [], netDown: false, events: [], window, env, SV, J, modal: null };
 	const obsidian = {
 		Plugin: class {}, PluginSettingTab: class {}, Setting: class {}, MarkdownView: class {}, MarkdownRenderer: { render: async (_app, md, el) => { el.textContent = md; } }, addIcon() {},
 		Platform: { isMobile: false, isIosApp: false },
@@ -74,7 +74,8 @@ function makeHarness(opts) {
 	const fm = {};
 	const app = {
 		vault: { read: async () => sheetText, cachedRead: async () => sheetText, getAbstractFileByPath: () => file, on: () => ({}) },
-		metadataCache: { getFileCache: () => ({ frontmatter: fm }) },
+		// staleCache: like iOS, the metadata cache does not reflect our own writes until much later (here: never)
+		metadataCache: { getFileCache: () => ({ frontmatter: opts.staleCache ? h.cacheSnapshot : fm }) },
 		fileManager: { processFrontMatter: async (f, fn) => { await fn(fm); } },
 		workspace: { getActiveFile: () => (h.noteOpen ? file : null), getLeaf() { return { openFile() {} }; } },
 	};

@@ -795,6 +795,7 @@ class CharacterHubView extends ItemView {
     this.isLoading = false;
     this.syncInfo = null;       // {endpoint, id, token} parsed from the tracked file's kadria-sync comment, or null
     this._autoPulledFor = null; // path we last auto-pulled for, so opening a file pulls once, not on every render
+    this._shadow = null;        // our own latest frontmatter write: Obsidian's metadata cache can lag it by a long time on iOS
     this._parsedFor = null;     // path whose printed sheet was last parsed into frontmatter
     this._parsing = false;
     this._opened = false;       // true once onOpen has finished its body re-parse (a pull before that would be overwritten)
@@ -825,6 +826,12 @@ class CharacterHubView extends ItemView {
     await this.render();
     await this.syncFrontmatterFromBody(false);
     this._opened = true;
+    if (this.app.metadataCache.on) {
+      // once Obsidian's cache has caught up with our write, it is the source of truth again (outside edits show up)
+      this.registerEvent(this.app.metadataCache.on('changed', (f) => {
+        if (this._shadow && f && f.path === this._shadow.path) { this._shadow = null; this.render(); }
+      }));
+    }
     this._parsedFor = this.file ? this.file.path : null;
     this.autoPullIfNeeded();
     this.registerEvent(this.app.vault.on('modify', async (f) => {
@@ -844,22 +851,35 @@ class CharacterHubView extends ItemView {
     return this.app.workspace.getActiveFile();
   }
 
+  // Writes the note's frontmatter and remembers the result. Obsidian's metadata cache can trail our own writes by a long
+  // time on the phone (seen on iOS: the panel kept drawing the old state), so the panel reads liveFm() instead.
+  async writeFrontmatter(mutator) {
+    const file = this.file;
+    let snapshot = null;
+    await this.app.fileManager.processFrontMatter(file, (f) => { mutator(f); snapshot = JSON.parse(JSON.stringify(f)); });
+    if (snapshot) this._shadow = { path: file.path, fm: snapshot, at: Date.now() };
+  }
+
+  liveFm(file) {
+    const sh = this._shadow;
+    if (file && sh && sh.path === file.path && Date.now() - sh.at < 10 * 60 * 1000) return sh.fm;
+    const cache = file && this.app.metadataCache.getFileCache(file);
+    return (cache && cache.frontmatter) || {};
+  }
+
   // `quiet` is for the sync code's own bookkeeping writes: no dirty tracking, no edit event.
   async updateFrontmatter(mutator, opts) {
     if (!this.file) return;
     const quiet = !!(opts && opts.quiet);
     this.isSyncing = true;
-    this._dbgStage = (this._dbgStage || '') + ' >pfm';
-    await this.app.fileManager.processFrontMatter(this.file, (f) => {
+    await this.writeFrontmatter((f) => {
       const before = quiet ? null : pushHash(buildPushFields(f));
       mutator(f);
       // A player edit to anything the sheet owns for the player means "unsent changes".
       if (!quiet && this.syncInfo && pushHash(buildPushFields(f)) !== before) f.sync_dirty = true;
     });
-    this._dbgStage = (this._dbgStage || '') + ' >render';
     if (!quiet && this.plugin.logEvent) this.plugin.logEvent('edit_saved', 'widget');
     await this.render();
-    this._dbgStage = (this._dbgStage || '') + ' >done';
   }
 
   // Re-parses the markdown body (tables/checkboxes) and rewrites the derived
@@ -884,7 +904,7 @@ class CharacterHubView extends ItemView {
 
     this.isSyncing = true;
     const linked = !!parseSyncInfo(content);
-    await this.app.fileManager.processFrontMatter(this.file, (fm) => {
+    await this.writeFrontmatter((fm) => {
       const before = linked ? pushHash(buildPushFields(fm)) : null;
       const guard = linked && fm.sync_dirty;
       Object.entries(parsed).forEach(([k, v]) => {
@@ -927,8 +947,7 @@ class CharacterHubView extends ItemView {
     }
     if (this._opened && !this._parsing) this.autoPullIfNeeded();
 
-    const cache = this.app.metadataCache.getFileCache(file);
-    const fm = (cache && cache.frontmatter) || {};
+    const fm = this.liveFm(file);
 
     this.renderTrackBar(root, file);
     root.createEl('h2', { text: fm.character || file.basename });
@@ -941,7 +960,7 @@ class CharacterHubView extends ItemView {
   renderSyncBar(el, fm) {
     if (!this.syncInfo) return;
     const bar = el.createDiv({ cls: 'csh-sync-bar' });
-    bar.createEl('span', { cls: 'csh-muted csh-sync-status' + (fm.sync_dirty ? ' csh-sync-dirty' : ''), text: '☁️ ' + syncStatusText(fm) + ` [dbg opened=${this._opened} parsedFor=${this._parsedFor ? 1 : 0} parsing=${this._parsing} pulled=${this._autoPulledFor ? 1 : 0} retries=${this._pullRetries || 0} info=${this.syncInfo ? 1 : 0} stage=${this._dbgStage}]` });
+    bar.createEl('span', { cls: 'csh-muted csh-sync-status' + (fm.sync_dirty ? ' csh-sync-dirty' : ''), text: '☁️ ' + syncStatusText(fm) });
     const send = bar.createEl('button', { text: 'Send to sheet', cls: 'csh-sync-btn' + (fm.sync_dirty ? ' mod-cta' : '') });
     send.addEventListener('click', () => this.syncSend());
     const get = bar.createEl('button', { text: 'Get from sheet', cls: 'csh-sync-btn' });
@@ -949,8 +968,7 @@ class CharacterHubView extends ItemView {
   }
 
   currentFm() {
-    const cache = this.file && this.app.metadataCache.getFileCache(this.file);
-    return (cache && cache.frontmatter) || {};
+    return this.liveFm(this.file);
   }
 
   async syncRequest(req) {
@@ -972,7 +990,6 @@ class CharacterHubView extends ItemView {
     this._autoPulledFor = this.file.path;
     // not awaited: an exception here used to vanish silently and leave the character 'Not synced yet'
     this.syncGet({ auto: true }).catch((e) => {
-      this._dbgStage = 'EXC ' + ((e && e.message) || e);
       this.log('sync_pull_exception', (e && e.message) || String(e));
       this.noteSyncError('internal error: ' + ((e && e.message) || String(e)).slice(0, 80));
     });
@@ -1028,11 +1045,8 @@ class CharacterHubView extends ItemView {
     if (!info) { if (!auto) new Notice('This character has no sheet link. Resubmit it through Character Intake to get a linked sheet.'); return; }
     let res;
     try {
-      this._dbgStage = 'requesting';
       res = await syncPull((r) => this.syncRequest(r), info);
-      this._dbgStage = 'got ok=' + (res && res.ok);
     } catch (e) {
-      this._dbgStage = 'caught ' + ((e && e.message) || e);
       this.log('sync_pull_failed', (e && e.message) || String(e));
       if (!auto) new Notice("Couldn't reach the sheet. Your changes are safe on this device.");
       else { this.retryAutoPull(); this.noteSyncError("couldn't reach the sheet: " + ((e && e.message) || String(e)).slice(0, 60)); } // e.g. the phone's network isn't up yet right after launching the app
@@ -1046,7 +1060,6 @@ class CharacterHubView extends ItemView {
       return;
     }
     const wasDirty = !!this.currentFm().sync_dirty;
-    this._dbgStage = 'applying';
     let dmChanged = [];
     let fresh = [];
     let restored = false;
@@ -1058,7 +1071,6 @@ class CharacterHubView extends ItemView {
       delete f.sync_last_error;
       if (restored && res.lastPushed) f.sync_last_push_at = res.lastPushed;
     }, { quiet: true });
-    this._dbgStage = 'applied';
     this.log('sync_pull_ok', `${auto ? 'auto' : 'manual'} dm:${dmChanged.length} awards:${fresh.length}`);
     if (dmChanged.length) new Notice(`Your DM updated: ${dmChanged.join(', ')}.`);
     if (fresh.length) {
