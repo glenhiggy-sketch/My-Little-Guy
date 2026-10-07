@@ -849,14 +849,17 @@ class CharacterHubView extends ItemView {
     if (!this.file) return;
     const quiet = !!(opts && opts.quiet);
     this.isSyncing = true;
+    this._dbgStage = (this._dbgStage || '') + ' >pfm';
     await this.app.fileManager.processFrontMatter(this.file, (f) => {
       const before = quiet ? null : pushHash(buildPushFields(f));
       mutator(f);
       // A player edit to anything the sheet owns for the player means "unsent changes".
       if (!quiet && this.syncInfo && pushHash(buildPushFields(f)) !== before) f.sync_dirty = true;
     });
+    this._dbgStage = (this._dbgStage || '') + ' >render';
     if (!quiet && this.plugin.logEvent) this.plugin.logEvent('edit_saved', 'widget');
     await this.render();
+    this._dbgStage = (this._dbgStage || '') + ' >done';
   }
 
   // Re-parses the markdown body (tables/checkboxes) and rewrites the derived
