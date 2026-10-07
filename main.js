@@ -974,7 +974,7 @@ class CharacterHubView extends ItemView {
   async syncRequest(req) {
     // A request can stall with no error (typically right after the app is launched, before the network is up); without a
     // timeout nothing would ever retry it.
-    const ms = this.plugin.syncTimeoutMs || 15000;
+    const ms = this.plugin.syncTimeoutMs || 8000;
     let timer;
     const r = await Promise.race([
       requestUrl({ url: req.url, method: req.method, body: req.body, contentType: req.contentType, throw: false }),
@@ -1036,7 +1036,7 @@ class CharacterHubView extends ItemView {
       if (!this.file || this.file.path !== path) return;
       this._autoPulledFor = null;
       this.autoPullIfNeeded();
-    }, this.plugin.syncRetryMs || 5000);
+    }, this.plugin.syncRetryMs || 3000);
   }
 
   async syncGet(opts) {

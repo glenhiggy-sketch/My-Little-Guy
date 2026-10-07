@@ -73,19 +73,25 @@ class IosDevice {
 	async open() {
 		await this.start();
 		await this.script("mobile: terminateApp", { bundleId: this.cfg.bundleId }).catch(() => {});
-		await this.script("mobile: launchApp", { bundleId: this.cfg.bundleId }); await this.wait(2500);
+		await this.script("mobile: launchApp", { bundleId: this.cfg.bundleId }); await this.wait(5000); // let Obsidian restore its workspace first
 		const title = this.character ? this.character.file.replace(/\.md$/, "") : "";
-		if (this.character) {
-			await this.script("mobile: deepLink", { url: `obsidian://open?vault=${encodeURIComponent(this.cfg.vault)}&file=${encodeURIComponent(title)}`, bundleId: this.cfg.bundleId });
-			await this.waitForText(title, 30000);                       // the note is on screen
+		// The panel follows the active note, and a restored workspace still has the previous scenario's note and panel:
+		// open our note, open the panel, and check what it is tracking. Retry if it is still on an old note.
+		for (let attempt = 0; attempt < 3; attempt++) {
+			if (this.character) {
+				await this.script("mobile: deepLink", { url: `obsidian://open?vault=${encodeURIComponent(this.cfg.vault)}&file=${encodeURIComponent(title)}`, bundleId: this.cfg.bundleId });
+				await this.waitForText(title, 30000);                   // the note is on screen
+			}
+			await this.wait(1500);
+			await this.tapAt(320, 786);                                // bottom toolbar menu
+			await this.waitForText("Open command palette", 8000);
+			await this.tap("Open command palette"); await this.wait(1500);
+			await this.script("mobile: keys", { keys: [..."Open My Little Guy"] }); await this.wait(2000);
+			await this.tapAt(148, 133); await this.wait(2500);         // first palette result
+			if (!title || (await this.readText()).includes(`Tracking: ${title}.md`)) break;
+			if (attempt === 2) throw new Error(`the panel is tracking a different note than ${title}`);
 		}
-		await this.wait(1500);
-		await this.tapAt(320, 786);                                    // bottom toolbar menu
-		await this.waitForText("Open command palette", 8000);
-		await this.tap("Open command palette"); await this.wait(1500);
-		await this.script("mobile: keys", { keys: [..."Open My Little Guy"] }); await this.wait(2000);
-		await this.tapAt(148, 133); await this.wait(2500);             // first palette result
-		await this.waitForText("Linked to the sheet", 30000);      // the automatic pull must land first, or it re-renders the panel under the player's fingers
+		await this.waitForText("Linked to the sheet", 45000);          // the automatic pull must land first, or it re-renders the panel under the player's fingers
 	}
 	async waitForText(sub, ms) {
 		const end = Date.now() + ms;
@@ -108,21 +114,36 @@ class IosDevice {
 	async text() { return this.readText(); }
 	async notices() { return []; } // TODO(phone): Obsidian notices are toasts; read them from the source right after the action
 	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.sess("POST", `/element/${e}/click`, {}); await this.wait(/ sheet$/.test(label) ? 5000 : 1200); } // sheet buttons make a real round trip to Google
+	/** Centre of an on-screen keyboard key (found after the keyboard has finished sliding up). */
+	async keyCenter(name) {
+		const keys = await this.sess("POST", "/elements", { using: "predicate string", value: `type == 'XCUIElementTypeKey' AND name == '${name}'` });
+		const el = Object.values(keys[0] || {})[0];
+		if (!el) return null;
+		const r = await this.sess("GET", `/element/${el}/rect`);
+		return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) };
+	}
 	async type(label, value, o = {}) {
+		const find = async () => { const els = await this.elements(label); return Object.values(o.nth === "last" ? els[els.length - 1] : els[o.nth || 0] || {})[0]; };
 		for (let attempt = 0; ; attempt++) { // the panel may re-render between find and use; a player would just tap again
 			try {
-				const els = await this.elements(label); const el = Object.values(o.nth === "last" ? els[els.length - 1] : els[o.nth || 0] || {})[0];
+				const el = await find();
 				if (!el) throw new Error(`no field called "${label}"`);
-				await this.sess("POST", `/element/${el}/click`, {}); await this.wait(500);
-				const again = await this.elements(label); const el2 = Object.values(o.nth === "last" ? again[again.length - 1] : again[o.nth || 0] || {})[0];
-				const r = await this.sess("GET", `/element/${el2}/rect`);       // like a player: tap the end of the number, delete it, type the new one
-				await this.tapAt(Math.round(r.x + r.width - 3), Math.round(r.y + r.height / 2)); await this.wait(500);
-				const dels = await this.sess("POST", "/elements", { using: "predicate string", value: "name == 'delete' OR label == 'Delete' OR name == 'Delete'" });
-				const del = Object.values(dels[0] || {})[0];
-				if (del) for (let i = 0; i < 6; i++) await this.sess("POST", `/element/${del}/click`, {});
-				await this.sess("POST", `/element/${el2}/value`, { text: String(value) });
+				await this.sess("POST", `/element/${el}/click`, {}); await this.wait(1800); // keyboard slides up
+				const r = await this.sess("GET", `/element/${await find()}/rect`);       // like a player: tap the end of the number, delete it, type the new one
+				await this.tapAt(Math.round(r.x + r.width - 7), Math.round(r.y + r.height / 2)); await this.wait(500); // tapping right on the border puts the caret at the START; a little inside puts it at the end
+				const del = await this.keyCenter("delete");
+				const read = async () => { const v = await this.sess("GET", `/element/${await find()}/attribute/value`).catch(() => null); return v === null || v === undefined ? "" : String(v); };
+				if (del) for (let i = 0; i < 12 && (await read()) !== ""; i++) { await this.tapAt(del.x, del.y); await this.wait(200); } // one key at a time, looking at the field, like a player
+				for (const ch of String(value)) {
+					const k = await this.keyCenter(ch);
+					if (!k) throw new Error(`no "${ch}" key on the keyboard`);
+					await this.tapAt(k.x, k.y); await this.wait(150);
+				}
 				await this.tapAt(195, 69); // tap the tab title: the field loses focus and the plugin's change handler runs
-				await this.wait(1200); return;
+				await this.wait(1200);
+				const got = String(await this.value(label, o));
+				if (got !== String(value)) throw new Error(`typed ${value} into "${label}" but it reads ${got}`);
+				return;
 			} catch (e) { if (attempt >= 2) throw e; await this.wait(1500); }
 		}
 	}
@@ -131,7 +152,13 @@ class IosDevice {
 		if (!el) throw new Error(`no field called "${label}"`);
 		return this.sess("GET", `/element/${el}/attribute/value`);
 	}
-	async goToPage(fragment) { await this.tap(fragment); }
+	async goToPage(fragment) { // the page dots are labelled with the whole title, e.g. "🎒 Inventory"
+		const using = this.cfg.direct ? "predicate string" : "-ios predicate string";
+		const els = await this.sess("POST", "/elements", { using, value: `label CONTAINS '${fragment}' AND type == 'XCUIElementTypeButton'` });
+		const el = Object.values(els[0] || {})[0];
+		if (!el) throw new Error(`no page called "${fragment}"`);
+		await this.sess("POST", `/element/${el}/click`, {}); await this.wait(1200);
+	}
 	async runCommand(name) { await this.script("mobile: deepLink", { url: `obsidian://adv-uri?vault=${encodeURIComponent(this.cfg.vault)}&commandname=${encodeURIComponent(name)}`, bundleId: this.cfg.bundleId }); await this.wait(); }
 	async setOffline() { throw new Error("offline is not driven on the phone"); }
 	async screenshot(file) { const b64 = await this.sess("GET", "/screenshot"); fs.writeFileSync(file, Buffer.from(b64, "base64")); return file; }
