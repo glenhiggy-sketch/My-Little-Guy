@@ -29,6 +29,7 @@ module.exports = [
 	{
 		name: "note-opened-while-panel-open",
 		story: "I install the plugin (the panel opens by itself), then open my character note: the panel must show my character, not a blank one.",
+		needs: ["fake-world", "panel-first"], // needs the panel open before any note (driver gap on the phone)
 		world: { panelFirst: true },
 		async run({ device, world, step }) {
 			await device.open();
@@ -43,6 +44,7 @@ module.exports = [
 	{
 		name: "first-pull-survives-a-network-blip",
 		story: "I open the app right after launching it and the phone's network isn't ready for a moment: the sheet link must still sync by itself a few seconds later.",
+		needs: ["fake-world"], // regression scenario for a condition only the fake world can create (a lagging cache, a stalled or offline network)
 		world: { startOffline: true },
 		async run({ device, step }) {
 			await device.open();
@@ -54,6 +56,7 @@ module.exports = [
 	{
 		name: "first-pull-survives-a-stalled-request",
 		story: "Right after the app launches the first request to the sheet never answers: it must time out and retry on its own, not leave me 'Not synced yet'.",
+		needs: ["fake-world"], // regression scenario for a condition only the fake world can create (a lagging cache, a stalled or offline network)
 		world: { hangFirstRequest: true },
 		async run({ device, step }) {
 			await device.open();
@@ -63,6 +66,7 @@ module.exports = [
 	{
 		name: "screen-keeps-up-when-obsidians-cache-lags",
 		story: "Obsidian on the phone updates its note index slowly: what I just typed, and the sheet link status, must still show straight away.",
+		needs: ["fake-world"], // regression scenario for a condition only the fake world can create (a lagging cache, a stalled or offline network)
 		world: { staleCache: true },
 		async run({ device, step }) {
 			await device.open();

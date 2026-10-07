@@ -10,7 +10,7 @@ const COMMANDS = {
 };
 
 class DomDevice {
-	constructor(h) { this.h = h; this.view = h.view; this.name = "dom"; this.capabilities = new Set(["offline", "commands"]); }
+	constructor(h) { this.h = h; this.view = h.view; this.name = "dom"; this.capabilities = new Set(["offline", "commands", "fake-world", "panel-first"]); }
 	root() { return this.h.modal ? this.h.modal.contentEl : this.view.contentEl; }
 	async settle() { await this.h.tick(); await this.h.tick(); }
 	async open() { await this.view.onOpen(); await this.settle(); }
