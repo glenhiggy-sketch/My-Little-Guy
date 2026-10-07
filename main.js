@@ -938,7 +938,7 @@ class CharacterHubView extends ItemView {
   renderSyncBar(el, fm) {
     if (!this.syncInfo) return;
     const bar = el.createDiv({ cls: 'csh-sync-bar' });
-    bar.createEl('span', { cls: 'csh-muted csh-sync-status' + (fm.sync_dirty ? ' csh-sync-dirty' : ''), text: '☁️ ' + syncStatusText(fm) + ` [dbg opened=${this._opened} parsedFor=${this._parsedFor ? 1 : 0} parsing=${this._parsing} pulled=${this._autoPulledFor ? 1 : 0} retries=${this._pullRetries || 0} info=${this.syncInfo ? 1 : 0}]` });
+    bar.createEl('span', { cls: 'csh-muted csh-sync-status' + (fm.sync_dirty ? ' csh-sync-dirty' : ''), text: '☁️ ' + syncStatusText(fm) + ` [dbg opened=${this._opened} parsedFor=${this._parsedFor ? 1 : 0} parsing=${this._parsing} pulled=${this._autoPulledFor ? 1 : 0} retries=${this._pullRetries || 0} info=${this.syncInfo ? 1 : 0} stage=${this._dbgStage}]` });
     const send = bar.createEl('button', { text: 'Send to sheet', cls: 'csh-sync-btn' + (fm.sync_dirty ? ' mod-cta' : '') });
     send.addEventListener('click', () => this.syncSend());
     const get = bar.createEl('button', { text: 'Get from sheet', cls: 'csh-sync-btn' });
@@ -1020,8 +1020,11 @@ class CharacterHubView extends ItemView {
     if (!info) { if (!auto) new Notice('This character has no sheet link. Resubmit it through Character Intake to get a linked sheet.'); return; }
     let res;
     try {
+      this._dbgStage = 'requesting';
       res = await syncPull((r) => this.syncRequest(r), info);
+      this._dbgStage = 'got ok=' + (res && res.ok);
     } catch (e) {
+      this._dbgStage = 'caught ' + ((e && e.message) || e);
       this.log('sync_pull_failed', (e && e.message) || String(e));
       if (!auto) new Notice("Couldn't reach the sheet. Your changes are safe on this device.");
       else { this.retryAutoPull(); this.noteSyncError("couldn't reach the sheet: " + ((e && e.message) || String(e)).slice(0, 60)); } // e.g. the phone's network isn't up yet right after launching the app
@@ -1035,6 +1038,7 @@ class CharacterHubView extends ItemView {
       return;
     }
     const wasDirty = !!this.currentFm().sync_dirty;
+    this._dbgStage = 'applying';
     let dmChanged = [];
     let fresh = [];
     let restored = false;
@@ -1046,6 +1050,7 @@ class CharacterHubView extends ItemView {
       delete f.sync_last_error;
       if (restored && res.lastPushed) f.sync_last_push_at = res.lastPushed;
     }, { quiet: true });
+    this._dbgStage = 'applied';
     this.log('sync_pull_ok', `${auto ? 'auto' : 'manual'} dm:${dmChanged.length} awards:${fresh.length}`);
     if (dmChanged.length) new Notice(`Your DM updated: ${dmChanged.join(', ')}.`);
     if (fresh.length) {
