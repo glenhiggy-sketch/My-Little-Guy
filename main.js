@@ -967,7 +967,12 @@ class CharacterHubView extends ItemView {
   autoPullIfNeeded() {
     if (!this.file || !this.syncInfo || this._autoPulledFor === this.file.path) return;
     this._autoPulledFor = this.file.path;
-    this.syncGet({ auto: true });
+    // not awaited: an exception here used to vanish silently and leave the character 'Not synced yet'
+    this.syncGet({ auto: true }).catch((e) => {
+      this._dbgStage = 'EXC ' + ((e && e.message) || e);
+      this.log('sync_pull_exception', (e && e.message) || String(e));
+      this.noteSyncError('internal error: ' + ((e && e.message) || String(e)).slice(0, 80));
+    });
   }
 
   log(event, detail) { if (this.plugin.logEvent) this.plugin.logEvent(event, detail); }
