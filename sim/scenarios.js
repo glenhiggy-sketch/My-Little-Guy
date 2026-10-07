@@ -99,7 +99,7 @@ module.exports = [
 			});
 			await step("Send puts gold and the item on the sheet", async () => {
 				await device.tap("Send to sheet"); const row = await world.sheetRow();
-				assert.strictEqual(row.gold, 40); assert(String(row.inventory).includes("rope"), "inventory: " + row.inventory);
+				assert.strictEqual(row.gold, 40); assert(String(row.inventory).toLowerCase().includes("rope"), "inventory: " + row.inventory); // iOS capitalises the first letter
 			});
 		},
 	},
@@ -189,11 +189,13 @@ module.exports = [
 			const start = 10;
 			await device.type("HP", 2);
 			await step("the warning appears and nothing changes yet", async () => {
-				await device.runCommand("Restore from sheet (discard unsent changes)"); has(await device.text(), "Anything you haven't sent will be lost");
+				await device.runCommand("Restore from sheet (discard unsent changes)");
+				await device.waitForText("Anything you haven't sent will be lost", 90000); // it asks the sheet first, which can take a while
 				await device.tap("Cancel"); assert.strictEqual(Number(await device.value("HP")), 2);
 			});
 			await step("confirming puts the sheet's values back", async () => {
-				await device.runCommand("Restore from sheet (discard unsent changes)"); await device.tap("Restore");
+				await device.runCommand("Restore from sheet (discard unsent changes)");
+				await device.waitForText("Anything you haven't sent will be lost", 90000); await device.tap("Restore");
 				assert.strictEqual(Number(await device.value("HP")), start); lacks(await device.text(), "Unsent changes");
 			});
 		},

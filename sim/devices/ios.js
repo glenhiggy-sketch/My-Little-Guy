@@ -91,7 +91,12 @@ class IosDevice {
 			if (!title || (await this.readText()).includes(`Tracking: ${title}.md`)) break;
 			if (attempt === 2) throw new Error(`the panel is tracking a different note than ${title}`);
 		}
-		await this.waitForText("Linked to the sheet", 120000);          // the automatic pull must land first, or it re-renders the panel under the player's fingers
+		await this.waitForStatus(120000);          // the automatic pull must land first, or it re-renders the panel under the player's fingers
+	}
+	async waitForStatus(ms) { // the first sync has landed: linked, or there are unsent changes, or something was sent
+		const end = Date.now() + ms;
+		while (Date.now() < end) { if (/Linked to the sheet|Unsent changes|Sent (just now|\d+ (min|h) ago)/.test(await this.readText())) return; await this.wait(1000); }
+		throw new Error(`the first sync never settled within ${ms / 1000}s. Screen: ${(await this.readText()).replace(/^.*?Pin this file/, "…Pin this file").slice(0, 400)}`);
 	}
 	async waitForText(sub, ms) {
 		const end = Date.now() + ms;
@@ -120,7 +125,17 @@ class IosDevice {
 		this._toasts = this._toasts || [];
 		do { for (const m of (await this.readText()).match(known) || []) if (!this._toasts.includes(m)) this._toasts.push(m); await this.wait(600); } while (Date.now() < end);
 	}
-	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.sess("POST", `/element/${e}/click`, {}); if (/ sheet$/.test(label)) await this.collectToasts(5000); else await this.wait(1200); } // sheet buttons make a real round trip to Google; watch for their pop-up messages meanwhile
+	/** Like a player: scroll until the element is clear of the floating bottom toolbar (y > ~740) and the status bar. */
+	async scrollIntoView(el) {
+		for (let i = 0; i < 6; i++) {
+			const r = await this.sess("GET", `/element/${el}/rect`).catch(() => null);
+			if (!r || (r.y + r.height < 720 && r.y > 190)) return;
+			const down = r.y + r.height >= 720;
+			await this.sess("POST", "/actions", { actions: [{ type: "pointer", id: "finger", parameters: { pointerType: "touch" }, actions: [{ type: "pointerMove", duration: 0, x: 40, y: down ? 600 : 300 }, { type: "pointerDown", button: 0 }, { type: "pointerMove", duration: 350, x: 40, y: down ? 300 : 600 }, { type: "pointerUp", button: 0 }] }] });
+			await this.wait(600);
+		}
+	}
+	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.scrollIntoView(e); await this.sess("POST", `/element/${e}/click`, {}); if (/ sheet$/.test(label)) await this.collectToasts(5000); else await this.wait(1200); } // sheet buttons make a real round trip to Google; watch for their pop-up messages meanwhile
 	/** Centre of an on-screen keyboard key (found after the keyboard has finished sliding up). */
 	async keyCenter(name) {
 		const keys = await this.sess("POST", "/elements", { using: "predicate string", value: `type == 'XCUIElementTypeKey' AND name == '${name}'` });
@@ -135,15 +150,29 @@ class IosDevice {
 			try {
 				const el = await find();
 				if (!el) throw new Error(`no field called "${label}"`);
+				await this.scrollIntoView(el);
 				await this.sess("POST", `/element/${el}/click`, {}); await this.wait(1800); // keyboard slides up
-				const r = await this.sess("GET", `/element/${await find()}/rect`);       // like a player: tap the end of the number, delete it, type the new one
-				await this.tapAt(Math.round(r.x + r.width - 7), Math.round(r.y + r.height / 2)); await this.wait(500); // tapping right on the border puts the caret at the START; a little inside puts it at the end
-				const del = await this.keyCenter("delete");
+				const r = await this.sess("GET", `/element/${await find()}/rect`);       // like a player: put the caret at the end of the number, delete it, type the new one
 				const read = async () => { try { const v = await this.sess("GET", `/element/${await find()}/attribute/value`); return v === null || v === undefined ? "" : String(v); } catch (e) { return null; } }; // null = could not read
-				for (let round = 0; del && round < 3; round++) {          // delete a key at a time, like a player, until the field really is empty
-					for (let i = 0; i < 8; i++) { await this.tapAt(del.x, del.y); await this.wait(200); }
-					if ((await read()) === "") break;
-					await this.tapAt(Math.round(r.x + r.width - 7), Math.round(r.y + r.height / 2)); await this.wait(400); // caret back to the end
+				const del = await this.keyCenter("delete");
+				const probe = await this.keyCenter("9");
+				const cy = Math.round(r.y + r.height / 2);
+				if (del && !probe) {                                                  // a text field (letters keyboard): tap its end, delete what is there
+					await this.tapAt(Math.round(r.x + r.width - 10), cy); await this.wait(450);
+					const len = String((await read()) || "").length;
+					for (let i = 0; i < len + 3; i++) { await this.tapAt(del.x, del.y); await this.wait(120); }
+				}
+				if (del && probe) {
+					let atEnd = false;
+					for (const dx of [7, 10, 14, 5, 20, 3]) {                        // tap, then prove where the caret is by typing a 9: it must come out last
+						await this.tapAt(Math.round(r.x + r.width - dx), cy); await this.wait(450);
+						const before = await read();
+						await this.tapAt(probe.x, probe.y); await this.wait(350);
+						const after = await read();
+						await this.tapAt(del.x, del.y); await this.wait(300);             // remove the probe again (caret is just after it)
+						if (after !== null && before !== null && after === before + "9") { atEnd = true; break; }
+					}
+					for (let i = 0; atEnd && i < 14 && (await read()) !== ""; i++) { await this.tapAt(del.x, del.y); await this.wait(250); }
 				}
 				for (const ch of String(value)) {
 					const find1 = async () => (await this.keyCenter(ch === " " ? "space" : ch)) || (await this.keyCenter(ch.toUpperCase()));
@@ -158,15 +187,19 @@ class IosDevice {
 				await this.tapAt(195, 69); // tap the tab title: the field loses focus and the plugin's change handler runs
 				await this.wait(1200);
 				const got = String(await this.value(label, o));
-				if (got !== String(value)) throw new Error(`typed ${value} into "${label}" but it reads ${got}`);
+				if (got.toLowerCase() !== String(value).toLowerCase()) throw new Error(`typed ${value} into "${label}" but it reads ${got}`);
 				return;
 			} catch (e) { if (attempt >= 2) throw e; await this.wait(1500); }
 		}
 	}
 	async value(label, o = {}) {
-		const els = await this.elements(label); const el = Object.values(o.nth === "last" ? els[els.length - 1] : els[o.nth || 0] || {})[0];
-		if (!el) throw new Error(`no field called "${label}"`);
-		return this.sess("GET", `/element/${el}/attribute/value`);
+		for (let attempt = 0; ; attempt++) { // the panel can redraw between finding the field and reading it
+			try {
+				const els = await this.elements(label); const el = Object.values(o.nth === "last" ? els[els.length - 1] : els[o.nth || 0] || {})[0];
+				if (!el) throw new Error(`no field called "${label}"`);
+				return await this.sess("GET", `/element/${el}/attribute/value`);
+			} catch (e) { if (attempt >= 3) throw e; await this.wait(1000); }
+		}
 	}
 	async goToPage(fragment) { // the page dots are labelled with the whole title, e.g. "🎒 Inventory"
 		const using = this.cfg.direct ? "predicate string" : "-ios predicate string";
@@ -175,7 +208,12 @@ class IosDevice {
 		if (!el) throw new Error(`no page called "${fragment}"`);
 		await this.sess("POST", `/element/${el}/click`, {}); await this.wait(1200);
 	}
-	async runCommand(name) { await this.script("mobile: deepLink", { url: `obsidian://adv-uri?vault=${encodeURIComponent(this.cfg.vault)}&commandname=${encodeURIComponent(name)}`, bundleId: this.cfg.bundleId }); await this.wait(); }
+	async runCommand(name) { // through the command palette, like a player (the panel view shows the bottom toolbar)
+		await this.tapAt(320, 786); await this.waitForText("Open command palette", 8000);
+		await this.tap("Open command palette"); await this.wait(1500);
+		await this.script("mobile: keys", { keys: [...name.replace(/ \(.*$/, "")] }); await this.wait(2000); // symbols are not on the letters keyboard: search by the part before any "("
+		await this.tapAt(148, 133); await this.wait(2500);
+	}
 	async setOffline() { throw new Error("offline is not driven on the phone"); }
 	async screenshot(file) { const b64 = await this.sess("GET", "/screenshot"); fs.writeFileSync(file, Buffer.from(b64, "base64")); return file; }
 }
