@@ -112,8 +112,15 @@ class IosDevice {
 	}
 	// The scenarios call text()/value() synchronously on the dom device; here they are async, so the runner awaits them.
 	async text() { return this.readText(); }
-	async notices() { return []; } // TODO(phone): Obsidian notices are toasts; read them from the source right after the action
-	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.sess("POST", `/element/${e}/click`, {}); await this.wait(/ sheet$/.test(label) ? 5000 : 1200); } // sheet buttons make a real round trip to Google
+	/** Obsidian's pop-up messages vanish after a few seconds: they are collected while waiting after a tap (see tap()). */
+	async notices() { return (this._toasts || []).slice(); }
+	async collectToasts(ms) {
+		const end = Date.now() + ms;
+		const known = /Your DM updated[^|]*?\.|Your DM awarded[^|]*?\.|Up to date with the sheet\.|Sent to the sheet\.|Couldn't reach the sheet[^|]*?\.|The sheet did not accept[^|]*?\.|You have unsent changes[^|]*?\.|Restored from the sheet\./g;
+		this._toasts = this._toasts || [];
+		do { for (const m of (await this.readText()).match(known) || []) if (!this._toasts.includes(m)) this._toasts.push(m); await this.wait(600); } while (Date.now() < end);
+	}
+	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.sess("POST", `/element/${e}/click`, {}); if (/ sheet$/.test(label)) await this.collectToasts(5000); else await this.wait(1200); } // sheet buttons make a real round trip to Google; watch for their pop-up messages meanwhile
 	/** Centre of an on-screen keyboard key (found after the keyboard has finished sliding up). */
 	async keyCenter(name) {
 		const keys = await this.sess("POST", "/elements", { using: "predicate string", value: `type == 'XCUIElementTypeKey' AND name == '${name}'` });
@@ -132,10 +139,19 @@ class IosDevice {
 				const r = await this.sess("GET", `/element/${await find()}/rect`);       // like a player: tap the end of the number, delete it, type the new one
 				await this.tapAt(Math.round(r.x + r.width - 7), Math.round(r.y + r.height / 2)); await this.wait(500); // tapping right on the border puts the caret at the START; a little inside puts it at the end
 				const del = await this.keyCenter("delete");
-				const read = async () => { const v = await this.sess("GET", `/element/${await find()}/attribute/value`).catch(() => null); return v === null || v === undefined ? "" : String(v); };
-				if (del) for (let i = 0; i < 12 && (await read()) !== ""; i++) { await this.tapAt(del.x, del.y); await this.wait(200); } // one key at a time, looking at the field, like a player
+				const read = async () => { try { const v = await this.sess("GET", `/element/${await find()}/attribute/value`); return v === null || v === undefined ? "" : String(v); } catch (e) { return null; } }; // null = could not read
+				for (let round = 0; del && round < 3; round++) {          // delete a key at a time, like a player, until the field really is empty
+					for (let i = 0; i < 8; i++) { await this.tapAt(del.x, del.y); await this.wait(200); }
+					if ((await read()) === "") break;
+					await this.tapAt(Math.round(r.x + r.width - 7), Math.round(r.y + r.height / 2)); await this.wait(400); // caret back to the end
+				}
 				for (const ch of String(value)) {
-					const k = await this.keyCenter(ch);
+					const find1 = async () => (await this.keyCenter(ch === " " ? "space" : ch)) || (await this.keyCenter(ch.toUpperCase()));
+					let k = await find1();
+					if (!k) {                                   // wrong layout (letters vs numbers): tap the layout key, like a player
+						const sw = (await this.keyCenter("more")) || (await this.keyCenter("numbers")) || (await this.keyCenter("ABC")) || (await this.keyCenter("letters"));
+						if (sw) { await this.tapAt(sw.x, sw.y); await this.wait(500); k = await find1(); }
+					}
 					if (!k) throw new Error(`no "${ch}" key on the keyboard`);
 					await this.tapAt(k.x, k.y); await this.wait(150);
 				}
