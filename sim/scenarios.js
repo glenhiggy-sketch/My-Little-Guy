@@ -163,8 +163,9 @@ module.exports = [
 			await device.open(); await device.goToPage("Inventory");
 			const before = Number(await device.value("Gold"));
 			await step("the award shows as pending with the 'update it yourself' wording; gold is unchanged", async () => {
-				await world.dm.award(100, "session 1"); await world.dm.publish(); await device.tap("Get from sheet");
-				await device.goToPage("Inventory"); has(await device.text(), "+100 gp"); has(await device.text(), "doesn't add it for you");
+				await world.dm.award(100, "session 1"); await world.dm.publish();
+				for (let n = 0; n < 3; n++) { await device.tap("Get from sheet"); await device.goToPage("Inventory"); if ((await device.text()).includes("+100 gp")) break; } // a patient player presses it again; the Sheet can lag a moment behind a publish
+				has(await device.text(), "+100 gp"); has(await device.text(), "doesn't add it for you");
 				assert.strictEqual(Number(await device.value("Gold")), before);
 			});
 			await step("Add to my gold adds it, and Send puts it on the sheet", async () => {
