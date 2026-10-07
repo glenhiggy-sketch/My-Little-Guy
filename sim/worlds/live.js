@@ -49,7 +49,11 @@ async function makeLiveWorld({ runId }) {
 		kind: "live",
 		character: { name: persona.character, player: persona.player, file: fileName, path: path.join(DRIVE_DIR, fileName) },
 		async sheetRow() {
-			const r = await (await fetch(`${ENDPOINT}?action=pull&id=${encodeURIComponent(info.id)}&token=${encodeURIComponent(info.token)}`)).json();
+			let r;
+			for (let attempt = 0; ; attempt++) {   // the Apps Script endpoint can be slow or answer with an HTML error page
+				try { r = await (await fetch(`${ENDPOINT}?action=pull&id=${encodeURIComponent(info.id)}&token=${encodeURIComponent(info.token)}`)).json(); break; }
+				catch (e) { if (attempt >= 3) throw e; await new Promise((res) => setTimeout(res, 3000)); }
+			}
 			if (!r.ok) throw new Error("pull failed: " + JSON.stringify(r));
 			const p = r.playerOwned;
 			return { hp: p.hp, hpMax: p.hpMax, ac: p.ac, gold: p.gold, inventory: p.inventory, spellSlots: typeof p.spellSlots === "string" ? p.spellSlots : JSON.stringify(p.spellSlots), party: r.dm && r.dm.party, lastPushed: r.lastPushed };

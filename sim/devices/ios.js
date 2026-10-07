@@ -91,7 +91,7 @@ class IosDevice {
 			if (!title || (await this.readText()).includes(`Tracking: ${title}.md`)) break;
 			if (attempt === 2) throw new Error(`the panel is tracking a different note than ${title}`);
 		}
-		await this.waitForText("Linked to the sheet", 45000);          // the automatic pull must land first, or it re-renders the panel under the player's fingers
+		await this.waitForText("Linked to the sheet", 120000);          // the automatic pull must land first, or it re-renders the panel under the player's fingers
 	}
 	async waitForText(sub, ms) {
 		const end = Date.now() + ms;
