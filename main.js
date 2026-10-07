@@ -938,7 +938,7 @@ class CharacterHubView extends ItemView {
   renderSyncBar(el, fm) {
     if (!this.syncInfo) return;
     const bar = el.createDiv({ cls: 'csh-sync-bar' });
-    bar.createEl('span', { cls: 'csh-muted csh-sync-status' + (fm.sync_dirty ? ' csh-sync-dirty' : ''), text: '☁️ ' + syncStatusText(fm) });
+    bar.createEl('span', { cls: 'csh-muted csh-sync-status' + (fm.sync_dirty ? ' csh-sync-dirty' : ''), text: '☁️ ' + syncStatusText(fm) + ` [dbg opened=${this._opened} parsedFor=${this._parsedFor ? 1 : 0} parsing=${this._parsing} pulled=${this._autoPulledFor ? 1 : 0} retries=${this._pullRetries || 0} info=${this.syncInfo ? 1 : 0}]` });
     const send = bar.createEl('button', { text: 'Send to sheet', cls: 'csh-sync-btn' + (fm.sync_dirty ? ' mod-cta' : '') });
     send.addEventListener('click', () => this.syncSend());
     const get = bar.createEl('button', { text: 'Get from sheet', cls: 'csh-sync-btn' });
