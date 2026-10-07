@@ -77,6 +77,20 @@ module.exports = [
 		},
 	},
 	{
+		name: "dm-update-is-not-hidden-by-a-cached-answer",
+		story: "I press Get from sheet, then my DM publishes, then I press it again: a cached copy of the earlier answer must not hide the update.",
+		world: { cacheGets: true },
+		needs: ["fake-world"], // the phone's own HTTP cache is the real-world version of this
+		async run({ device, world, step }) {
+			await device.open();
+			await step("nothing published yet", async () => { await device.tap("Get from sheet"); lacks(await device.text(), "Party: Blue"); });
+			await step("after Publish, the very same button shows the party", async () => {
+				await world.dm.draft({ party: "Blue" }); await world.dm.publish(); await device.tap("Get from sheet");
+				has(await device.text(), "Party: Blue");
+			});
+		},
+	},
+	{
 		name: "play-a-fight",
 		story: "I get hit, change my HP, see it's unsent, press Send, and the DM's sheet shows my HP.",
 		async run({ device, world, step }) {

@@ -638,6 +638,7 @@ async function syncPull(request, info) {
   url.searchParams.set('action', 'pull');
   url.searchParams.set('id', info.id);
   url.searchParams.set('token', info.token);
+  url.searchParams.set('_', Date.now() + '-' + Math.random().toString(36).slice(2, 8)); // never let a cache answer for the sheet
   const res = await request({ url: url.toString(), method: 'GET' });
   if (!res || !res.json) throw new Error('The sheet gave an unreadable answer (HTTP ' + (res && res.status) + ')');
   return res.json;

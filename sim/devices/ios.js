@@ -123,7 +123,11 @@ class IosDevice {
 		const end = Date.now() + ms;
 		const known = /Your DM updated[^|]*?\.|Your DM awarded[^|]*?\.|Up to date with the sheet\.|Sent to the sheet\.|Couldn't reach the sheet[^|]*?\.|The sheet did not accept[^|]*?\.|You have unsent changes[^|]*?\.|Restored from the sheet\./g;
 		this._toasts = this._toasts || [];
-		do { for (const m of (await this.readText()).match(known) || []) if (!this._toasts.includes(m)) this._toasts.push(m); await this.wait(600); } while (Date.now() < end);
+		let seenAt = 0;
+		do {                                                    // keep watching until the sheet has answered (a toast appeared) and a moment more, or ms is up
+			for (const m of (await this.readText()).match(known) || []) if (!this._toasts.includes(m)) { this._toasts.push(m); seenAt = Date.now(); }
+			await this.wait(600);
+		} while (Date.now() < end && !(seenAt && Date.now() - seenAt > 2500));
 	}
 	/** Like a player: scroll until the element is clear of the floating bottom toolbar (y > ~740) and the status bar. */
 	async scrollIntoView(el) {
@@ -135,7 +139,7 @@ class IosDevice {
 			await this.wait(600);
 		}
 	}
-	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.scrollIntoView(e); await this.sess("POST", `/element/${e}/click`, {}); if (/ sheet$/.test(label)) await this.collectToasts(5000); else await this.wait(1200); } // sheet buttons make a real round trip to Google; watch for their pop-up messages meanwhile
+	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.scrollIntoView(e); await this.sess("POST", `/element/${e}/click`, {}); if (/ sheet$/.test(label)) { this._toasts = []; await this.collectToasts(90000); } else await this.wait(1200); } // sheet buttons make a real round trip to Google; watch for their pop-up messages meanwhile
 	/** Centre of an on-screen keyboard key (found after the keyboard has finished sliding up). */
 	async keyCenter(name) {
 		const keys = await this.sess("POST", "/elements", { using: "predicate string", value: `type == 'XCUIElementTypeKey' AND name == '${name}'` });

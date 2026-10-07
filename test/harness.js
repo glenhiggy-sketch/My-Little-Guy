@@ -44,6 +44,7 @@ function makeHarness(opts) {
 	P.setText = function (s) { this.textContent = s; };
 	P.createSvg = function (tag, o) { return this.createEl(tag, o); };
 
+	const getCache = {};
 	const h = { cacheSnapshot: {}, notices: [], netDown: false, events: [], window, env, SV, J, modal: null };
 	const obsidian = {
 		Plugin: class {}, PluginSettingTab: class {}, Setting: class {}, MarkdownView: class {}, MarkdownRenderer: { render: async (_app, md, el) => { el.textContent = md; } }, addIcon() {},
@@ -55,10 +56,13 @@ function makeHarness(opts) {
 		requestUrl: async ({ url, method, body }) => {
 			if (opts.hangFirstRequest && !h.hung) { h.hung = true; return new Promise(() => {}); } // stalls forever, like a request right after app launch
 			if (h.netDown) throw new Error("net::ERR_INTERNET_DISCONNECTED");
+			if (opts.cacheGets && method !== "POST" && getCache[url]) return getCache[url]; // an HTTP cache answering an identical GET
 			const u = new URL(url);
 			const res = method === "POST" ? SV.doPost({ postData: { contents: body } }) : u.searchParams.get("action") === "pull" ? SV.pullCharacter_(Object.fromEntries(u.searchParams)) : { ok: false, error: "unknown" };
 			const text = JSON.stringify(J(res));
-			return { status: 200, text, get json() { return JSON.parse(text); } };
+			const out = { status: 200, text, get json() { return JSON.parse(text); } };
+			if (opts.cacheGets && method !== "POST") getCache[url] = out;
+			return out;
 		},
 	};
 	const mod = { exports: {} };
