@@ -46,6 +46,8 @@ class DomDevice {
 		while (Date.now() < end) { if (this.text().includes(sub)) return; await this.h.tick(); }
 		throw new Error(`"${sub}" never appeared within ${ms / 1000}s. Screen: ${this.text().slice(0, 200)}`);
 	}
+	/** Obsidian reports a file change after our own write, late enough that the plugin no longer knows it caused it. */
+	async lateFileEvent() { await this.view.syncFrontmatterFromBody(true); await this.settle(); }
 	async setOffline(off) { this.h.netDown = !!off; }
 	async screenshot() { return null; }
 }

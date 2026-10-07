@@ -895,6 +895,10 @@ class CharacterHubView extends ItemView {
     if (!this.file) return;
     const content = await this.app.vault.read(this.file);
     const body = content.replace(/^---\n[\s\S]*?\n---\n?/, '');
+    // Only the saved values changed (our own write, reported late by the file system)? Then there is nothing to re-read:
+    // re-parsing would put the printed sheet's numbers back over what the player just sent.
+    if (fromEdit && this._lastBody && this._lastBody.path === this.file.path && this._lastBody.text === body) return;
+    this._lastBody = { path: this.file.path, text: body };
     const parsed = parseSheetBody(body);
     if (!parsed || !Object.keys(parsed).length) return;
 

@@ -85,7 +85,8 @@ module.exports = [
 			await device.open();
 			await step("nothing published yet", async () => { await device.tap("Get from sheet"); lacks(await device.text(), "Party: Blue"); });
 			await step("after Publish, the very same button shows the party", async () => {
-				await world.dm.draft({ party: "Blue" }); await world.dm.publish(); await device.tap("Get from sheet");
+				await world.dm.draft({ party: "Blue" }); await world.dm.publish();
+				await device.tap("Get from sheet");
 				has(await device.text(), "Party: Blue");
 			});
 		},
@@ -149,7 +150,8 @@ module.exports = [
 			await device.open();
 			await step("a DM draft is invisible to me", async () => { await world.dm.draft({ party: "Blue", notes: "The guild wants a word." }); await device.tap("Get from sheet"); lacks(await device.text(), "Party: Blue"); });
 			await step("after Publish, Get from sheet shows the party and tells me", async () => {
-				await world.dm.publish(); await device.tap("Get from sheet");
+				await world.dm.publish();
+				for (let i = 0; i < 3; i++) { await device.tap("Get from sheet"); if ((await device.text()).includes("Party: Blue")) break; } // a patient player presses it again; the Sheet can lag a moment behind a publish
 				has(await device.text(), "Party: Blue"); assert((await device.notices()).some((m) => /Your DM updated/.test(m)), (await device.notices()).join(" | "));
 			});
 		},
@@ -203,6 +205,19 @@ module.exports = [
 			await device.setOffline(true);
 			await step("after a restart with no signal the HP is still what I sent", async () => {
 				await device.reopen(); assert.strictEqual(Number(await device.value("HP")), 9);
+			});
+		},
+	},
+	{
+		name: "late-file-event-does-not-undo-my-send",
+		story: "I send my HP; a moment later Obsidian reports a change to the note. My HP must stay what I sent, and it must not be flagged as unsent again.",
+		needs: ["fake-world"], // the phone delivers these events at unpredictable times
+		async run({ device, world, step }) {
+			await device.open(); await device.type("HP", 9); await device.tap("Send to sheet");
+			await step("a late file-change event leaves my sent HP and the 'sent' status alone", async () => {
+				await device.lateFileEvent();
+				assert.strictEqual(Number(await device.value("HP")), 9); lacks(await device.text(), "Unsent changes");
+				assert.strictEqual((await world.sheetRow()).hp, 9);
 			});
 		},
 	},

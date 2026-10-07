@@ -7,6 +7,7 @@
 - Fix (iPhone): the panel now draws from the note's frontmatter as we last wrote it, instead of Obsidian's metadata cache, which can trail our own writes by a long time on a phone. Before, an HP change or the first sync could be saved correctly but not shown (no "Unsent changes", status stuck on "Not synced yet"). Regression scenario `screen-keeps-up-when-obsidians-cache-lags`.
 - Fix: Get from sheet could occasionally be answered from the phone's own cache and miss a DM update that had just been published. Each request to the sheet is now unique. Regression scenario `dm-update-is-not-hidden-by-a-cached-answer`.
 - Fix: once a character has synced with the sheet, reopening it no longer puts the old numbers from the printed sheet back (it showed the original HP again until the sheet answered, and for good if you were offline). Regression scenario `reopen-offline-keeps-what-i-sent`.
+- Fix: a late "file changed" notice from Obsidian after your own save could make the plugin re-read the printed sheet and mark your just-sent HP as unsent again. It now only re-reads the printed sheet when its text actually changed. Regression scenario `late-file-event-does-not-undo-my-send`.
 
 ## 1.14.0
 - **Sheet sync.** Character sheets made by Character Intake now carry a hidden link to the campaign Google Sheet. A new bar under the character header shows sync status with **Send to sheet** and **Get from sheet** buttons (also commands: "Send to sheet", "Get from sheet", "Restore from sheet").
