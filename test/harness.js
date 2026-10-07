@@ -78,7 +78,8 @@ function makeHarness(opts) {
 		workspace: { getActiveFile: () => (h.noteOpen ? file : null), getLeaf() { return { openFile() {} }; } },
 	};
 	h.noteOpen = !opts.panelFirst; // panelFirst: the panel is open (as after a fresh install) before the player opens their character note
-	const plugin = { settings: { sheetPath: opts.panelFirst ? "" : file.path }, lastActiveFile: opts.panelFirst ? null : file, logEvent: (e, d) => h.events.push(e + (d ? ":" + d : "")) };
+	h.netDown = !!opts.startOffline;
+	const plugin = { syncRetryMs: 20, settings: { sheetPath: opts.panelFirst ? "" : file.path }, lastActiveFile: opts.panelFirst ? null : file, logEvent: (e, d) => h.events.push(e + (d ? ":" + d : "")) };
 	const view = new View({ app }, plugin);
 
 	// ---- sheet-side helpers (what a DM sees in Google Sheets)

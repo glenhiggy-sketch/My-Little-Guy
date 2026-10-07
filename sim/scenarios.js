@@ -41,6 +41,17 @@ module.exports = [
 		},
 	},
 	{
+		name: "first-pull-survives-a-network-blip",
+		story: "I open the app right after launching it and the phone's network isn't ready for a moment: the sheet link must still sync by itself a few seconds later.",
+		world: { startOffline: true },
+		async run({ device, step }) {
+			await device.open();
+			await step("with no network the panel still shows my character (nothing lost)", async () => has(await device.text(), "Not synced yet"));
+			await device.setOffline(false);
+			await step("a few seconds later it links to the sheet on its own", async () => device.waitForText("Linked to the sheet", 20000));
+		},
+	},
+	{
 		name: "play-a-fight",
 		story: "I get hit, change my HP, see it's unsent, press Send, and the DM's sheet shows my HP.",
 		async run({ device, world, step }) {

@@ -74,12 +74,23 @@ class IosDevice {
 		await this.start();
 		await this.script("mobile: terminateApp", { bundleId: this.cfg.bundleId }).catch(() => {});
 		await this.script("mobile: launchApp", { bundleId: this.cfg.bundleId }); await this.wait(2500);
-		if (this.character) await this.script("mobile: deepLink", { url: `obsidian://open?vault=${encodeURIComponent(this.cfg.vault)}&file=${encodeURIComponent(this.character.file.replace(/\.md$/, ""))}`, bundleId: this.cfg.bundleId });
-		await this.wait(2500);
-		await this.tapAt(320, 786); await this.wait(1200);          // bottom toolbar menu
-		await this.tap("Open command palette");
-		await this.script("mobile: keys", { keys: [..."Open My Little Guy"] }); await this.wait(1200);
-		await this.tapAt(148, 133); await this.wait(3500);         // first palette result
+		const title = this.character ? this.character.file.replace(/\.md$/, "") : "";
+		if (this.character) {
+			await this.script("mobile: deepLink", { url: `obsidian://open?vault=${encodeURIComponent(this.cfg.vault)}&file=${encodeURIComponent(title)}`, bundleId: this.cfg.bundleId });
+			await this.waitForText(title, 30000);                       // the note is on screen
+		}
+		await this.wait(1500);
+		await this.tapAt(320, 786);                                    // bottom toolbar menu
+		await this.waitForText("Open command palette", 8000);
+		await this.tap("Open command palette"); await this.wait(1500);
+		await this.script("mobile: keys", { keys: [..."Open My Little Guy"] }); await this.wait(2000);
+		await this.tapAt(148, 133); await this.wait(2500);             // first palette result
+		await this.waitForText("Linked to the sheet", 30000);      // the automatic pull must land first, or it re-renders the panel under the player's fingers
+	}
+	async waitForText(sub, ms) {
+		const end = Date.now() + ms;
+		while (Date.now() < end) { if ((await this.readText()).includes(sub)) return; await this.wait(1000); }
+		throw new Error(`"${sub}" never appeared on the phone within ${ms / 1000}s. Screen: ${(await this.readText()).replace(/^.*?Pin this file/, "…Pin this file").slice(0, 600)}`);
 	}
 	async tapAt(x, y) {
 		await this.sess("POST", "/actions", { actions: [{ type: "pointer", id: "finger", parameters: { pointerType: "touch" }, actions: [{ type: "pointerMove", duration: 0, x, y }, { type: "pointerDown", button: 0 }, { type: "pause", duration: 80 }, { type: "pointerUp", button: 0 }] }] });
@@ -98,12 +109,18 @@ class IosDevice {
 	async notices() { return []; } // TODO(phone): Obsidian notices are toasts; read them from the source right after the action
 	async tap(label, o = {}) { const e = await this.element(label, o.nth || 0); await this.sess("POST", `/element/${e}/click`, {}); await this.wait(); }
 	async type(label, value, o = {}) {
-		const els = await this.elements(label); const el = Object.values(o.nth === "last" ? els[els.length - 1] : els[o.nth || 0] || {})[0];
-		if (!el) throw new Error(`no field called "${label}"`);
-		await this.sess("POST", `/element/${el}/click`, {}); await this.sess("POST", `/element/${el}/clear`, {});
-		await this.sess("POST", `/element/${el}/value`, { text: String(value) });
-		await this.script("mobile: hideKeyboard", { keys: ["Done", "Return"] }).catch(() => {}); // blur => the plugin's change handler runs
-		await this.wait();
+		for (let attempt = 0; ; attempt++) { // the panel may re-render between find and use; a player would just tap again
+			try {
+				const els = await this.elements(label); const el = Object.values(o.nth === "last" ? els[els.length - 1] : els[o.nth || 0] || {})[0];
+				if (!el) throw new Error(`no field called "${label}"`);
+				await this.sess("POST", `/element/${el}/click`, {}); await this.wait(500);
+				const again = await this.elements(label); const el2 = Object.values(o.nth === "last" ? again[again.length - 1] : again[o.nth || 0] || {})[0];
+				await this.sess("POST", `/element/${el2}/clear`, {});
+				await this.sess("POST", `/element/${el2}/value`, { text: String(value) });
+				await this.script("mobile: hideKeyboard", { keys: ["Done", "Return"] }).catch(() => {}); // blur => the plugin's change handler runs
+				await this.wait(1000); return;
+			} catch (e) { if (attempt >= 2) throw e; await this.wait(1500); }
+		}
 	}
 	async value(label, o = {}) {
 		const els = await this.elements(label); const el = Object.values(o.nth === "last" ? els[els.length - 1] : els[o.nth || 0] || {})[0];

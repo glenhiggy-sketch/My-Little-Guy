@@ -2,6 +2,7 @@
 
 ## 1.14.1
 - Fix: if the My Little Guy panel was already open (it opens itself after install) and you then opened your character note, the panel showed a blank character (Class ?, HP 0) until you closed and reopened it. A note that becomes the tracked sheet is now parsed once, then pulled from the sheet. Found by the end-user simulation on the test iPhone; regression scenario `note-opened-while-panel-open`.
+- Fix: if the first automatic pull fails (for example the phone's network isn't up yet right after launching the app), it is now retried a few times instead of silently leaving the character "Not synced yet". Regression scenario `first-pull-survives-a-network-blip`.
 
 ## 1.14.0
 - **Sheet sync.** Character sheets made by Character Intake now carry a hidden link to the campaign Google Sheet. A new bar under the character header shows sync status with **Send to sheet** and **Get from sheet** buttons (also commands: "Send to sheet", "Get from sheet", "Restore from sheet").

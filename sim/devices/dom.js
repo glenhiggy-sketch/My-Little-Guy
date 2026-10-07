@@ -41,6 +41,11 @@ class DomDevice {
 	async runCommand(name) { if (!COMMANDS[name]) throw new Error("unknown command " + name); await COMMANDS[name](this.view); await this.settle(); }
 	/** The player opens their character note while the panel is already open (the plugin's active-leaf-change). */
 	async openNote() { this.h.noteOpen = true; this.h.plugin.lastActiveFile = this.h.file; await this.view.render(); await this.settle(); }
+	async waitForText(sub, ms) {
+		const end = Date.now() + ms;
+		while (Date.now() < end) { if (this.text().includes(sub)) return; await this.h.tick(); }
+		throw new Error(`"${sub}" never appeared within ${ms / 1000}s. Screen: ${this.text().slice(0, 200)}`);
+	}
 	async setOffline(off) { this.h.netDown = !!off; }
 	async screenshot() { return null; }
 }

@@ -990,6 +990,17 @@ class CharacterHubView extends ItemView {
     new Notice(rejected.length ? 'Sent, but the sheet did not accept: ' + rejected.join('; ') : 'Sent to the sheet.');
   }
 
+  // A failed automatic pull is retried a few times, so a cold start before the network is up doesn't leave the sheet unsynced.
+  retryAutoPull() {
+    if ((this._pullRetries = (this._pullRetries || 0) + 1) > 4) return;
+    const path = this.file && this.file.path;
+    setTimeout(() => {
+      if (!this.file || this.file.path !== path) return;
+      this._autoPulledFor = null;
+      this.autoPullIfNeeded();
+    }, this.plugin.syncRetryMs || 5000);
+  }
+
   async syncGet(opts) {
     const auto = !!(opts && opts.auto);
     const info = this.syncInfo;
@@ -1000,8 +1011,10 @@ class CharacterHubView extends ItemView {
     } catch (e) {
       this.log('sync_pull_failed', (e && e.message) || String(e));
       if (!auto) new Notice("Couldn't reach the sheet. Your changes are safe on this device.");
+      else this.retryAutoPull(); // e.g. the phone's network isn't up yet right after launching the app
       return;
     }
+    this._pullRetries = 0;
     if (!res.ok) {
       this.log('sync_pull_refused', res.error || 'unknown');
       if (!auto) new Notice('The sheet did not accept this character link. Ask your DM to check it.');
