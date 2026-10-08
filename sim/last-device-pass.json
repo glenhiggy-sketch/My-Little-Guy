@@ -1,0 +1,28 @@
+{
+  "device": "ios",
+  "at": "2026-10-08T23:44:37.798Z",
+  "buildHash": "47c7e2c028d7a4647f4370c9a405fa517f47182726b5a3866a5090672df3e5df",
+  "passed": [
+    "open-and-orient",
+    "play-a-fight",
+    "inventory-and-gold",
+    "spell-slots",
+    "long-rest",
+    "dm-updates-me",
+    "gold-award-is-never-automatic",
+    "reopen-keeps-unsent-changes",
+    "reopen-after-send",
+    "restore-asks-first"
+  ],
+  "skipped": [
+    "note-opened-while-panel-open",
+    "first-pull-survives-a-network-blip",
+    "first-pull-survives-a-stalled-request",
+    "screen-keeps-up-when-obsidians-cache-lags",
+    "dm-update-is-not-hidden-by-a-cached-answer",
+    "reopen-offline-keeps-what-i-sent",
+    "late-file-event-does-not-undo-my-send",
+    "reopen-with-a-stale-index-keeps-unsent-changes",
+    "offline-send"
+  ]
+}
