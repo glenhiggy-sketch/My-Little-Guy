@@ -1,7 +1,7 @@
 {
   "device": "ios",
-  "at": "2026-10-08T23:44:37.798Z",
-  "buildHash": "47c7e2c028d7a4647f4370c9a405fa517f47182726b5a3866a5090672df3e5df",
+  "at": "2026-10-09T01:16:22.600Z",
+  "buildHash": "9b186690b89446377842cc69860339c4fd67804c4c94791beab5f48236c63bc0",
   "passed": [
     "open-and-orient",
     "play-a-fight",
@@ -17,6 +17,7 @@
   "skipped": [
     "note-opened-while-panel-open",
     "first-pull-survives-a-network-blip",
+    "first-pull-survives-a-long-outage",
     "first-pull-survives-a-stalled-request",
     "screen-keeps-up-when-obsidians-cache-lags",
     "dm-update-is-not-hidden-by-a-cached-answer",
