@@ -1050,15 +1050,18 @@ class CharacterHubView extends ItemView {
     this.updateFrontmatter((f) => { f.sync_last_error = msg; }, { quiet: true }).catch(() => {});
   }
 
-  // A failed automatic pull is retried a few times, so a cold start before the network is up doesn't leave the sheet unsynced.
+  // A failed automatic pull is retried with growing gaps (3s, 6s, 12s ... capped at 60s, ~6 minutes in all), so a cold start or a patch of
+  // no signal doesn't leave the sheet unsynced until the player reopens the note.
   retryAutoPull() {
-    if ((this._pullRetries = (this._pullRetries || 0) + 1) > 4) return;
+    const n = this._pullRetries = (this._pullRetries || 0) + 1;
+    if (n > 10) return;
+    const base = this.plugin.syncRetryMs || 3000;
     const path = this.file && this.file.path;
     setTimeout(() => {
       if (!this.file || this.file.path !== path) return;
       this._autoPulledFor = null;
       this.autoPullIfNeeded();
-    }, this.plugin.syncRetryMs || 3000);
+    }, Math.min(base * 2 ** (n - 1), base * 20));
   }
 
   async syncGet(opts) {

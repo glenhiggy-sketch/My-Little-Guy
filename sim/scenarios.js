@@ -54,6 +54,18 @@ module.exports = [
 		},
 	},
 	{
+		name: "first-pull-survives-a-long-outage",
+		story: "I open the app and the phone has no internet for a good while (a minute or more): when it comes back the sheet link must still sync by itself, without me reopening anything.",
+		needs: ["fake-world"], // regression scenario for a condition only the fake world can create (a lagging cache, a stalled or offline network)
+		world: { startOffline: true },
+		async run({ device, step }) {
+			await device.open();
+			await new Promise((r) => setTimeout(r, 1200)); // far longer than the first few quick retries
+			await device.setOffline(false);
+			await step("once the network is back it links to the sheet on its own", async () => device.waitForText("Linked to the sheet", 20000));
+		},
+	},
+	{
 		name: "first-pull-survives-a-stalled-request",
 		story: "Right after the app launches the first request to the sheet never answers: it must time out and retry on its own, not leave me 'Not synced yet'.",
 		needs: ["fake-world"], // regression scenario for a condition only the fake world can create (a lagging cache, a stalled or offline network)
@@ -181,7 +193,7 @@ module.exports = [
 		async run({ device, step }) {
 			await device.open(); await device.type("HP", 4);
 			await step("after an app restart the HP is still mine and still unsent", async () => {
-				await device.reopen(); assert.strictEqual(Number(await device.value("HP")), 4); has(await device.text(), "Unsent changes");
+				await device.reopen(); assert.strictEqual(Number(await device.value("HP")), 4); await device.waitForText("Unsent changes", 20000); // the phone draws the panel a moment after the app is back
 			});
 		},
 	},
@@ -230,7 +242,7 @@ module.exports = [
 		async run({ device, step }) {
 			await device.open(); await device.type("HP", 4);
 			await step("after a restart the HP is still mine and still unsent", async () => {
-				await device.reopen(); assert.strictEqual(Number(await device.value("HP")), 4); has(await device.text(), "Unsent changes");
+				await device.reopen(); assert.strictEqual(Number(await device.value("HP")), 4); await device.waitForText("Unsent changes", 20000); // the phone draws the panel a moment after the app is back
 			});
 		},
 	},

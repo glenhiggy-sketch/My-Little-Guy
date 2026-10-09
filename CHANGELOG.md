@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.14.2
+- Fix: if the phone has no internet for longer than a few seconds when the app starts, the sheet link now keeps retrying (3s, 6s, 12s, then once a minute, about 6 minutes in all) and syncs by itself when the network is back. Before, it gave up after about 12 seconds and stayed on "Not synced yet" until you reopened the note. Found by the second end-user run on the test iPhone; regression scenario `first-pull-survives-a-long-outage`.
+
 ## 1.14.1
 - Fix: if the My Little Guy panel was already open (it opens itself after install) and you then opened your character note, the panel showed a blank character (Class ?, HP 0) until you closed and reopened it. A note that becomes the tracked sheet is now parsed once, then pulled from the sheet. Found by the end-user simulation on the test iPhone; regression scenario `note-opened-while-panel-open`.
 - Fix: if the first automatic pull fails (for example the phone's network isn't up yet right after launching the app), it is now retried a few times instead of silently leaving the character "Not synced yet". Regression scenario `first-pull-survives-a-network-blip`.

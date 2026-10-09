@@ -21,6 +21,7 @@ function checkBugsFile() {
 	return [...fs.readFileSync(f, "utf8").matchAll(/scenario:\s*`([^`]+)`/g)].map((m) => m[1]).filter((n) => !names.has(n));
 }
 
+const DEVICE_CAPS = { dom: ["offline", "commands", "fake-world", "panel-first"], ios: ["commands"] }; // keep in step with each device's `capabilities`
 async function makeWorld(sc) {
 	if (deviceKind === "dom") return require("./devices/dom").makeDomWorld(sc.world);
 	if (deviceKind === "ios") return require("./devices/ios").makeIosWorld({ runId, outDir });
@@ -37,8 +38,8 @@ async function makeWorld(sc) {
 		const res = { scenario: sc.name, story: sc.story, steps: [], status: "pass" };
 		let w;
 		try {
-			w = await makeWorld(sc);
-			const missingCaps = (sc.needs || []).filter((c) => !w.device.capabilities.has(c));
+			const missingCaps = (sc.needs || []).filter((c) => !DEVICE_CAPS[deviceKind].includes(c)); // decide before building a character: a skipped scenario must not cost a form submit
+			if (!missingCaps.length) w = await makeWorld(sc);
 			if (missingCaps.length) { res.status = "skip"; res.reason = "device lacks: " + missingCaps.join(", "); }
 			else {
 				const step = async (name, fn) => {
