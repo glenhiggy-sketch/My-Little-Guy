@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.0
+- New: a character's limited-use class features are now tracked from the start. Rage, Bardic Inspiration, Channel Divinity, Wild Shape, Second Wind, Action Surge, Indomitable, Superiority Dice (Battle Master), Focus Points, Uncanny Metabolism, Lay on Hands, Favored Enemy (free Hunter's Mark), Sorcery Points, Innate Sorcery, Sorcerous Restoration, Magical Cunning, Arcane Recovery, Magical Tinkering and Flash of Genius appear on the Combat page with the right number of uses for the character's level (2024 rules), and Short/Long rest restore them. Before, the Class Features block was empty until you added each one by hand. Characters already in your vault get the same list from a new "+ Add my class's usual trackers" button. Re-reading the printed sheet never resets your used counts. Subclass-specific resources (other than Battle Master dice) are not listed; add those by hand. Scenario `class-resources-are-tracked`.
+
 ## 1.14.2
 - Fix: if the phone has no internet for longer than a few seconds when the app starts, the sheet link now keeps retrying (3s, 6s, 12s, then once a minute, about 6 minutes in all) and syncs by itself when the network is back. Before, it gave up after about 12 seconds and stayed on "Not synced yet" until you reopened the note. Found by the second end-user run on the test iPhone; regression scenario `first-pull-survives-a-long-outage`.
 

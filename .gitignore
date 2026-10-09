@@ -4,3 +4,4 @@ node_modules/
 sim/reports/
 sim/ios.config.json
 sim/.env.local
+sim/audit/chars/

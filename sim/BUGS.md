@@ -16,3 +16,4 @@ Format: `- YYYY-MM-DD <what went wrong> -- scenario: \`name\``
 - 2026-10-07 After Send the screen sometimes still said 'Unsent changes' (a late file event re-parsed the printed sheet) -- scenario: `late-file-event-does-not-undo-my-send`
 - 2026-10-07 First screen after a cold start showed HP 0 / default values (stale Obsidian index) on the iPhone -- scenario: `reopen-with-a-stale-index-keeps-unsent-changes`
 - 2026-10-09 A longer network outage at app start (more than ~12s) left the sheet 'Not synced yet' for good: the automatic retries gave up (found on the iPhone) -- scenario: `first-pull-survives-a-long-outage`
+- 2026-10-09 Class features with limited uses (Rage, Focus Points, Sorcery Points, Channel Divinity...) were never tracked unless added by hand; the audit of 13 level-9 characters found 0 tracked -- scenario: `class-resources-are-tracked`

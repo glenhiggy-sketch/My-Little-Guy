@@ -213,6 +213,38 @@ function findTableRows(body, headerNeedle) {
 // Only fields the template actually represents are set; anything not found in the
 // body (session-only state like tracked feature uses, death saves, notes, creatures,
 // sheet_url) is left untouched by the caller.
+// Limited-use class resources (2024 rules) so the Features block starts filled in instead of empty. Counts scale with level and
+// ability modifiers. "short" = fully back after a short rest; "long" = fully back only after a long rest (features that give one use
+// back on a short rest, like Rage or Channel Divinity, are listed as "long": tick a pip back by hand for the partial recovery).
+// Subclass-specific resources (other than Battle Master's dice) are not listed; add those by hand.
+function classTrackers(fm) {
+  const lv = Number(fm.level) || 1;
+  const cls = String(fm.class || '').toLowerCase().trim();
+  const sub = String(fm.subclass || '').toLowerCase();
+  const score = (k) => Number(fm.abilities && fm.abilities[k] && fm.abilities[k].score) || 10;
+  const mod = (k) => Math.floor(score(k) / 2 - 5);
+  const step = (rows) => rows.reduce((v, [min, val]) => (lv >= min ? val : v), 0);
+  const out = [];
+  const add = (name, max, recovery) => { if (max > 0) out.push({ name, max, used: 0, recovery }); };
+  if (cls === 'barbarian') add('Rage', step([[1, 2], [3, 3], [6, 4], [12, 5], [17, 6]]), 'long');
+  else if (cls === 'bard') add('Bardic Inspiration', Math.max(1, mod('cha')), lv >= 5 ? 'short' : 'long');
+  else if (cls === 'cleric') add('Channel Divinity', step([[2, 2], [6, 3], [18, 4]]), 'long');
+  else if (cls === 'druid') add('Wild Shape', step([[2, 2], [6, 3], [17, 4]]), 'long');
+  else if (cls === 'fighter') {
+    add('Second Wind', step([[1, 2], [4, 3], [10, 4]]), 'long');
+    add('Action Surge', step([[2, 1], [17, 2]]), 'short');
+    add('Indomitable', step([[9, 1], [13, 2], [17, 3]]), 'long');
+    if (sub.includes('battle master')) add('Superiority Dice', step([[3, 4], [7, 5], [15, 6]]), 'short');
+  } else if (cls === 'monk') { add('Focus Points', lv >= 2 ? lv : 0, 'short'); add('Uncanny Metabolism', lv >= 2 ? 1 : 0, 'long'); }
+  else if (cls === 'paladin') { add('Lay on Hands (HP pool)', 5 * lv, 'long'); add('Channel Divinity', step([[3, 2], [11, 3]]), 'long'); }
+  else if (cls === 'ranger') add("Favored Enemy (free Hunter's Mark)", step([[1, 2], [5, 3], [9, 4], [13, 5], [17, 6]]), 'long');
+  else if (cls === 'sorcerer') { add('Sorcery Points', lv >= 2 ? lv : 0, 'long'); add('Innate Sorcery', 2, 'long'); add('Sorcerous Restoration', lv >= 5 ? 1 : 0, 'long'); }
+  else if (cls === 'warlock') add('Magical Cunning', lv >= 2 ? 1 : 0, 'long');
+  else if (cls === 'wizard') add('Arcane Recovery', 1, 'long');
+  else if (cls === 'artificer') { add('Magical Tinkering', Math.max(1, mod('int')), 'long'); add('Flash of Genius', lv >= 7 ? Math.max(1, mod('int')) : 0, 'long'); }
+  return out;
+}
+
 function parseSheetBody(body) {
   const out = {};
 
@@ -654,7 +686,7 @@ async function syncPush(request, info, fields) {
 
 const SYNC_CORE = {
   parseSyncInfo, inventoryToText, textToInventory, normSlots, buildPushFields, pushHash, applyPlayerOwned,
-  applyDmPublished, mergeAwards, resolveAward, syncStatusText, syncPull, syncPush, SYNC_PLAYER_KEYS,
+  applyDmPublished, mergeAwards, resolveAward, syncStatusText, syncPull, syncPush, SYNC_PLAYER_KEYS, classTrackers,
 };
 
 const STANDARD_DICE = [4, 6, 8, 10, 12, 20, 100];
@@ -932,6 +964,7 @@ class CharacterHubView extends ItemView {
         if (guard && SYNC_PLAYER_KEYS.includes(k) && fm[k] !== undefined) return;
         fm[k] = v;
       });
+      if (fm.features === undefined) { const tr = classTrackers(fm); if (tr.length) fm.features = tr; } // first time only: never overwrite the player's used counts
       if (linked && fromEdit && pushHash(buildPushFields(fm)) !== before) fm.sync_dirty = true;
     });
 
@@ -1386,6 +1419,10 @@ class CharacterHubView extends ItemView {
     const features = fm.features || [];
     if (!features.length) {
       featBlock.createEl('div', { cls: 'csh-muted', text: 'No tracked features yet.' });
+      if (classTrackers(fm).length) {
+        const stdBtn = featBlock.createEl('button', { text: "+ Add my class's usual trackers", cls: 'csh-add-btn', attr: { 'aria-label': 'Add my class trackers' } });
+        stdBtn.addEventListener('click', () => { this.updateFrontmatter((f) => { f.features = classTrackers(f); }); });
+      }
     }
 
     features.forEach((feat, idx) => {
@@ -1416,7 +1453,7 @@ class CharacterHubView extends ItemView {
       if (max > 0) {
         const pips = row.createDiv({ cls: 'csh-pips' });
         for (let i = 0; i < max; i++) {
-          const pip = pips.createEl('button', { cls: 'csh-pip' + (i < (feat.used || 0) ? ' used' : '') });
+          const pip = pips.createEl('button', { cls: 'csh-pip' + (i < (feat.used || 0) ? ' used' : ''), attr: { 'aria-label': feat.name + ' use ' + (i + 1) } });
           pip.addEventListener('click', () => {
             this.updateFrontmatter((f) => {
               const cur = f.features[idx];

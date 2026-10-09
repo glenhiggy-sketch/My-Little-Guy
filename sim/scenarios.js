@@ -156,6 +156,16 @@ module.exports = [
 		},
 	},
 	{
+		name: "class-resources-are-tracked",
+		story: "My class has limited-use features (a wizard's Arcane Recovery): they are already listed with their uses, I can spend one, and a long rest gives it back.",
+		async run({ device, step }) {
+			await device.open(); await device.goToPage("Combat");
+			// the feature name sits in an editable field, so the test finds the tracker by its use pip (it fails if there is none)
+			await step("the class's limited-use feature is already tracked and I can spend a use", async () => device.tap("Arcane Recovery use 1"));
+			await step("after a long rest it is listed again and spendable", async () => { await device.tap("🌙 Long"); await device.goToPage("Combat"); await device.tap("Arcane Recovery use 1"); });
+		},
+	},
+	{
 		name: "dm-updates-me",
 		story: "My DM puts me in a party and adds a note. I see nothing until they publish, then Get from sheet shows it.",
 		async run({ device, world, step }) {

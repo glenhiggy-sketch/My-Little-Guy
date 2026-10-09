@@ -1,6 +1,6 @@
 {
   "name": "my-little-guy",
-  "version": "1.14.2",
+  "version": "1.15.0",
   "private": true,
   "description": "My Little Guy - an Obsidian plugin for D&D 5e character sheets, synced with the Kadria Character Intake Google Sheet.",
   "scripts": {
