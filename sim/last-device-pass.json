@@ -1,13 +1,15 @@
 {
   "device": "ios",
-  "at": "2026-10-09T01:16:22.600Z",
-  "buildHash": "9b186690b89446377842cc69860339c4fd67804c4c94791beab5f48236c63bc0",
+  "at": "2026-10-10T16:01:25.061Z",
+  "buildHash": "4f42705906c4e3de3deee54b713613663a15a0ae22c95ba9e058e10260c12534",
   "passed": [
     "open-and-orient",
     "play-a-fight",
     "inventory-and-gold",
     "spell-slots",
     "long-rest",
+    "class-resources-are-tracked",
+    "hit-dice-exhaustion-and-inspiration",
     "dm-updates-me",
     "gold-award-is-never-automatic",
     "reopen-keeps-unsent-changes",
