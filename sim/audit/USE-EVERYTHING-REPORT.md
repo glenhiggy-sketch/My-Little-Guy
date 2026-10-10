@@ -1,0 +1,120 @@
+# Use-everything simulation (2026-10-10)
+
+76 sheets, 34327 control actions, 0 sheets with problems.
+
+## Wiki limited-use features with no tracker in My Little Guy
+- Abjure Foes (L9): 5 sheets
+- Advanced Artifice (L14): 6 sheets
+- Arcane Firearm (L5): 1 sheets
+- Archdruid (L20): 4 sheets
+- Artificer Subclass (L3): 6 sheets
+- Aspect of the Wilds (L6): 1 sheets
+- Barbarian Subclass (L3): 4 sheets
+- Bard Subclass (L3): 6 sheets
+- Bastion of Law (L6): 1 sheets
+- Beasts of Ill Omen (L6): 1 sheets
+- Bewitching Magic (L14): 1 sheets
+- Blessing of the Trickster (L3): 1 sheets
+- Branches of the Tree (L6): 1 sheets
+- Bulwark of Force (L15): 1 sheets
+- Celestial Resilience (L10): 1 sheets
+- Circle of the Land Spells (L3): 1 sheets
+- Cleric Subclass (L3): 7 sheets
+- Cloak of Shadows (L17): 1 sheets
+- Cosmic Omen (L6): 1 sheets
+- Cutting Words (L3): 1 sheets
+- Dark One’s Own Luck (L6): 1 sheets
+- Dazzling Footwork (L3): 1 sheets
+- Defensive Tactics (L7): 1 sheets
+- Deflect Attacks (L3): 5 sheets
+- Disciplined Survivor (L14): 5 sheets
+- Dread Allegiance (L3): 1 sheets
+- Dread Incarnate (L17): 1 sheets
+- Druid Subclass (L3): 4 sheets
+- Eldritch Master (L20): 6 sheets
+- Elemental Attunement (L3): 1 sheets
+- Elemental Burst (L6): 1 sheets
+- Empowered Channeling (L6): 1 sheets
+- Eventide's Splendor (L14): 1 sheets
+- Ever-Ready Shot (L10): 1 sheets
+- Experimental Elixir (L3): 1 sheets
+- Expert Divination (L6): 1 sheets
+- Fiendish Resilience (L10): 1 sheets
+- Fighter Subclass (L3): 6 sheets
+- Flurry of Healing and Harm (L11): 1 sheets
+- Font of Magic (L2): 6 sheets
+- Fortified Position (L15): 1 sheets
+- Guarded Mind (L10): 1 sheets
+- Guided Strike (L3): 1 sheets
+- Hand of Harm (L3): 1 sheets
+- Hand of Healing (L3): 1 sheets
+- Improved Shadow Step (L11): 1 sheets
+- Inspiring Movement (L6): 1 sheets
+- Invoke Duplicity (L3): 1 sheets
+- Knightly Envoy (L3): 1 sheets
+- Land’s Aid (L3): 1 sheets
+- Macabre Modifications (L9): 1 sheets
+- Master Transmuter (L14): 1 sheets
+- Masterful Shots (L18): 1 sheets
+- Memorize Spell (L5): 9 sheets
+- Mind Magic (L3): 1 sheets
+- Modify Magic (L3): 1 sheets
+- Monk Subclass (L3): 5 sheets
+- Nature's Wrath (L3): 1 sheets
+- Nature’s Sanctuary (L14): 1 sheets
+- Necromancy Spellbook (L3): 1 sheets
+- Oceanic Gift (L14): 1 sheets
+- Pact Magic (L1): 6 sheets
+- Path to the Grave (L3): 1 sheets
+- Peerless Athlete (L3): 1 sheets
+- Peerless Skill (L14): 1 sheets
+- Power of Shadow (L3): 1 sheets
+- Preserve Life (L3): 1 sheets
+- Primal Companion (L3): 1 sheets
+- Quivering Palm (L17): 1 sheets
+- Radiance of the Dawn (L3): 1 sheets
+- Rage (L1): 4 sheets
+- Rage of the Gods (L14): 1 sheets
+- Ranger Subclass (L3): 6 sheets
+- Relentless (L15): 1 sheets
+- Relentless Rage (L11): 4 sheets
+- Rend Mind (L17): 1 sheets
+- Replicate Magic Item (L2): 6 sheets
+- Restoring Touch (L14): 5 sheets
+- Rogue Subclass (L3): 6 sheets
+- Sacred Weapon (L3): 1 sheets
+- Shadow Arts (L3): 1 sheets
+- Shared Resilience (L15): 1 sheets
+- Song of Defense (L10): 1 sheets
+- Sorcerer Subclass (L3): 6 sheets
+- Soul Blades (L9): 1 sheets
+- Soul of Artifice (L20): 6 sheets
+- Spell Breaker (L10): 1 sheets
+- Spell Mastery (L18): 8 sheets
+- Spell-Storing Item (L11): 6 sheets
+- Spellcasting (L1): 49 sheets
+- Spellcasting (L3): 3 sheets
+- Spirits from Beyond (L3): 1 sheets
+- Star Map (L3): 1 sheets
+- Starry Form (L3): 1 sheets
+- Steel Defender (L3): 1 sheets
+- Stunning Strike (L5): 5 sheets
+- Superior Defense (L18): 5 sheets
+- Tactical Mind (L2): 6 sheets
+- Tandem Footwork (L6): 1 sheets
+- Telekinetic Adept (L7): 1 sheets
+- Telekinetic Master (L18): 1 sheets
+- Tokens of the Departed (L9): 1 sheets
+- Transmuter's Stone (L3): 1 sheets
+- Use Magic Device (L13): 1 sheets
+- Voice of Death (L9): 1 sheets
+- Vow of Enmity (L3): 1 sheets
+- War Bond (L3): 1 sheets
+- War God’s Blessing (L6): 1 sheets
+- Warlock Subclass (L3): 6 sheets
+- Weapon Mastery (L1): 27 sheets
+- Whispers of the Dead (L3): 1 sheets
+- Wild Companion (L2): 4 sheets
+- Wild Resurgence (L5): 4 sheets
+- Wrath of the Sea (L3): 1 sheets
+- Wrath of the Wild (L3): 1 sheets

@@ -1,0 +1,464 @@
+[
+ {
+  "class": "Artificer",
+  "form": [
+   "Alchemist",
+   "Armorer",
+   "Artillerist",
+   "Battle Smith",
+   "Cartographer",
+   "Reanimator"
+  ],
+  "wiki": [
+   "alchemist",
+   "armorer",
+   "artillerist",
+   "battle-smith",
+   "cartographer",
+   "reanimator"
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "class": "Barbarian",
+  "form": [
+   "Path of the Ancestral Guardian",
+   "Path of the Battlerager",
+   "Path of the Beast",
+   "Path of the Berserker",
+   "Path of the Giant",
+   "Path of Lament",
+   "Path of the Spiritual Guardian",
+   "Path of the Storm Herald",
+   "Path of the Totem Warrior",
+   "Path of the Wild Heart",
+   "Path of Wild Magic",
+   "Path of the World Tree",
+   "Path of the Zealot"
+  ],
+  "wiki": [
+   "path-of-the-berserker",
+   "path-of-the-wild-heart",
+   "path-of-the-world-tree",
+   "path-of-the-zealot"
+  ],
+  "missing": [],
+  "extra": [
+   "Path of the Ancestral Guardian",
+   "Path of the Battlerager",
+   "Path of the Beast",
+   "Path of the Giant",
+   "Path of Lament",
+   "Path of the Spiritual Guardian",
+   "Path of the Storm Herald",
+   "Path of the Totem Warrior"
+  ]
+ },
+ {
+  "class": "Bard",
+  "form": [
+   "College of Creation",
+   "College of Dance",
+   "College of Eloquence",
+   "College of Glamour",
+   "College of Lore",
+   "College of the Moon",
+   "College of Spirits",
+   "College of Swords",
+   "College of Valor",
+   "College of Whispers"
+  ],
+  "wiki": [
+   "college-of-dance",
+   "college-of-glamour",
+   "college-of-lore",
+   "college-of-spirits",
+   "college-of-the-moon",
+   "college-of-valor"
+  ],
+  "missing": [],
+  "extra": [
+   "College of Creation",
+   "College of Eloquence",
+   "College of Swords",
+   "College of Whispers"
+  ]
+ },
+ {
+  "class": "Cleric",
+  "form": [
+   "Arcana Domain",
+   "Death Domain",
+   "Forge Domain",
+   "Grave Domain",
+   "Knowledge Domain",
+   "Life Domain",
+   "Light Domain",
+   "Nature Domain",
+   "Order Domain",
+   "Peace Domain",
+   "Pestilence Domain",
+   "Tempest Domain",
+   "Trickery Domain",
+   "Twilight Domain",
+   "War Domain"
+  ],
+  "wiki": [
+   "arcana-domain",
+   "grave-domain",
+   "knowledge-domain",
+   "life-domain",
+   "light-domain",
+   "trickery-domain",
+   "war-domain"
+  ],
+  "missing": [],
+  "extra": [
+   "Death Domain",
+   "Forge Domain",
+   "Nature Domain",
+   "Order Domain",
+   "Peace Domain",
+   "Pestilence Domain",
+   "Tempest Domain"
+  ]
+ },
+ {
+  "class": "Druid",
+  "form": [
+   "Circle of Preservation",
+   "Circle of the Titan",
+   "Circle of Dreams",
+   "Circle of the Land",
+   "Circle of the Moon",
+   "Circle of the Sea",
+   "Circle of the Shepherd",
+   "Circle of Spores",
+   "Circle of the Stars",
+   "Circle of Wildfire",
+   "Circle of Stone",
+   "Circle of Stars"
+  ],
+  "wiki": [
+   "circle-of-the-land",
+   "circle-of-the-moon",
+   "circle-of-the-sea",
+   "circle-of-the-stars"
+  ],
+  "missing": [],
+  "extra": [
+   "Circle of Preservation",
+   "Circle of the Titan",
+   "Circle of Dreams",
+   "Circle of the Shepherd",
+   "Circle of Spores",
+   "Circle of Wildfire",
+   "Circle of Stone"
+  ]
+ },
+ {
+  "class": "Fighter",
+  "form": [
+   "Arcane Archer",
+   "Banneret",
+   "Battle Master",
+   "Cavalier",
+   "Champion",
+   "Echo Knight",
+   "Eldritch Knight",
+   "Gladiator",
+   "Hell Knight",
+   "Psi Warrior",
+   "Rune Knight",
+   "Samurai"
+  ],
+  "wiki": [
+   "arcane-archer",
+   "banneret",
+   "battle-master",
+   "champion",
+   "eldritch-knight",
+   "psi-warrior",
+   "sorrow-knight"
+  ],
+  "missing": [
+   "sorrow-knight"
+  ],
+  "extra": [
+   "Cavalier",
+   "Echo Knight",
+   "Gladiator",
+   "Hell Knight",
+   "Rune Knight",
+   "Samurai"
+  ]
+ },
+ {
+  "class": "Monk",
+  "form": [
+   "Way of the Ascendant Dragon",
+   "Way of the Astral Self",
+   "Warrior of the Elements",
+   "Way of the Kensei",
+   "Way of the Long Death",
+   "Warrior of Mercy",
+   "Warrior of the Open Hand",
+   "Warrior of Shadow",
+   "Way of the Sun Soul",
+   "Tattooed Warrior",
+   "Warrior of Intoxication",
+   "Warrior of the Mystic Arts",
+   "Warrior of Venom",
+   "Way of the Drunken Master",
+   "Way of the Four Elements",
+   "Way of Mercy",
+   "Way of the Open Hand",
+   "Way of Shadow"
+  ],
+  "wiki": [
+   "warrior-of-mercy",
+   "warrior-of-shadow",
+   "warrior-of-the-elements",
+   "warrior-of-the-mystic-arts",
+   "warrior-of-the-open-hand"
+  ],
+  "missing": [],
+  "extra": [
+   "Way of the Ascendant Dragon",
+   "Way of the Astral Self",
+   "Way of the Kensei",
+   "Way of the Long Death",
+   "Way of the Sun Soul",
+   "Tattooed Warrior",
+   "Warrior of Intoxication",
+   "Warrior of Venom",
+   "Way of the Drunken Master"
+  ]
+ },
+ {
+  "class": "Paladin",
+  "form": [
+   "Oath of the Ancients",
+   "Oath of Conquest",
+   "Oath of the Crown",
+   "Oath of Devotion",
+   "Oath of Glory",
+   "Oath of the Noble Genies",
+   "Oath of the Spellguard",
+   "Oathbreaker",
+   "Oath of Redemption",
+   "Oath of Vengeance",
+   "Oath of the Watchers"
+  ],
+  "wiki": [
+   "oath-of-devotion",
+   "oath-of-glory",
+   "oath-of-the-ancients",
+   "oath-of-the-noble-genies",
+   "oath-of-vengeance"
+  ],
+  "missing": [],
+  "extra": [
+   "Oath of Conquest",
+   "Oath of the Crown",
+   "Oath of the Spellguard",
+   "Oathbreaker",
+   "Oath of Redemption",
+   "Oath of the Watchers"
+  ]
+ },
+ {
+  "class": "Ranger",
+  "form": [
+   "Beast Master",
+   "Drakewarden",
+   "Fey Wanderer",
+   "Gloom Stalker",
+   "Hollow Warden",
+   "Horizon Walker",
+   "Hunter",
+   "Monster Slayer",
+   "Swarmkeeper",
+   "Winter Walker"
+  ],
+  "wiki": [
+   "beast-master",
+   "fey-wanderer",
+   "gloom-stalker",
+   "hollow-warden",
+   "hunter",
+   "winter-walker"
+  ],
+  "missing": [],
+  "extra": [
+   "Drakewarden",
+   "Horizon Walker",
+   "Monster Slayer",
+   "Swarmkeeper"
+  ]
+ },
+ {
+  "class": "Rogue",
+  "form": [
+   "Arcane Trickster",
+   "Assassin",
+   "Inquisitive",
+   "Magic Stealer",
+   "Mastermind",
+   "Phantom",
+   "Scion of the Three",
+   "Scout",
+   "Soulknife",
+   "Swashbuckler",
+   "Thief"
+  ],
+  "wiki": [
+   "arcane-trickster",
+   "assassin",
+   "phantom",
+   "scion-of-the-three",
+   "soulknife",
+   "thief"
+  ],
+  "missing": [],
+  "extra": [
+   "Inquisitive",
+   "Magic Stealer",
+   "Mastermind",
+   "Scout",
+   "Swashbuckler"
+  ]
+ },
+ {
+  "class": "Sorcerer",
+  "form": [
+   "Aberrant Sorcery",
+   "Ancestral Sorcery",
+   "Clockwork Sorcery",
+   "Defiled Sorcery",
+   "Demonic Sorcery",
+   "Divine Soul",
+   "Draconic Sorcery",
+   "Lunar Sorcery",
+   "Shadow Sorcery",
+   "Spellfire Sorcery",
+   "Storm Sorcery",
+   "Wild Magic Sorcery",
+   "Aberrant Mind",
+   "Clockwork Soul",
+   "Draconic Bloodline",
+   "Shadow Magic",
+   "Wild Magic"
+  ],
+  "wiki": [
+   "aberrant-sorcery",
+   "clockwork-sorcery",
+   "draconic-sorcery",
+   "shadow-sorcery",
+   "spellfire-sorcery",
+   "wild-magic-sorcery"
+  ],
+  "missing": [],
+  "extra": [
+   "Ancestral Sorcery",
+   "Defiled Sorcery",
+   "Demonic Sorcery",
+   "Divine Soul",
+   "Lunar Sorcery",
+   "Storm Sorcery"
+  ]
+ },
+ {
+  "class": "Warlock",
+  "form": [
+   "The Archfey",
+   "The Celestial",
+   "The Fathomless",
+   "The Fiend",
+   "The Genie",
+   "The Great Old One",
+   "The Hexblade",
+   "The Primordial",
+   "The Sorcerer-King",
+   "The Undying",
+   "The Undead",
+   "The Vestige"
+  ],
+  "wiki": [
+   "archfey-patron",
+   "celestial-patron",
+   "fiend-patron",
+   "great-old-one-patron",
+   "undead-patron",
+   "vestige-patron"
+  ],
+  "missing": [],
+  "extra": [
+   "The Fathomless",
+   "The Genie",
+   "The Hexblade",
+   "The Primordial",
+   "The Sorcerer-King",
+   "The Undying"
+  ]
+ },
+ {
+  "class": "Wizard",
+  "form": [
+   "School of Abjuration",
+   "Bladesinger",
+   "Chronurgy Magic",
+   "School of Conjuration (Conjurer)",
+   "School of Divination",
+   "School of Enchantment (Enchanter)",
+   "School of Evocation",
+   "Graviturgy Magic",
+   "School of Illusion",
+   "School of Necromancy (Necromancer)",
+   "Order of Scribes",
+   "School of Transmutation (Transmuter)",
+   "War Magic",
+   "Bladesinging",
+   "School of Conjuration",
+   "School of Enchantment",
+   "School of Necromancy",
+   "School of Transmutation",
+   "School of War Magic"
+  ],
+  "wiki": [
+   "abjurer",
+   "bladesinger",
+   "conjurer",
+   "diviner",
+   "enchanter",
+   "evoker",
+   "illusionist",
+   "necromancer",
+   "transmuter"
+  ],
+  "missing": [
+   "abjurer",
+   "conjurer",
+   "diviner",
+   "enchanter",
+   "evoker",
+   "necromancer",
+   "transmuter"
+  ],
+  "extra": [
+   "School of Abjuration",
+   "Chronurgy Magic",
+   "School of Conjuration",
+   "School of Divination",
+   "School of Enchantment",
+   "School of Evocation",
+   "Graviturgy Magic",
+   "School of Necromancy",
+   "Order of Scribes",
+   "School of Transmutation",
+   "School of War Magic",
+   "Bladesinging"
+  ]
+ }
+]

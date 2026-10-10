@@ -166,6 +166,16 @@ module.exports = [
 		},
 	},
 	{
+		name: "hit-dice-exhaustion-and-inspiration",
+		story: "After a fight I spend a hit die to heal, mark my exhaustion, and note that I have Heroic Inspiration: all of it is on my sheet and I can use it.",
+		async run({ device, step }) {
+			await device.open(); await device.type("HP", 2); await device.goToPage("Combat");
+			await step("I can see my hit dice and spend one", async () => { has(await device.text(), "Hit Dice: 3 / 3"); await device.tap("Spend a hit die"); await device.waitForText("Hit Dice: 2 / 3", 15000); });
+			await step("I can raise my exhaustion", async () => { await device.tap("Increase exhaustion"); await device.waitForText("Exhaustion: 1 / 6", 15000); });
+			await step("I can take Heroic Inspiration", async () => { await device.tap("Heroic Inspiration"); await device.waitForText("Heroic Inspiration: yes", 15000); });
+		},
+	},
+	{
 		name: "dm-updates-me",
 		story: "My DM puts me in a party and adds a note. I see nothing until they publish, then Get from sheet shows it.",
 		async run({ device, world, step }) {

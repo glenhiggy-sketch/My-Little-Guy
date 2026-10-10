@@ -1,0 +1,2310 @@
+[
+ {
+  "sheet": "Artificer__alchemist",
+  "wiki_features": 17,
+  "missing": [
+   [
+    3,
+    "Tools of the Trade"
+   ],
+   [
+    3,
+    "Alchemist Spells."
+   ],
+   [
+    3,
+    "Experimental Elixir"
+   ],
+   [
+    5,
+    "Alchemical Savant"
+   ],
+   [
+    9,
+    "Restorative Reagents"
+   ],
+   [
+    15,
+    "Chemical Mastery"
+   ]
+  ],
+  "generic_placeholders": 0,
+  "sheet_features": 28
+ },
+ {
+  "sheet": "Artificer__armorer",
+  "wiki_features": 18,
+  "missing": [
+   [
+    3,
+    "Tools of the Trade"
+   ],
+   [
+    3,
+    "Armorer Spells"
+   ],
+   [
+    3,
+    "Arcane Armor"
+   ],
+   [
+    3,
+    "Armor Model"
+   ],
+   [
+    5,
+    "Extra Attack"
+   ],
+   [
+    9,
+    "Improved Armorer"
+   ],
+   [
+    15,
+    "Perfected Armor"
+   ]
+  ],
+  "generic_placeholders": 0,
+  "sheet_features": 28
+ },
+ {
+  "sheet": "Artificer__artillerist",
+  "wiki_features": 17,
+  "missing": [
+   [
+    3,
+    "Tools of the Trade"
+   ],
+   [
+    3,
+    "Artillerist Spells"
+   ],
+   [
+    3,
+    "Eldritch Cannon"
+   ],
+   [
+    5,
+    "Arcane Firearm"
+   ],
+   [
+    9,
+    "Explosive Cannon"
+   ],
+   [
+    15,
+    "Fortified Position"
+   ]
+  ],
+  "generic_placeholders": 0,
+  "sheet_features": 28
+ },
+ {
+  "sheet": "Artificer__battle-smith",
+  "wiki_features": 18,
+  "missing": [
+   [
+    3,
+    "Tools of the Trade"
+   ],
+   [
+    3,
+    "Battle Smith spells"
+   ],
+   [
+    3,
+    "Battle Ready"
+   ],
+   [
+    3,
+    "Steel Defender"
+   ],
+   [
+    5,
+    "Extra Attack"
+   ],
+   [
+    9,
+    "Arcane Jolt"
+   ],
+   [
+    15,
+    "Improved Defender"
+   ]
+  ],
+  "generic_placeholders": 0,
+  "sheet_features": 28
+ },
+ {
+  "sheet": "Artificer__cartographer",
+  "wiki_features": 18,
+  "missing": [
+   [
+    3,
+    "Tools of the Trade"
+   ],
+   [
+    3,
+    "Cartographer Spells"
+   ],
+   [
+    3,
+    "Adventurer's Atlas"
+   ],
+   [
+    3,
+    "Mapping Magic"
+   ],
+   [
+    5,
+    "Guided Precision"
+   ],
+   [
+    9,
+    "Ingenious Movement"
+   ],
+   [
+    15,
+    "Superior Atlas"
+   ]
+  ],
+  "generic_placeholders": 0,
+  "sheet_features": 28
+ },
+ {
+  "sheet": "Artificer__reanimator",
+  "wiki_features": 18,
+  "missing": [
+   [
+    3,
+    "Reanimator Spells"
+   ],
+   [
+    3,
+    "Reanimator\u2019s Skill Set"
+   ],
+   [
+    3,
+    "Reanimated Companion"
+   ],
+   [
+    5,
+    "Strange Modifications"
+   ],
+   [
+    9,
+    "Improved Reanimation"
+   ],
+   [
+    9,
+    "Macabre Modifications"
+   ],
+   [
+    15,
+    "Refined Reanimation"
+   ]
+  ],
+  "generic_placeholders": 0,
+  "sheet_features": 28
+ },
+ {
+  "sheet": "Barbarian__path-of-the-berserker",
+  "wiki_features": 22,
+  "missing": [
+   [
+    3,
+    "Frenzy"
+   ],
+   [
+    6,
+    "Mindless Rage"
+   ],
+   [
+    10,
+    "Retaliation"
+   ],
+   [
+    14,
+    "Intimidating Presence"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 21
+ },
+ {
+  "sheet": "Barbarian__path-of-the-wild-heart",
+  "wiki_features": 23,
+  "missing": [
+   [
+    3,
+    "Animal Speaker"
+   ],
+   [
+    3,
+    "Rage of the Wilds"
+   ],
+   [
+    6,
+    "Aspect of the Wilds"
+   ],
+   [
+    10,
+    "Nature Speaker"
+   ],
+   [
+    14,
+    "Power of the Wilds"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 21
+ },
+ {
+  "sheet": "Barbarian__path-of-the-world-tree",
+  "wiki_features": 22,
+  "missing": [
+   [
+    3,
+    "Vitality of the Tree"
+   ],
+   [
+    6,
+    "Branches of the Tree"
+   ],
+   [
+    10,
+    "Battering Roots"
+   ],
+   [
+    14,
+    "Travel along the Tree"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 21
+ },
+ {
+  "sheet": "Barbarian__path-of-the-zealot",
+  "wiki_features": 23,
+  "missing": [
+   [
+    3,
+    "Divine Fury"
+   ],
+   [
+    3,
+    "Warrior of the Gods"
+   ],
+   [
+    6,
+    "Fanatical Focus"
+   ],
+   [
+    10,
+    "Zealous Presence"
+   ],
+   [
+    14,
+    "Rage of the Gods"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 21
+ },
+ {
+  "sheet": "Bard__college-of-dance",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Dazzling Footwork"
+   ],
+   [
+    6,
+    "Inspiring Movement"
+   ],
+   [
+    6,
+    "Tandem Footwork"
+   ],
+   [
+    14,
+    "Leading Evasion"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 14
+ },
+ {
+  "sheet": "Bard__college-of-glamour",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Beguiling Magic"
+   ],
+   [
+    3,
+    "Mantle of Inspiration"
+   ],
+   [
+    6,
+    "Mantle of Majesty"
+   ],
+   [
+    14,
+    "Unbreakable Majesty"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 14
+ },
+ {
+  "sheet": "Bard__college-of-lore",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Bonus Proficiencies"
+   ],
+   [
+    3,
+    "Cutting Words"
+   ],
+   [
+    6,
+    "Magical Discoveries"
+   ],
+   [
+    14,
+    "Peerless Skill"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 14
+ },
+ {
+  "sheet": "Bard__college-of-spirits",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Channeler"
+   ],
+   [
+    3,
+    "Spirits from Beyond"
+   ],
+   [
+    6,
+    "Empowered Channeling"
+   ],
+   [
+    14,
+    "Mystical Connection"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 14
+ },
+ {
+  "sheet": "Bard__college-of-the-moon",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Moon's Inspiration"
+   ],
+   [
+    3,
+    "Primal Lore"
+   ],
+   [
+    6,
+    "Blessing of Moonlight"
+   ],
+   [
+    14,
+    "Eventide's Splendor"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 14
+ },
+ {
+  "sheet": "Bard__college-of-valor",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Combat Inspiration"
+   ],
+   [
+    3,
+    "Martial Training"
+   ],
+   [
+    6,
+    "Extra Attack"
+   ],
+   [
+    14,
+    "Battle Magic"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 14
+ },
+ {
+  "sheet": "Cleric__arcana-domain",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Arcana Domain Spells"
+   ],
+   [
+    3,
+    "Modify Magic"
+   ],
+   [
+    3,
+    "Student of Arcana"
+   ],
+   [
+    6,
+    "Dispelling Recovery"
+   ],
+   [
+    17,
+    "Magical Mastery"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Cleric__grave-domain",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Grave Domain Spells"
+   ],
+   [
+    3,
+    "Circle of Mortality"
+   ],
+   [
+    3,
+    "Path to the Grave"
+   ],
+   [
+    6,
+    "Sentinel at Death\u2019s Door"
+   ],
+   [
+    17,
+    "Divine Reaper"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Cleric__knowledge-domain",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Blessings of Knowledge"
+   ],
+   [
+    3,
+    "Knowledge Domain Spells"
+   ],
+   [
+    3,
+    "Mind Magic"
+   ],
+   [
+    6,
+    "Unfettered Mind"
+   ],
+   [
+    17,
+    "Divine Foreknowledge"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Cleric__life-domain",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Disciple of Life"
+   ],
+   [
+    3,
+    "Life Domain Spells"
+   ],
+   [
+    3,
+    "Preserve Life"
+   ],
+   [
+    6,
+    "Blessed Healer"
+   ],
+   [
+    17,
+    "Supreme Healing"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Cleric__light-domain",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Light Domain Spells"
+   ],
+   [
+    3,
+    "Radiance of the Dawn"
+   ],
+   [
+    3,
+    "Warding Flare"
+   ],
+   [
+    6,
+    "Improved Warding Flare"
+   ],
+   [
+    17,
+    "Corona of Light"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Cleric__trickery-domain",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Blessing of the Trickster"
+   ],
+   [
+    3,
+    "Trickery Domain Spells"
+   ],
+   [
+    3,
+    "Invoke Duplicity"
+   ],
+   [
+    6,
+    "Trickster\u2019s Transposition"
+   ],
+   [
+    17,
+    "Improved Duplicity"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Cleric__war-domain",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Guided Strike"
+   ],
+   [
+    3,
+    "War Domain Spells"
+   ],
+   [
+    3,
+    "War Priest"
+   ],
+   [
+    6,
+    "War God\u2019s Blessing"
+   ],
+   [
+    17,
+    "Avatar of Battle"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Druid__circle-of-the-land",
+  "wiki_features": 16,
+  "missing": [
+   [
+    3,
+    "Circle of the Land Spells"
+   ],
+   [
+    3,
+    "Land\u2019s Aid"
+   ],
+   [
+    6,
+    "Natural Recovery"
+   ],
+   [
+    10,
+    "Nature\u2019s Ward"
+   ],
+   [
+    14,
+    "Nature\u2019s Sanctuary"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Druid__circle-of-the-moon",
+  "wiki_features": 16,
+  "missing": [
+   [
+    3,
+    "Circle Forms"
+   ],
+   [
+    3,
+    "Circle of the Moon Spells"
+   ],
+   [
+    6,
+    "Improved Circle Forms"
+   ],
+   [
+    10,
+    "Moonlight Step"
+   ],
+   [
+    14,
+    "Lunar Form"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Druid__circle-of-the-sea",
+  "wiki_features": 16,
+  "missing": [
+   [
+    3,
+    "Circle of the Sea Spells"
+   ],
+   [
+    3,
+    "Wrath of the Sea"
+   ],
+   [
+    6,
+    "Aquatic Affinity"
+   ],
+   [
+    10,
+    "Stormborn"
+   ],
+   [
+    14,
+    "Oceanic Gift"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Druid__circle-of-the-stars",
+  "wiki_features": 16,
+  "missing": [
+   [
+    3,
+    "Star Map"
+   ],
+   [
+    3,
+    "Starry Form"
+   ],
+   [
+    6,
+    "Cosmic Omen"
+   ],
+   [
+    10,
+    "Twinkling Constellations"
+   ],
+   [
+    14,
+    "Full of Stars"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 15
+ },
+ {
+  "sheet": "Fighter__arcane-archer",
+  "wiki_features": 20,
+  "missing": [
+   [
+    11,
+    "Two Extra Attacks"
+   ],
+   [
+    20,
+    "Three Extra Attacks"
+   ],
+   [
+    3,
+    "Arcane Archer Lore"
+   ],
+   [
+    3,
+    "Arcane Shot"
+   ],
+   [
+    7,
+    "Curving Shot"
+   ],
+   [
+    7,
+    "Magical Ammunition"
+   ],
+   [
+    10,
+    "Ever-Ready Shot"
+   ],
+   [
+    15,
+    "Indomitable Teleport"
+   ],
+   [
+    18,
+    "Masterful Shots"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Fighter__banneret",
+  "wiki_features": 19,
+  "missing": [
+   [
+    11,
+    "Two Extra Attacks"
+   ],
+   [
+    20,
+    "Three Extra Attacks"
+   ],
+   [
+    3,
+    "Knightly Envoy"
+   ],
+   [
+    3,
+    "Group Recovery"
+   ],
+   [
+    7,
+    "Team Tactics"
+   ],
+   [
+    10,
+    "Rallying Surge"
+   ],
+   [
+    15,
+    "Shared Resilience"
+   ],
+   [
+    18,
+    "Inspiring Commander"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Fighter__battle-master",
+  "wiki_features": 19,
+  "missing": [
+   [
+    11,
+    "Two Extra Attacks"
+   ],
+   [
+    20,
+    "Three Extra Attacks"
+   ],
+   [
+    3,
+    "Combat Superiority"
+   ],
+   [
+    3,
+    "Student of War"
+   ],
+   [
+    7,
+    "Know Your Enemy"
+   ],
+   [
+    10,
+    "Improved Combat Superiority"
+   ],
+   [
+    15,
+    "Relentless"
+   ],
+   [
+    18,
+    "Ultimate Combat Superiority"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 29
+ },
+ {
+  "sheet": "Fighter__champion",
+  "wiki_features": 19,
+  "missing": [
+   [
+    11,
+    "Two Extra Attacks"
+   ],
+   [
+    20,
+    "Three Extra Attacks"
+   ],
+   [
+    3,
+    "Improved Critical"
+   ],
+   [
+    3,
+    "Remarkable Athlete"
+   ],
+   [
+    7,
+    "Additional Fighting Style"
+   ],
+   [
+    10,
+    "Heroic Warrior"
+   ],
+   [
+    15,
+    "Superior Critical"
+   ],
+   [
+    18,
+    "Survivor"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Fighter__eldritch-knight",
+  "wiki_features": 19,
+  "missing": [
+   [
+    11,
+    "Two Extra Attacks"
+   ],
+   [
+    20,
+    "Three Extra Attacks"
+   ],
+   [
+    3,
+    "Spellcasting"
+   ],
+   [
+    3,
+    "War Bond"
+   ],
+   [
+    7,
+    "War Magic"
+   ],
+   [
+    10,
+    "Eldritch Strike"
+   ],
+   [
+    15,
+    "Arcane Charge"
+   ],
+   [
+    18,
+    "Improved War Magic"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Fighter__psi-warrior",
+  "wiki_features": 18,
+  "missing": [
+   [
+    11,
+    "Two Extra Attacks"
+   ],
+   [
+    20,
+    "Three Extra Attacks"
+   ],
+   [
+    3,
+    "Psionic Power"
+   ],
+   [
+    7,
+    "Telekinetic Adept"
+   ],
+   [
+    10,
+    "Guarded Mind"
+   ],
+   [
+    15,
+    "Bulwark of Force"
+   ],
+   [
+    18,
+    "Telekinetic Master"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Monk__warrior-of-mercy",
+  "wiki_features": 26,
+  "missing": [
+   [
+    2,
+    "Monk\u2019s Focus"
+   ],
+   [
+    3,
+    "Hand of Harm"
+   ],
+   [
+    3,
+    "Hand of Healing"
+   ],
+   [
+    3,
+    "Implements of Mercy"
+   ],
+   [
+    6,
+    "Physician\u2019s Touch"
+   ],
+   [
+    11,
+    "Flurry of Healing and Harm"
+   ],
+   [
+    17,
+    "Hand of Ultimate Mercy"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 24
+ },
+ {
+  "sheet": "Monk__warrior-of-shadow",
+  "wiki_features": 24,
+  "missing": [
+   [
+    2,
+    "Monk\u2019s Focus"
+   ],
+   [
+    3,
+    "Shadow Arts"
+   ],
+   [
+    6,
+    "Shadow Step"
+   ],
+   [
+    11,
+    "Improved Shadow Step"
+   ],
+   [
+    17,
+    "Cloak of Shadows"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 24
+ },
+ {
+  "sheet": "Monk__warrior-of-the-elements",
+  "wiki_features": 25,
+  "missing": [
+   [
+    2,
+    "Monk\u2019s Focus"
+   ],
+   [
+    3,
+    "Elemental Attunement"
+   ],
+   [
+    3,
+    "Manipulate Elements"
+   ],
+   [
+    6,
+    "Elemental Burst"
+   ],
+   [
+    11,
+    "Stride of the Elements"
+   ],
+   [
+    17,
+    "Elemental Epitome"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 24
+ },
+ {
+  "sheet": "Monk__warrior-of-the-mystic-arts",
+  "wiki_features": 25,
+  "missing": [
+   [
+    2,
+    "Monk\u2019s Focus"
+   ],
+   [
+    3,
+    "Spellcasting"
+   ],
+   [
+    6,
+    "Mystic Fighting Style"
+   ],
+   [
+    6,
+    "Mystic Focus"
+   ],
+   [
+    11,
+    "Focused Strike"
+   ],
+   [
+    17,
+    "Improved Mystic Fighting Style"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 24
+ },
+ {
+  "sheet": "Monk__warrior-of-the-open-hand",
+  "wiki_features": 24,
+  "missing": [
+   [
+    2,
+    "Monk\u2019s Focus"
+   ],
+   [
+    3,
+    "Open Hand Technique"
+   ],
+   [
+    6,
+    "Wholeness of Body"
+   ],
+   [
+    11,
+    "Fleet Step"
+   ],
+   [
+    17,
+    "Quivering Palm"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 24
+ },
+ {
+  "sheet": "Paladin__oath-of-devotion",
+  "wiki_features": 20,
+  "missing": [
+   [
+    3,
+    "Oath of Devotion Spells"
+   ],
+   [
+    3,
+    "Sacred Weapon"
+   ],
+   [
+    7,
+    "Aura of Devotion"
+   ],
+   [
+    15,
+    "Smite of Protection"
+   ],
+   [
+    20,
+    "Holy Nimbus"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Paladin__oath-of-glory",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Inspiring Smite"
+   ],
+   [
+    3,
+    "Oath of Glory Spells."
+   ],
+   [
+    3,
+    "Peerless Athlete"
+   ],
+   [
+    7,
+    "Aura of Alacrity"
+   ],
+   [
+    15,
+    "Glorious Defense"
+   ],
+   [
+    20,
+    "Living Legend"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Paladin__oath-of-the-ancients",
+  "wiki_features": 20,
+  "missing": [
+   [
+    3,
+    "Nature's Wrath"
+   ],
+   [
+    3,
+    "Oath of the Ancients Spells"
+   ],
+   [
+    7,
+    "Aura of Warding"
+   ],
+   [
+    15,
+    "Undying Sentinel"
+   ],
+   [
+    20,
+    "Elder Champion"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Paladin__oath-of-the-noble-genies",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Elemental Smite"
+   ],
+   [
+    3,
+    "Genie Spells"
+   ],
+   [
+    3,
+    "Genie's Splendor"
+   ],
+   [
+    7,
+    "Aura of Elemental Shielding"
+   ],
+   [
+    15,
+    "Elemental Rebuke"
+   ],
+   [
+    20,
+    "Noble Scion"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Paladin__oath-of-vengeance",
+  "wiki_features": 20,
+  "missing": [
+   [
+    3,
+    "Oath of Vengeance Spells"
+   ],
+   [
+    3,
+    "Vow of Enmity"
+   ],
+   [
+    7,
+    "Relentless Avenger"
+   ],
+   [
+    15,
+    "Soul of Vengeance"
+   ],
+   [
+    20,
+    "Avenging Angel"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Ranger__beast-master",
+  "wiki_features": 19,
+  "missing": [
+   [
+    3,
+    "Primal Companion"
+   ],
+   [
+    7,
+    "Exceptional Training"
+   ],
+   [
+    11,
+    "Bestial Fury"
+   ],
+   [
+    15,
+    "Share Spells"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Ranger__fey-wanderer",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Dreadful Strikes"
+   ],
+   [
+    3,
+    "Fey Wanderer Spells"
+   ],
+   [
+    3,
+    "Otherworldly Glamour."
+   ],
+   [
+    7,
+    "Beguiling Twist"
+   ],
+   [
+    11,
+    "Fey Reinforcements"
+   ],
+   [
+    15,
+    "Misty Wanderer"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Ranger__gloom-stalker",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Dread Ambusher"
+   ],
+   [
+    3,
+    "Gloom Stalker Spells"
+   ],
+   [
+    3,
+    "Umbral Sight"
+   ],
+   [
+    7,
+    "Iron Mind"
+   ],
+   [
+    11,
+    "Stalker's Flurry"
+   ],
+   [
+    15,
+    "Shadowy Dodge"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Ranger__hollow-warden",
+  "wiki_features": 20,
+  "missing": [
+   [
+    3,
+    "Hollow Warden Spells"
+   ],
+   [
+    3,
+    "Wrath of the Wild"
+   ],
+   [
+    7,
+    "Hungering Might"
+   ],
+   [
+    11,
+    "Rot and Violence"
+   ],
+   [
+    15,
+    "Ancient Might"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Ranger__hunter",
+  "wiki_features": 20,
+  "missing": [
+   [
+    3,
+    "Hunter's Lore"
+   ],
+   [
+    3,
+    "Hunter's Prey"
+   ],
+   [
+    7,
+    "Defensive Tactics"
+   ],
+   [
+    11,
+    "Superior Hunter's Prey"
+   ],
+   [
+    15,
+    "Superior Hunter's Defense"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Ranger__winter-walker",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Frigid Explorer"
+   ],
+   [
+    3,
+    "Hunter's Rime"
+   ],
+   [
+    3,
+    "Winter Walker Spells"
+   ],
+   [
+    7,
+    "Fortifying Soul"
+   ],
+   [
+    11,
+    "Chilling Retribution"
+   ],
+   [
+    15,
+    "Frozen Haunt"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 19
+ },
+ {
+  "sheet": "Rogue__arcane-trickster",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Spellcasting"
+   ],
+   [
+    3,
+    "Mage Hand Legerdemain"
+   ],
+   [
+    9,
+    "Magical Ambush"
+   ],
+   [
+    13,
+    "Versatile Trickster"
+   ],
+   [
+    17,
+    "Spell Thief"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Rogue__assassin",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Assassinate"
+   ],
+   [
+    3,
+    "Assassin's Tools"
+   ],
+   [
+    9,
+    "Infiltration Expertise"
+   ],
+   [
+    13,
+    "Envenom Weapons"
+   ],
+   [
+    17,
+    "Death Strike"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Rogue__phantom",
+  "wiki_features": 22,
+  "missing": [
+   [
+    3,
+    "Wails from the Grave"
+   ],
+   [
+    3,
+    "Whispers of the Dead"
+   ],
+   [
+    9,
+    "Tokens of the Departed"
+   ],
+   [
+    9,
+    "Voice of Death"
+   ],
+   [
+    13,
+    "Ghost Walk"
+   ],
+   [
+    17,
+    "Death\u2019s Friend"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Rogue__scion-of-the-three",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Bloodthirst"
+   ],
+   [
+    3,
+    "Dread Allegiance"
+   ],
+   [
+    9,
+    "Strike Fear"
+   ],
+   [
+    13,
+    "Aura of Malevolence"
+   ],
+   [
+    17,
+    "Dread Incarnate"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Rogue__soulknife",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Psionic Power"
+   ],
+   [
+    3,
+    "Psychic Blades"
+   ],
+   [
+    9,
+    "Soul Blades"
+   ],
+   [
+    13,
+    "Psychic Veil"
+   ],
+   [
+    17,
+    "Rend Mind"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Rogue__thief",
+  "wiki_features": 21,
+  "missing": [
+   [
+    3,
+    "Fast Hands"
+   ],
+   [
+    3,
+    "Second Story Work"
+   ],
+   [
+    9,
+    "Supreme Sneak"
+   ],
+   [
+    13,
+    "Use Magic Device"
+   ],
+   [
+    17,
+    "Thief's Reflexes"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 20
+ },
+ {
+  "sheet": "Sorcerer__aberrant-sorcery",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Psionic Spells"
+   ],
+   [
+    3,
+    "Telepathic Speech"
+   ],
+   [
+    6,
+    "Psionic Sorcery"
+   ],
+   [
+    6,
+    "Psychic Defenses"
+   ],
+   [
+    14,
+    "Revelation in Flesh"
+   ],
+   [
+    18,
+    "Warping Implosion"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 17
+ },
+ {
+  "sheet": "Sorcerer__clockwork-sorcery",
+  "wiki_features": 13,
+  "missing": [
+   [
+    3,
+    "Clockwork Spells"
+   ],
+   [
+    3,
+    "Restore Balance"
+   ],
+   [
+    6,
+    "Bastion of Law"
+   ],
+   [
+    14,
+    "Trance of Order"
+   ],
+   [
+    18,
+    "Clockwork Cavalcade"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 17
+ },
+ {
+  "sheet": "Sorcerer__draconic-sorcery",
+  "wiki_features": 13,
+  "missing": [
+   [
+    3,
+    "Draconic Resilience"
+   ],
+   [
+    3,
+    "Draconic Spells"
+   ],
+   [
+    6,
+    "Elemental Affinity"
+   ],
+   [
+    14,
+    "Dragon Wings"
+   ],
+   [
+    18,
+    "Dragon Companion"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 17
+ },
+ {
+  "sheet": "Sorcerer__shadow-sorcery",
+  "wiki_features": 13,
+  "missing": [
+   [
+    3,
+    "Shadow Spells"
+   ],
+   [
+    3,
+    "Power of Shadow"
+   ],
+   [
+    6,
+    "Beasts of Ill Omen"
+   ],
+   [
+    14,
+    "Shadow Walk"
+   ],
+   [
+    18,
+    "Umbral Form"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 17
+ },
+ {
+  "sheet": "Sorcerer__spellfire-sorcery",
+  "wiki_features": 13,
+  "missing": [
+   [
+    3,
+    "Spellfire Burst"
+   ],
+   [
+    3,
+    "Spellfire Spells"
+   ],
+   [
+    6,
+    "Absorb Spells"
+   ],
+   [
+    14,
+    "Honed Spellfire"
+   ],
+   [
+    18,
+    "Crown of Spellfire"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 17
+ },
+ {
+  "sheet": "Sorcerer__wild-magic-sorcery",
+  "wiki_features": 13,
+  "missing": [
+   [
+    3,
+    "Wild Magic Surge"
+   ],
+   [
+    3,
+    "Tides of Chaos"
+   ],
+   [
+    6,
+    "Bend Luck"
+   ],
+   [
+    14,
+    "Controlled Chaos"
+   ],
+   [
+    18,
+    "Tamed Surge"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 17
+ },
+ {
+  "sheet": "Warlock__archfey-patron",
+  "wiki_features": 12,
+  "missing": [
+   [
+    3,
+    "Archfey Spells"
+   ],
+   [
+    3,
+    "Steps of the Fey"
+   ],
+   [
+    6,
+    "Misty Escape"
+   ],
+   [
+    10,
+    "Beguiling Defenses"
+   ],
+   [
+    14,
+    "Bewitching Magic"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 23
+ },
+ {
+  "sheet": "Warlock__celestial-patron",
+  "wiki_features": 12,
+  "missing": [
+   [
+    3,
+    "Celestial Spells"
+   ],
+   [
+    3,
+    "Healing Light"
+   ],
+   [
+    6,
+    "Radiant Soul"
+   ],
+   [
+    10,
+    "Celestial Resilience"
+   ],
+   [
+    14,
+    "Searing Vengeance"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 23
+ },
+ {
+  "sheet": "Warlock__fiend-patron",
+  "wiki_features": 12,
+  "missing": [
+   [
+    3,
+    "Dark One\u2019s Blessing"
+   ],
+   [
+    3,
+    "Fiend Spells"
+   ],
+   [
+    6,
+    "Dark One\u2019s Own Luck"
+   ],
+   [
+    10,
+    "Fiendish Resilience"
+   ],
+   [
+    14,
+    "Hurl Through Hell"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 23
+ },
+ {
+  "sheet": "Warlock__great-old-one-patron",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Awakened Mind"
+   ],
+   [
+    3,
+    "Great Old One Spells"
+   ],
+   [
+    3,
+    "Psychic Spells"
+   ],
+   [
+    6,
+    "Clairvoyant Combatant"
+   ],
+   [
+    10,
+    "Eldritch Hex"
+   ],
+   [
+    10,
+    "Thought Shield"
+   ],
+   [
+    14,
+    "Create Thrall"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 23
+ },
+ {
+  "sheet": "Warlock__undead-patron",
+  "wiki_features": 12,
+  "missing": [
+   [
+    3,
+    "Form of Dread"
+   ],
+   [
+    3,
+    "Undead Spells"
+   ],
+   [
+    6,
+    "Grave Touched"
+   ],
+   [
+    10,
+    "Necrotic Husk"
+   ],
+   [
+    14,
+    "Superior Dread"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 23
+ },
+ {
+  "sheet": "Warlock__vestige-patron",
+  "wiki_features": 12,
+  "missing": [
+   [
+    3,
+    "Vestige Companion"
+   ],
+   [
+    3,
+    "Vestige Spells"
+   ],
+   [
+    6,
+    "Vestige Power"
+   ],
+   [
+    10,
+    "Vestige Recovery"
+   ],
+   [
+    14,
+    "Semblance of Life"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 23
+ },
+ {
+  "sheet": "Wizard__abjurer",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Arcane Tradition"
+   ],
+   [
+    3,
+    "Abjuration Savant"
+   ],
+   [
+    3,
+    "Arcane ward"
+   ],
+   [
+    6,
+    "Projected Ward"
+   ],
+   [
+    10,
+    "Spell Breaker"
+   ],
+   [
+    14,
+    "Spell Resistance"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 12
+ },
+ {
+  "sheet": "Wizard__bladesinger",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Arcane Tradition"
+   ],
+   [
+    3,
+    "Bladesong"
+   ],
+   [
+    3,
+    "Training in War and Song"
+   ],
+   [
+    6,
+    "Extra Attack"
+   ],
+   [
+    10,
+    "Song of Defense"
+   ],
+   [
+    14,
+    "Song of Victory"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 12
+ },
+ {
+  "sheet": "Wizard__conjurer",
+  "wiki_features": 15,
+  "missing": [
+   [
+    3,
+    "Arcane Tradition"
+   ],
+   [
+    3,
+    "Benign Transposition"
+   ],
+   [
+    3,
+    "Conjuration Savant"
+   ],
+   [
+    6,
+    "Distant Transposition"
+   ],
+   [
+    6,
+    "Durable Summons"
+   ],
+   [
+    10,
+    "Focused Conjuration"
+   ],
+   [
+    14,
+    "Splintered Summons"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 12
+ },
+ {
+  "sheet": "Wizard__diviner",
+  "wiki_features": 13,
+  "missing": [
+   [
+    3,
+    "Arcane Tradition"
+   ],
+   [
+    3,
+    "Divination Savant"
+   ],
+   [
+    3,
+    "Portent"
+   ],
+   [
+    6,
+    "Expert Divination"
+   ],
+   [
+    14,
+    "Greater Portent"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 12
+ },
+ {
+  "sheet": "Wizard__enchanter",
+  "wiki_features": 15,
+  "missing": [
+   [
+    3,
+    "Arcane Tradition"
+   ],
+   [
+    3,
+    "Enchanting Conversationalist"
+   ],
+   [
+    3,
+    "Enchantment Savant"
+   ],
+   [
+    3,
+    "Hypnotic Presence"
+   ],
+   [
+    6,
+    "Split Enchantment"
+   ],
+   [
+    10,
+    "Instinctive Charm"
+   ],
+   [
+    14,
+    "Alter Memories"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 12
+ },
+ {
+  "sheet": "Wizard__evoker",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Arcane Tradition"
+   ],
+   [
+    3,
+    "Evocation Savant"
+   ],
+   [
+    3,
+    "Potent Cantrip"
+   ],
+   [
+    6,
+    "Sculpt Spells"
+   ],
+   [
+    10,
+    "Empowered Evocation"
+   ],
+   [
+    14,
+    "Overchannel"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 12
+ },
+ {
+  "sheet": "Wizard__illusionist",
+  "wiki_features": 14,
+  "missing": [
+   [
+    3,
+    "Arcane Tradition"
+   ],
+   [
+    3,
+    "Illusion Savant"
+   ],
+   [
+    3,
+    "Improved Illusions"
+   ],
+   [
+    6,
+    "Phantasmal Creatures"
+   ],
+   [
+    10,
+    "Illusory Self"
+   ],
+   [
+    14,
+    "Illusory Reality"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 12
+ },
+ {
+  "sheet": "Wizard__necromancer",
+  "wiki_features": 15,
+  "missing": [
+   [
+    3,
+    "Arcane Tradition"
+   ],
+   [
+    3,
+    "Necromancy Savant"
+   ],
+   [
+    3,
+    "Necromancy Spellbook"
+   ],
+   [
+    6,
+    "Grave Power"
+   ],
+   [
+    6,
+    "Undead Thralls"
+   ],
+   [
+    10,
+    "Harvest Undead"
+   ],
+   [
+    14,
+    "Death's Master"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 12
+ },
+ {
+  "sheet": "Wizard__transmuter",
+  "wiki_features": 16,
+  "missing": [
+   [
+    3,
+    "Arcane Tradition"
+   ],
+   [
+    3,
+    "Transmutation Savant"
+   ],
+   [
+    3,
+    "Transmuter's Stone"
+   ],
+   [
+    3,
+    "Wondrous Alteration"
+   ],
+   [
+    6,
+    "Empowered Transmutation"
+   ],
+   [
+    10,
+    "Potent Stone"
+   ],
+   [
+    10,
+    "Shape-Shifter"
+   ],
+   [
+    14,
+    "Master Transmuter"
+   ]
+  ],
+  "generic_placeholders": 1,
+  "sheet_features": 12
+ }
+]

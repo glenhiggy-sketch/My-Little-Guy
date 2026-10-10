@@ -5,3 +5,7 @@ sim/reports/
 sim/ios.config.json
 sim/.env.local
 sim/audit/chars/
+
+sim/audit/l20/
+sim/audit/form/
+sim/last-candidate.json

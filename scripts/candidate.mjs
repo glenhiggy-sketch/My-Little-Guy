@@ -4,6 +4,7 @@
 import { readFileSync, writeFileSync, mkdtempSync, copyFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 
 const sh = (cmd) => execFileSync(cmd, { stdio: "inherit", shell: true });
@@ -22,4 +23,7 @@ writeFileSync(join(dir, "manifest.json"), JSON.stringify({ ...manifest, version:
 execFileSync("git", ["push", "origin", "HEAD:main"], { stdio: "inherit" });
 const sha = out("git", ["rev-parse", "HEAD"]);
 execFileSync("gh", ["release", "create", tag, join(dir, "main.js"), join(dir, "manifest.json"), join(dir, "styles.css"), "--prerelease", "--target", sha, "--title", tag + " (test build)", "--notes", "Pre-release test build for the end-user simulation on the test iPhone. Not for general use."], { stdio: "inherit" });
+// Remember exactly which build this candidate is, so sim/run.js only records a device pass for these files.
+const buildHash = createRequire(import.meta.url)("./build-hash.js");
+writeFileSync("sim/last-candidate.json", JSON.stringify({ tag, buildHash: buildHash() }, null, 2) + "\n");
 console.log(`\nCandidate ${tag} published as a pre-release.\nOn the phone: BRAT > Add beta plugin > glenhiggy-sketch/My-Little-Guy > version ${tag}. Then: npm run sim:ios`);

@@ -201,8 +201,10 @@ class IosDevice {
 			try {
 				const els = await this.elements(label); const el = Object.values(o.nth === "last" ? els[els.length - 1] : els[o.nth || 0] || {})[0];
 				if (!el) throw new Error(`no field called "${label}"`);
-				return await this.sess("GET", `/element/${el}/attribute/value`);
-			} catch (e) { if (attempt >= 3) throw e; await this.wait(1000); }
+				const v = await this.sess("GET", `/element/${el}/attribute/value`);
+				if ((v === "" || v === null || v === undefined) && attempt < 12) { await this.wait(1500); continue; } // an empty field is one the phone has not filled in yet (right after the app comes back)
+				return v;
+			} catch (e) { if (attempt >= 12) throw e; await this.wait(1000); }
 		}
 	}
 	async goToPage(fragment) { // the page dots are labelled with the whole title, e.g. "🎒 Inventory"

@@ -213,36 +213,151 @@ function findTableRows(body, headerNeedle) {
 // Only fields the template actually represents are set; anything not found in the
 // body (session-only state like tracked feature uses, death saves, notes, creatures,
 // sheet_url) is left untouched by the caller.
-// Limited-use class resources (2024 rules) so the Features block starts filled in instead of empty. Counts scale with level and
-// ability modifiers. "short" = fully back after a short rest; "long" = fully back only after a long rest (features that give one use
-// back on a short rest, like Rage or Channel Divinity, are listed as "long": tick a pip back by hand for the partial recovery).
-// Subclass-specific resources (other than Battle Master's dice) are not listed; add those by hand.
+// Limited-use class and subclass resources (D&D 2024 rules, dnd2024.wikidot.com) so the Features block starts filled in instead of empty.
+// Each row is [from level, name, max uses, recovery]. Max and recovery may be functions of the character (c.lv, c.prof, c.mod('wis') = that
+// ability modifier, c.uses('wis') = that modifier but at least 1, c.step([[level, value], ...]) = value at the highest level reached).
+// "short" = fully back after a short rest; "long" = fully back only after a long rest (features that give one use back on a short rest, like
+// Rage or Channel Divinity, are listed as "long": tick a pip back by hand for the partial recovery). Features that only spend another
+// resource (Stunning Strike spends Focus Points) are not listed separately. Subclass keys are matched against the subclass name.
+const ONE = () => 1;
+const CLASS_RESOURCES = {
+  barbarian: {
+    base: [[1, 'Rage', (c) => c.step([[1, 2], [3, 3], [6, 4], [12, 5], [17, 6]]), 'long'], [15, 'Persistent Rage', ONE, 'long']],
+    subs: {
+      berserker: [[14, 'Intimidating Presence', ONE, 'long']],
+      zealot: [[3, 'Warrior of the Gods (d12 pool)', (c) => c.step([[3, 4], [6, 5], [12, 6], [17, 7]]), 'long'], [10, 'Zealous Presence', ONE, 'long'], [14, 'Rage of the Gods', ONE, 'long']],
+    },
+  },
+  bard: {
+    base: [[1, 'Bardic Inspiration', (c) => c.uses('cha'), (c) => (c.lv >= 5 ? 'short' : 'long')]],
+    subs: {
+      spirits: [[6, 'Empowered Channeling (free cast)', ONE, 'long']],
+      glamour: [[3, 'Beguiling Magic', ONE, 'long'], [6, 'Mantle of Majesty', ONE, 'long'], [14, 'Unbreakable Majesty', ONE, 'short']],
+      moon: [[6, 'Blessing of Moonlight', ONE, 'long']],
+    },
+  },
+  cleric: {
+    base: [[2, 'Channel Divinity', (c) => c.step([[2, 2], [6, 3], [18, 4]]), 'long'], [10, 'Divine Intervention', ONE, 'long']],
+    subs: {
+      arcana: [[6, 'Dispelling Recovery', ONE, 'short']],
+      grave: [[6, "Sentinel at Death's Door", (c) => c.uses('wis'), 'long'], [17, 'Divine Reaper', ONE, 'short']],
+      knowledge: [[17, 'Divine Foreknowledge', ONE, 'long']],
+      light: [[3, 'Warding Flare', (c) => c.uses('wis'), (c) => (c.lv >= 6 ? 'short' : 'long')], [17, 'Corona of Light', (c) => c.uses('wis'), 'long']],
+      war: [[3, 'War Priest', (c) => c.uses('wis'), 'short']],
+    },
+  },
+  druid: {
+    base: [[2, 'Wild Shape', (c) => c.step([[2, 2], [6, 3], [17, 4]]), 'long']],
+    subs: {
+      land: [[6, 'Natural Recovery (free spell)', ONE, 'long']],
+      moon: [[10, 'Moonlight Step', (c) => c.uses('wis'), 'long']],
+      stars: [[3, 'Star Map (free Guiding Bolt)', (c) => c.uses('wis'), 'long'], [6, 'Cosmic Omen (reactions)', (c) => c.uses('wis'), 'long']],
+    },
+  },
+  fighter: {
+    base: [[1, 'Second Wind', (c) => c.step([[1, 2], [4, 3], [10, 4]]), 'long'], [2, 'Action Surge', (c) => c.step([[2, 1], [17, 2]]), 'short'], [9, 'Indomitable', (c) => c.step([[9, 1], [13, 2], [17, 3]]), 'long']],
+    subs: {
+      'battle master': [[3, 'Superiority Dice', (c) => c.step([[3, 4], [7, 5], [15, 6]]), 'short'], [7, 'Know Your Enemy', ONE, 'long']],
+      'psi warrior': [[3, 'Psionic Energy Dice', (c) => c.step([[3, 4], [5, 6], [9, 8], [13, 10], [17, 12]]), 'long'], [7, 'Psi-Powered Leap', ONE, 'short'], [15, 'Bulwark of Force', ONE, 'long'], [18, 'Telekinetic Master (free cast)', ONE, 'long']],
+      'arcane archer': [[3, 'Arcane Shot', (c) => c.uses('int'), 'short'], [7, 'Magical Ammunition', ONE, 'short']],
+      banneret: [[3, 'Group Recovery', ONE, 'short']],
+      'sorrow knight': [[3, 'Solemn Gaze', (c) => c.uses('wis'), 'long']],
+    },
+  },
+  monk: {
+    base: [[2, 'Focus Points', (c) => c.lv, 'short'], [2, 'Uncanny Metabolism', ONE, 'long']],
+    subs: { 'open hand': [[6, 'Wholeness of Body', (c) => c.uses('wis'), 'long']], mercy: [[17, 'Hand of Ultimate Mercy', ONE, 'long']] },
+  },
+  paladin: {
+    base: [[1, 'Lay on Hands (HP pool)', (c) => 5 * c.lv, 'long'], [2, "Paladin's Smite (free cast)", ONE, 'long'], [3, 'Channel Divinity', (c) => c.step([[3, 2], [11, 3]]), 'long'], [5, 'Faithful Steed (free cast)', ONE, 'long']],
+    subs: {
+      devotion: [[20, 'Holy Nimbus', ONE, 'long']],
+      glory: [[15, 'Glorious Defense', (c) => c.uses('cha'), 'long'], [20, 'Living Legend', ONE, 'long']],
+      ancients: [[15, 'Undying Sentinel', ONE, 'long'], [20, 'Elder Champion', ONE, 'long']],
+      vengeance: [[20, 'Avenging Angel', ONE, 'long']],
+      genies: [[15, 'Elemental Rebuke', (c) => c.uses('cha'), 'long'], [20, 'Noble Scion', ONE, 'long']],
+    },
+  },
+  ranger: {
+    base: [[1, "Favored Enemy (free Hunter's Mark)", (c) => c.step([[1, 2], [5, 3], [9, 4], [13, 5], [17, 6]]), 'long'], [10, 'Tireless', (c) => c.uses('wis'), 'long'], [14, "Nature's Veil", (c) => c.uses('wis'), 'long']],
+    subs: {
+      'fey wanderer': [[11, 'Fey Reinforcements (free cast)', ONE, 'long'], [15, 'Misty Wanderer', (c) => c.uses('wis'), 'long']],
+      'gloom stalker': [[3, 'Dread Ambusher', (c) => c.uses('wis'), 'long']],
+      'hollow warden': [[15, 'Ancient Might', ONE, 'long']],
+      'winter walker': [[7, 'Fortifying Soul', ONE, 'long'], [11, 'Chilling Retribution', (c) => c.uses('wis'), 'long'], [15, 'Frozen Haunt', ONE, 'long']],
+    },
+  },
+  rogue: {
+    base: [[20, 'Stroke of Luck', ONE, 'short']],
+    subs: {
+      'arcane trickster': [[17, 'Spell Thief', ONE, 'long']],
+      soulknife: [[3, 'Psionic Energy Dice', (c) => c.step([[3, 4], [5, 6], [9, 8], [13, 10], [17, 12]]), 'long'], [13, 'Psychic Veil', ONE, 'long'], [17, 'Rend Mind', ONE, 'long']],
+      phantom: [[3, 'Wails from the Grave', (c) => c.uses('dex'), 'long'], [9, 'Soul Trinkets', () => 2, 'long'], [9, 'Voice of Death (free cast)', ONE, 'short'], [13, 'Ghost Walk', ONE, 'long']],
+      scion: [[3, 'Bloodthirst', (c) => c.uses('int'), 'long']],
+    },
+  },
+  sorcerer: {
+    base: [[1, 'Innate Sorcery', () => 2, 'long'], [2, 'Sorcery Points', (c) => c.lv, 'long'], [5, 'Sorcerous Restoration', ONE, 'long']],
+    subs: {
+      aberrant: [[18, 'Warping Implosion', ONE, 'long']],
+      clockwork: [[3, 'Restore Balance', (c) => c.uses('cha'), 'long'], [14, 'Trance of Order', ONE, 'long'], [18, 'Clockwork Cavalcade', ONE, 'long']],
+      draconic: [[14, 'Dragon Wings', ONE, 'long'], [18, 'Dragon Companion (free cast)', ONE, 'long']],
+      'wild magic': [[3, 'Tides of Chaos', ONE, 'long'], [18, 'Tamed Surge', ONE, 'long']],
+      shadow: [[18, 'Umbral Form', ONE, 'long']],
+      spellfire: [[18, 'Crown of Spellfire', ONE, 'long']],
+    },
+  },
+  warlock: {
+    base: [[2, 'Magical Cunning', ONE, 'long'], [9, 'Contact Patron (free cast)', ONE, 'long'], [11, 'Mystic Arcanum (6th level)', ONE, 'long'], [13, 'Mystic Arcanum (7th level)', ONE, 'long'], [15, 'Mystic Arcanum (8th level)', ONE, 'long'], [17, 'Mystic Arcanum (9th level)', ONE, 'long']],
+    subs: {
+      archfey: [[3, 'Steps of the Fey', (c) => c.uses('cha'), 'long'], [10, 'Beguiling Defenses', ONE, 'long']],
+      celestial: [[3, 'Healing Light (d6 pool)', (c) => c.lv + 1, 'long'], [14, 'Searing Vengeance', ONE, 'long']],
+      fiend: [[6, "Dark One's Own Luck", (c) => c.uses('cha'), 'long'], [14, 'Hurl Through Hell', ONE, 'long']],
+      'great old one': [[6, 'Clairvoyant Combatant', ONE, 'short']],
+      undead: [[3, 'Form of Dread', (c) => c.uses('cha'), 'long'], [10, 'Necrotic Husk', ONE, 'short']],
+      vestige: [[10, 'Vestige Recovery', ONE, 'long'], [14, 'Semblance of Life', ONE, 'long']],
+    },
+  },
+  wizard: {
+    base: [[1, 'Arcane Recovery', ONE, 'long'], [20, 'Signature Spells (free casts)', () => 2, 'short']],
+    subs: {
+      abjur: [[3, 'Arcane Ward (HP)', (c) => Math.max(1, 2 * c.lv + c.mod('int')), 'long']],
+      bladesing: [[3, 'Bladesong', (c) => c.uses('int'), 'long']],
+      conjur: [[3, 'Benign Transposition', (c) => c.uses('int'), 'long'], [14, 'Splintered Summons', ONE, 'long']],
+      divin: [[3, 'Portent (foretelling dice)', (c) => (c.lv >= 14 ? 3 : 2), 'long']],
+      enchant: [[3, 'Hypnotic Presence', (c) => c.uses('int'), 'long'], [6, 'Split Enchantment', (c) => c.uses('int'), 'long'], [10, 'Instinctive Charm', ONE, 'long']],
+      'evoker|evocation': [[14, 'Overchannel', ONE, 'long']],
+      illusion: [[6, 'Phantasmal Creatures (free casts)', () => 2, 'long'], [10, 'Illusory Self', ONE, 'short']],
+      necromanc: [[6, 'Undead Thralls (free cast)', ONE, 'long'], [14, "Death's Master", ONE, 'long']],
+      transmut: [[3, 'Wondrous Alteration (free cast)', ONE, 'long'], [6, 'Empowered Transmutation', (c) => c.uses('int'), 'long'], [10, 'Shape-Shifter (free cast)', ONE, 'long']],
+    },
+  },
+  artificer: {
+    base: [[1, "Tinker's Magic", (c) => c.uses('int'), 'long'], [7, 'Flash of Genius', (c) => c.uses('int'), 'long'], [11, 'Spell-Storing Item (uses)', (c) => Math.max(2, 2 * c.mod('int')), 'long']],
+    subs: {
+      alchemist: [[3, 'Experimental Elixirs', (c) => c.step([[3, 2], [5, 3], [9, 4], [15, 5]]), 'long'], [9, 'Restorative Reagents', (c) => c.uses('int'), 'long'], [15, 'Chemical Mastery', ONE, 'long']],
+      armorer: [[15, 'Perfected Armor', (c) => c.uses('int'), 'long']],
+      artillerist: [[3, 'Eldritch Cannon', ONE, 'long']],
+      'battle smith': [[9, 'Arcane Jolt', (c) => c.uses('int'), 'long']],
+      cartographer: [[3, 'Mapping Magic', (c) => c.uses('int'), 'long'], [15, 'Superior Atlas', ONE, 'long']],
+      reanimator: [[3, "Reanimator's Skill Set", (c) => c.uses('int'), 'long'], [3, 'Reanimated Companion', ONE, 'long'], [15, 'Refined Reanimation', ONE, 'long']],
+    },
+  },
+};
+// Hit die size per class (2024 rules), used when the sheet does not say.
+const HIT_DIE = { barbarian: 12, fighter: 10, paladin: 10, ranger: 10, artificer: 8, bard: 8, cleric: 8, druid: 8, monk: 8, rogue: 8, warlock: 8, sorcerer: 6, wizard: 6 };
+function hitDieFor(fm) { return Number(fm.hit_die) || HIT_DIE[String(fm.class || '').toLowerCase().trim()] || 8; }
 function classTrackers(fm) {
   const lv = Number(fm.level) || 1;
-  const cls = String(fm.class || '').toLowerCase().trim();
+  const table = CLASS_RESOURCES[String(fm.class || '').toLowerCase().trim()];
+  if (!table) return [];
   const sub = String(fm.subclass || '').toLowerCase();
-  const score = (k) => Number(fm.abilities && fm.abilities[k] && fm.abilities[k].score) || 10;
-  const mod = (k) => Math.floor(score(k) / 2 - 5);
-  const step = (rows) => rows.reduce((v, [min, val]) => (lv >= min ? val : v), 0);
-  const out = [];
-  const add = (name, max, recovery) => { if (max > 0) out.push({ name, max, used: 0, recovery }); };
-  if (cls === 'barbarian') add('Rage', step([[1, 2], [3, 3], [6, 4], [12, 5], [17, 6]]), 'long');
-  else if (cls === 'bard') add('Bardic Inspiration', Math.max(1, mod('cha')), lv >= 5 ? 'short' : 'long');
-  else if (cls === 'cleric') add('Channel Divinity', step([[2, 2], [6, 3], [18, 4]]), 'long');
-  else if (cls === 'druid') add('Wild Shape', step([[2, 2], [6, 3], [17, 4]]), 'long');
-  else if (cls === 'fighter') {
-    add('Second Wind', step([[1, 2], [4, 3], [10, 4]]), 'long');
-    add('Action Surge', step([[2, 1], [17, 2]]), 'short');
-    add('Indomitable', step([[9, 1], [13, 2], [17, 3]]), 'long');
-    if (sub.includes('battle master')) add('Superiority Dice', step([[3, 4], [7, 5], [15, 6]]), 'short');
-  } else if (cls === 'monk') { add('Focus Points', lv >= 2 ? lv : 0, 'short'); add('Uncanny Metabolism', lv >= 2 ? 1 : 0, 'long'); }
-  else if (cls === 'paladin') { add('Lay on Hands (HP pool)', 5 * lv, 'long'); add('Channel Divinity', step([[3, 2], [11, 3]]), 'long'); }
-  else if (cls === 'ranger') add("Favored Enemy (free Hunter's Mark)", step([[1, 2], [5, 3], [9, 4], [13, 5], [17, 6]]), 'long');
-  else if (cls === 'sorcerer') { add('Sorcery Points', lv >= 2 ? lv : 0, 'long'); add('Innate Sorcery', 2, 'long'); add('Sorcerous Restoration', lv >= 5 ? 1 : 0, 'long'); }
-  else if (cls === 'warlock') add('Magical Cunning', lv >= 2 ? 1 : 0, 'long');
-  else if (cls === 'wizard') add('Arcane Recovery', 1, 'long');
-  else if (cls === 'artificer') { add('Magical Tinkering', Math.max(1, mod('int')), 'long'); add('Flash of Genius', lv >= 7 ? Math.max(1, mod('int')) : 0, 'long'); }
-  return out;
+  const mod = (k) => Math.floor((Number(fm.abilities && fm.abilities[k] && fm.abilities[k].score) || 10) / 2 - 5);
+  const c = { lv, prof: 2 + Math.floor((lv - 1) / 4), mod, uses: (k) => Math.max(1, mod(k)), step: (rows) => rows.reduce((v, [min, val]) => (lv >= min ? val : v), 0) };
+  const rows = [...table.base];
+  Object.entries(table.subs).forEach(([keys, list]) => { if (sub && keys.split('|').some((k) => sub.includes(k))) rows.push(...list); });
+  const pick = (v) => (typeof v === 'function' ? v(c) : v);
+  return rows.filter((r) => lv >= r[0]).map((r) => ({ name: r[1], max: pick(r[2]), used: 0, recovery: pick(r[3]) })).filter((t) => t.max > 0);
 }
 
 function parseSheetBody(body) {
@@ -686,7 +801,7 @@ async function syncPush(request, info, fields) {
 
 const SYNC_CORE = {
   parseSyncInfo, inventoryToText, textToInventory, normSlots, buildPushFields, pushHash, applyPlayerOwned,
-  applyDmPublished, mergeAwards, resolveAward, syncStatusText, syncPull, syncPush, SYNC_PLAYER_KEYS, classTrackers,
+  applyDmPublished, mergeAwards, resolveAward, syncStatusText, syncPull, syncPush, SYNC_PLAYER_KEYS, classTrackers, hitDieFor,
 };
 
 const STANDARD_DICE = [4, 6, 8, 10, 12, 20, 100];
@@ -784,7 +899,7 @@ class LevelUpModal extends Modal {
       select.addEventListener('change', () => { classIndex = Number(select.value); });
     }
 
-    const hitDie = this.fm.hit_die || 8;
+    const hitDie = hitDieFor(this.fm);
     const avg = Math.floor(hitDie / 2) + 1;
     contentEl.createEl('p', { text: `Hit die: d${hitDie}. Average roll: ${avg}.` });
 
@@ -1341,6 +1456,30 @@ class CharacterHubView extends ItemView {
       });
     });
 
+    // Hit Dice: spend one to heal (die + Constitution modifier); half the total (at least 1) come back on a long rest.
+    const hdTotal = Number(fm.hit_dice_total) || Number(fm.level) || 1;
+    const hdLeft = Math.max(0, hdTotal - (Number(fm.hit_dice_used) || 0));
+    const hdDie = hitDieFor(fm);
+    const hdRow = hpBlock.createDiv({ cls: 'csh-hp-row' });
+    hdRow.createEl('span', { text: `🎲 Hit Dice: ${hdLeft} / ${hdTotal} (d${hdDie}) ` });
+    const hdBtn = hdRow.createEl('button', { text: 'Spend a hit die', cls: 'csh-rest-btn', attr: { 'aria-label': 'Spend a hit die' } });
+    hdBtn.addEventListener('click', () => {
+      if (hdLeft <= 0) { new Notice('No hit dice left. A long rest gives back half of them.'); return; }
+      const roll = 1 + Math.floor(Math.random() * hdDie);
+      const con = Math.floor((Number(fm.abilities && fm.abilities.con && fm.abilities.con.score) || 10) / 2 - 5);
+      const heal = Math.max(0, roll + con);
+      this.updateFrontmatter((f) => {
+        f.hit_dice_used = (Number(f.hit_dice_used) || 0) + 1;
+        f.hp = Math.min(f.hp_max || 0, (f.hp || 0) + heal);
+      });
+      new Notice(`Hit die: rolled ${roll}${con >= 0 ? ' + ' : ' - '}${Math.abs(con)} = ${heal} HP`);
+    });
+
+    // Heroic Inspiration (2024 rules): you either have it or you don't.
+    const inspRow = hpBlock.createDiv({ cls: 'csh-btn-row' });
+    const inspBtn = inspRow.createEl('button', { text: fm.inspiration ? '⭐ Heroic Inspiration: yes' : '☆ Heroic Inspiration: no', cls: 'csh-condition-chip' + (fm.inspiration ? ' active' : ''), attr: { 'aria-label': 'Heroic Inspiration' } });
+    inspBtn.addEventListener('click', () => { this.updateFrontmatter((f) => { f.inspiration = !f.inspiration; }); });
+
     // Death saves
     const dsBlock = sec.createDiv({ cls: 'csh-combat-block' });
     dsBlock.createEl('h4', { text: '💀 Death Saves' });
@@ -1375,6 +1514,13 @@ class CharacterHubView extends ItemView {
     // Conditions
     const condBlock = sec.createDiv({ cls: 'csh-combat-block' });
     condBlock.createEl('h4', { text: '☣️ Conditions' });
+    const exRow = condBlock.createDiv({ cls: 'csh-hp-row' });
+    const exLevel = Number(fm.exhaustion) || 0;
+    exRow.createEl('span', { text: `💀 Exhaustion: ${exLevel} / 6 ` });
+    const exDown = exRow.createEl('button', { text: '−', attr: { 'aria-label': 'Decrease exhaustion' } });
+    const exUp = exRow.createEl('button', { text: '+', attr: { 'aria-label': 'Increase exhaustion' } });
+    exDown.addEventListener('click', () => { this.updateFrontmatter((f) => { f.exhaustion = Math.max(0, (Number(f.exhaustion) || 0) - 1); }); });
+    exUp.addEventListener('click', () => { this.updateFrontmatter((f) => { f.exhaustion = Math.min(6, (Number(f.exhaustion) || 0) + 1); }); });
     const active = fm.conditions || [];
     const condGrid = condBlock.createDiv({ cls: 'csh-condition-grid' });
 
@@ -1634,6 +1780,14 @@ class CharacterHubView extends ItemView {
       this.updateFrontmatter((f) => { f.gold = Math.round((Number(goldInput.value) || 0) * 100) / 100; });
     });
     goldRow.createEl('span', { text: ' gp' });
+    // The printed sheet has five coin types; gold is the only one the Sheet syncs, the rest are kept on this device.
+    const coinRow = sec.createDiv({ cls: 'csh-hp-row' });
+    [['cp', 'Copper'], ['sp', 'Silver'], ['ep', 'Electrum'], ['pp', 'Platinum']].forEach(([key, label]) => {
+      coinRow.createEl('span', { text: ` ${key.toUpperCase()} ` });
+      const coin = coinRow.createEl('input', { type: 'number', cls: 'csh-hp-input csh-gold-input', attr: { 'aria-label': label } });
+      coin.value = String((fm.coins && fm.coins[key]) || 0);
+      coin.addEventListener('change', () => { this.updateFrontmatter((f) => { f.coins = f.coins || {}; f.coins[key] = Math.max(0, Math.round(Number(coin.value) || 0)); }); });
+    });
     const pendingAwards = Array.isArray(fm.sync_pending_awards) ? fm.sync_pending_awards : [];
     if (pendingAwards.length) {
       const box = sec.createDiv({ cls: 'csh-awards' });

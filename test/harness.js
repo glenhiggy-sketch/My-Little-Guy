@@ -66,13 +66,13 @@ function makeHarness(opts) {
 		},
 	};
 	const mod = { exports: {} };
-	global.window = window; global.document = window.document;
+	global.window = window; global.document = window.document; global.requestAnimationFrame = global.requestAnimationFrame || ((f) => setTimeout(f, 0)); // a real browser has it; the dice roll animation uses it
 	new Function("module", "exports", "require", fs.readFileSync(path.join(ROOT, "main.js"), "utf8"))(mod, mod.exports, (n) => (n === "obsidian" ? obsidian : require(n)));
 	const { __sync: C, __CharacterHubView: View } = mod.exports;
 
 	// ---- a character, a vault file and a fake app around it
 	const row = SV.upsertDatabaseRow_({ characterName: character.name, playerName: character.player, species: character.species, background: character.background, className: character.className, alignment: character.alignment },
-		{ level: 3, hp: 20, ac: 11, subclassName: "School of Abjuration", equipment: ["a quarterstaff", "a spellbook"], spellSlots: [4, 2, 0, 0, 0, 0, 0, 0, 0] });
+		Object.assign({ level: 3, hp: 20, ac: 11, subclassName: "School of Abjuration", equipment: ["a quarterstaff", "a spellbook"], spellSlots: [4, 2, 0, 0, 0, 0, 0, 0, 0] }, opts.stats || {})); // opts.stats: make the Sheet row match a different fixture
 	const sheetText = SV.withSyncComment_(fs.readFileSync(opts.fixture || FIXTURE, "utf8"), row);
 	const file = { path: character.name + " - " + character.player + ".md", basename: character.name + " - " + character.player, extension: "md" };
 	const fm = {};
@@ -86,7 +86,7 @@ function makeHarness(opts) {
 	};
 	h.noteOpen = !opts.panelFirst; // panelFirst: the panel is open (as after a fresh install) before the player opens their character note
 	h.netDown = !!opts.startOffline;
-	const plugin = { syncRetryMs: 20, syncTimeoutMs: 100, settings: { sheetPath: opts.panelFirst ? "" : file.path }, lastActiveFile: opts.panelFirst ? null : file, logEvent: (e, d) => h.events.push(e + (d ? ":" + d : "")) };
+	const plugin = { saveSettings: async () => {}, syncRetryMs: 20, syncTimeoutMs: 100, settings: { sheetPath: opts.panelFirst ? "" : file.path }, lastActiveFile: opts.panelFirst ? null : file, logEvent: (e, d) => h.events.push(e + (d ? ":" + d : "")) };
 	const view = new View({ app }, plugin);
 
 	// ---- sheet-side helpers (what a DM sees in Google Sheets)

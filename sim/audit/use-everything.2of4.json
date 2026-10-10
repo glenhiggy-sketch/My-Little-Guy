@@ -1,0 +1,1855 @@
+[
+ {
+  "sheet": "Artificer__armorer.md",
+  "cls": "Artificer",
+  "sub": "Armorer",
+  "level": 20,
+  "controls": 451,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Tinker's Magic 5 (long)",
+   "Flash of Genius 5 (long)",
+   "Perfected Armor 5 (long)"
+  ],
+  "spellLevels": 5,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 6,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "New Feature",
+    "max": 1,
+    "used": 0,
+    "recovery": "short"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can replace one of your cantrips from this feature with another Artificer cantrip of your choice."
+   },
+   {
+    "level": 1,
+    "feature": "Tinker's Magic",
+    "tracked": true,
+    "onSheet": true,
+    "line": "The item lasts until you finish a Long Rest, at which point it vanishes."
+   },
+   {
+    "level": 2,
+    "feature": "Replicate Magic Item",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you finish a Long Rest, you can create one or two different magic items if you have Tinker’s Tools in hand."
+   },
+   {
+    "level": 3,
+    "feature": "Artificer Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Artificer level or lower."
+   },
+   {
+    "level": 6,
+    "feature": "Magic Item Tinker",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You expend a level 1+ spell slot and recharge the item."
+   },
+   {
+    "level": 7,
+    "feature": "Flash of Genius",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can take this Reaction a number of times equal to your Intelligence modifier (minimum of once)."
+   },
+   {
+    "level": 11,
+    "feature": "Spell-Storing Item",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can touch one Simple or Martial weapon or one item that you can use as a Spellcasting Focus, and you store a spell in it, choosing a level 1, 2, or 3 Artificer spell that has a casting time of an action and doesn’t require a Material component that is consumed by the spell (you needn’t have the spell prepared)."
+   },
+   {
+    "level": 14,
+    "feature": "Advanced Artifice",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you finish a Short Rest, you regain one expended use of your Flash of Genius feature."
+   },
+   {
+    "level": 20,
+    "feature": "Soul of Artifice",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you finish a Short Rest, you regain all expended uses of your Flash of Genius if you have Attunement to at least one magic item."
+   },
+   {
+    "level": 3,
+    "feature": "Armor Model",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can change the armor’s model whenever you finish a Short or Long Rest if you have Smith’s Tools in hand."
+   },
+   {
+    "level": 15,
+    "feature": "Perfected Armor",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can take this Reaction a number of times equal to your Intelligence modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+   }
+  ]
+ },
+ {
+  "sheet": "Artificer__reanimator.md",
+  "cls": "Artificer",
+  "sub": "Reanimator",
+  "level": 20,
+  "controls": 458,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Tinker's Magic 5 (long)",
+   "Flash of Genius 5 (long)",
+   "Reanimator's Skill Set 5 (long)",
+   "Reanimated Companion 1 (long)",
+   "Refined Reanimation 1 (long)"
+  ],
+  "spellLevels": 5,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 6,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "New Feature",
+    "max": 1,
+    "used": 0,
+    "recovery": "short"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can replace one of your cantrips from this feature with another Artificer cantrip of your choice."
+   },
+   {
+    "level": 1,
+    "feature": "Tinker's Magic",
+    "tracked": true,
+    "onSheet": true,
+    "line": "The item lasts until you finish a Long Rest, at which point it vanishes."
+   },
+   {
+    "level": 2,
+    "feature": "Replicate Magic Item",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you finish a Long Rest, you can create one or two different magic items if you have Tinker’s Tools in hand."
+   },
+   {
+    "level": 3,
+    "feature": "Artificer Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Artificer level or lower."
+   },
+   {
+    "level": 6,
+    "feature": "Magic Item Tinker",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You expend a level 1+ spell slot and recharge the item."
+   },
+   {
+    "level": 7,
+    "feature": "Flash of Genius",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can take this Reaction a number of times equal to your Intelligence modifier (minimum of once)."
+   },
+   {
+    "level": 11,
+    "feature": "Spell-Storing Item",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can touch one Simple or Martial weapon or one item that you can use as a Spellcasting Focus, and you store a spell in it, choosing a level 1, 2, or 3 Artificer spell that has a casting time of an action and doesn’t require a Material component that is consumed by the spell (you needn’t have the spell prepared)."
+   },
+   {
+    "level": 14,
+    "feature": "Advanced Artifice",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you finish a Short Rest, you regain one expended use of your Flash of Genius feature."
+   },
+   {
+    "level": 20,
+    "feature": "Soul of Artifice",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you finish a Short Rest, you regain all expended uses of your Flash of Genius if you have Attunement to at least one magic item."
+   },
+   {
+    "level": 3,
+    "feature": "Reanimator’s Skill Set",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can modify the spell this way a number of times equal to your Intelligence modifier, and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Reanimated Companion",
+    "tracked": true,
+    "onSheet": false,
+    "line": "It lasts until you finish a Long Rest or until you take a Magic action to dismiss it early, at which point it harmlessly collapses into a pile of viscera."
+   },
+   {
+    "level": 9,
+    "feature": "Macabre Modifications",
+    "tracked": false,
+    "onSheet": false,
+    "line": "The companion gains a Swim Speed equal to its Speed, and it can move through a space as narrow as 1 inch without expending extra movement to do so."
+   },
+   {
+    "level": 15,
+    "feature": "Refined Reanimation",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can cast Raise Dead once without expending a spell slot and without Material components, provided you use Tinker’s Tools or another type of Artisan’s Tools with which you have proficiency as the Spellcasting Focus."
+   }
+  ]
+ },
+ {
+  "sheet": "Barbarian__path-of-the-zealot.md",
+  "cls": "Barbarian",
+  "sub": "Path of the Zealot",
+  "level": 20,
+  "controls": 442,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Rage 6 (long)",
+   "Persistent Rage 1 (long)",
+   "Warrior of the Gods (d12 pool) 7 (long)",
+   "Zealous Presence 1 (long)",
+   "Rage of the Gods 1 (long)"
+  ],
+  "spellLevels": 0,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "New Feature",
+    "max": 1,
+    "used": 0,
+    "recovery": "short"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Rage",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table."
+   },
+   {
+    "level": 1,
+    "feature": "Weapon Mastery",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices."
+   },
+   {
+    "level": 3,
+    "feature": "Barbarian Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Barbarian level or lower."
+   },
+   {
+    "level": 11,
+    "feature": "Relentless Rage",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you finish a Short or Long Rest, the DC resets to 10."
+   },
+   {
+    "level": 15,
+    "feature": "Persistent Rage",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you roll Initiative, you can regain all expended uses of Rage."
+   },
+   {
+    "level": 3,
+    "feature": "Warrior of the Gods",
+    "tracked": true,
+    "onSheet": false,
+    "line": "As a Bonus Action, you can expend dice from the pool, roll them, and regain a number of Hit Points equal to the roll’s total."
+   },
+   {
+    "level": 10,
+    "feature": "Zealous Presence",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you use this feature, you can’t use it again until you finish a Long Rest unless you expend a use of your Rage (no action required) to restore your use of it."
+   },
+   {
+    "level": 14,
+    "feature": "Rage of the Gods",
+    "tracked": false,
+    "onSheet": false,
+    "line": "Once you use this feature, you can't do so again until you finish a Long Rest."
+   }
+  ]
+ },
+ {
+  "sheet": "Bard__college-of-spirits.md",
+  "cls": "Bard",
+  "sub": "College of Spirits",
+  "level": 20,
+  "controls": 451,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Bardic Inspiration 3 (short)"
+  ],
+  "spellLevels": 9,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "New Feature",
+    "max": 1,
+    "used": 0,
+    "recovery": "short"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Bardic Inspiration",
+    "tracked": true,
+    "onSheet": true,
+    "line": "A Bardic Inspiration die is expended when it's rolled."
+   },
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended slots when you finish a Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Bard Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Bard level or lower."
+   },
+   {
+    "level": 5,
+    "feature": "Font of Inspiration",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You now regain all your expended uses of Bardic Inspiration when you finish a Short or Long Rest."
+   },
+   {
+    "level": 18,
+    "feature": "Superior Inspiration",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you roll Initiative, you regain expended uses of Bardic Inspiration until you have two if you have fewer than that."
+   },
+   {
+    "level": 3,
+    "feature": "Spirits from Beyond",
+    "tracked": false,
+    "onSheet": false,
+    "line": "The spirit remains channeled until you unleash it or until you finish a Short or Long Rest."
+   },
+   {
+    "level": 6,
+    "feature": "Empowered Channeling",
+    "tracked": false,
+    "onSheet": false,
+    "line": "You can cast the spell once without a spell slot, and you regain the ability to cast it in this way when you finish a Long Rest."
+   }
+  ]
+ },
+ {
+  "sheet": "Cleric__grave-domain.md",
+  "cls": "Cleric",
+  "sub": "Grave Domain",
+  "level": 20,
+  "controls": 465,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Channel Divinity 4 (long)",
+   "Divine Intervention 1 (long)",
+   "Sentinel at Death's Door 4 (long)",
+   "Divine Reaper 1 (short)"
+  ],
+  "spellLevels": 9,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended slots when you finish a Long Rest."
+   },
+   {
+    "level": 2,
+    "feature": "Channel Divinity",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You regain one of its expended uses when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Cleric Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Cleric level or lower."
+   },
+   {
+    "level": 10,
+    "feature": "Divine Intervention",
+    "tracked": true,
+    "onSheet": true,
+    "line": "As part of the same action, you cast that spell without expending a spell slot or needing Material components."
+   },
+   {
+    "level": 20,
+    "feature": "Greater Divine Intervention",
+    "tracked": true,
+    "onSheet": true,
+    "line": "If you do so, you can’t use Divine Intervention again until you finish 2d4 Long Rests."
+   },
+   {
+    "level": 3,
+    "feature": "Path to the Grave",
+    "tracked": false,
+    "onSheet": false,
+    "line": "As a Bonus Action, you present your Holy Symbol and expend a use of Channel Divinity to curse one creature you can see within 30 feet of yourself until the start of your next turn."
+   },
+   {
+    "level": 6,
+    "feature": "Sentinel at Death’s Door",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can use this feature a number of times equal to your Wisdom modifier (minimum of once)."
+   },
+   {
+    "level": 17,
+    "feature": "Divine Reaper",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you cast a spell of level 5 or lower from the Necromancy school that targets one creature, or when you cast a spell from the Grave Domain Spells table, you can expend a use of Channel Divinity to target a second creature within the spell’s range."
+   }
+  ]
+ },
+ {
+  "sheet": "Cleric__trickery-domain.md",
+  "cls": "Cleric",
+  "sub": "Trickery Domain",
+  "level": 20,
+  "controls": 458,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Channel Divinity 4 (long)",
+   "Divine Intervention 1 (long)"
+  ],
+  "spellLevels": 9,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended slots when you finish a Long Rest."
+   },
+   {
+    "level": 2,
+    "feature": "Channel Divinity",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You regain one of its expended uses when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Cleric Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Cleric level or lower."
+   },
+   {
+    "level": 10,
+    "feature": "Divine Intervention",
+    "tracked": true,
+    "onSheet": true,
+    "line": "As part of the same action, you cast that spell without expending a spell slot or needing Material components."
+   },
+   {
+    "level": 20,
+    "feature": "Greater Divine Intervention",
+    "tracked": true,
+    "onSheet": true,
+    "line": "If you do so, you can’t use Divine Intervention again until you finish 2d4 Long Rests."
+   },
+   {
+    "level": 3,
+    "feature": "Blessing of the Trickster",
+    "tracked": false,
+    "onSheet": false,
+    "line": "This blessing lasts until you finish a Long Rest or you use this feature again."
+   },
+   {
+    "level": 3,
+    "feature": "Invoke Duplicity",
+    "tracked": false,
+    "onSheet": false,
+    "line": "As a Bonus Action, you can expend one use of your Channel Divinity to create a perfect visual illusion of yourself in an unoccupied space you can see within 30 feet of yourself."
+   }
+  ]
+ },
+ {
+  "sheet": "Druid__circle-of-the-sea.md",
+  "cls": "Druid",
+  "sub": "Circle of the Sea",
+  "level": 20,
+  "controls": 447,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Wild Shape 4 (long)"
+  ],
+  "spellLevels": 9,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "New Feature",
+    "max": 1,
+    "used": 0,
+    "recovery": "short"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended slots when you finish a Long Rest."
+   },
+   {
+    "level": 2,
+    "feature": "Wild Shape",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 2,
+    "feature": "Wild Companion",
+    "tracked": false,
+    "onSheet": true,
+    "line": "As a Magic action, you can expend a spell slot or a use of Wild Shape to cast the Find Familiar spell without Material components."
+   },
+   {
+    "level": 3,
+    "feature": "Druid Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Druid level or lower."
+   },
+   {
+    "level": 5,
+    "feature": "Wild Resurgence",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Once on each of your turns, if you have no uses of Wild Shape left, you can give yourself one use by expending a spell slot (no action required)."
+   },
+   {
+    "level": 20,
+    "feature": "Archdruid",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you roll Initiative and have no uses of Wild Shape left, you regain one expended use of it."
+   },
+   {
+    "level": 3,
+    "feature": "Wrath of the Sea",
+    "tracked": false,
+    "onSheet": false,
+    "line": "As a Bonus Action, you can expend a use of your Wild Shape to manifest a 5-foot Emanation that takes the form of ocean spray that surrounds you for 10 minutes."
+   },
+   {
+    "level": 14,
+    "feature": "Oceanic Gift",
+    "tracked": false,
+    "onSheet": false,
+    "line": "In addition, you can manifest the Emanation around both the other creature and yourself if you expend two uses of your Wild Shape instead of one when manifesting it."
+   }
+  ]
+ },
+ {
+  "sheet": "Fighter__battle-master.md",
+  "cls": "Fighter",
+  "sub": "Battle Master",
+  "level": 20,
+  "controls": 443,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Second Wind 4 (long)",
+   "Action Surge 2 (short)",
+   "Indomitable 3 (long)",
+   "Superiority Dice 6 (short)",
+   "Know Your Enemy 1 (long)"
+  ],
+  "spellLevels": 0,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 3,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 7,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "New Feature",
+    "max": 1,
+    "used": 0,
+    "recovery": "short"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Second Wind",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 1,
+    "feature": "Weapon Mastery",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices."
+   },
+   {
+    "level": 2,
+    "feature": "Action Surge",
+    "tracked": true,
+    "onSheet": true,
+    "line": "Once you use this feature, you can’t do so again until you finish a Short or Long Rest."
+   },
+   {
+    "level": 2,
+    "feature": "Tactical Mind",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you fail an ability check, you can expend a use of your Second Wind to push yourself toward success."
+   },
+   {
+    "level": 3,
+    "feature": "Fighter Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Fighter level or lower."
+   },
+   {
+    "level": 9,
+    "feature": "Indomitable",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You must use the new roll, and you can’t use this feature again until you finish a Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Combat Superiority",
+    "tracked": true,
+    "onSheet": false,
+    "line": "A Superiority Die is expended when you use it."
+   },
+   {
+    "level": 7,
+    "feature": "Know Your Enemy",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you use this feature, you can’t do so again until you finish a Long Rest."
+   },
+   {
+    "level": 15,
+    "feature": "Relentless",
+    "tracked": false,
+    "onSheet": false,
+    "line": "Once per turn, when you use a maneuver, you can roll 1d8 and use the number rolled instead of expending a Superiority Die."
+   },
+   {
+    "level": 18,
+    "feature": "Ultimate Combat Superiority",
+    "tracked": true,
+    "onSheet": false,
+    "line": "When you make a Dexterity (Stealth) check or an Initiative roll, you can expend one Superiority Die and add the die to the roll, unless you have the Incapacitated condition."
+   }
+  ]
+ },
+ {
+  "sheet": "Monk__warrior-of-mercy.md",
+  "cls": "Monk",
+  "sub": "Warrior of Mercy",
+  "level": 20,
+  "controls": 432,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Focus Points 20 (short)",
+   "Uncanny Metabolism 1 (long)",
+   "Hand of Ultimate Mercy 1 (long)"
+  ],
+  "spellLevels": 0,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "New Feature",
+    "max": 1,
+    "used": 0,
+    "recovery": "short"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 2,
+    "feature": "Monk’s Focus",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can expend these points to enhance or fuel certain Monk features."
+   },
+   {
+    "level": 2,
+    "feature": "Uncanny Metabolism",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you roll Initiative, you can regain all expended Focus Points."
+   },
+   {
+    "level": 3,
+    "feature": "Deflect Attacks",
+    "tracked": false,
+    "onSheet": true,
+    "line": "If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force."
+   },
+   {
+    "level": 3,
+    "feature": "Monk Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Monk level or lower."
+   },
+   {
+    "level": 5,
+    "feature": "Stunning Strike",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Once per turn when you hit a creature with a Monk weapon or an Unarmed Strike, you can expend 1 Focus Point to attempt a stunning strike."
+   },
+   {
+    "level": 10,
+    "feature": "Heightened Focus",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can expend 1 Focus Point to use Flurry of Blows and make three Unarmed Strikes with it instead of two."
+   },
+   {
+    "level": 14,
+    "feature": "Disciplined Survivor",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Additionally, whenever you make a saving throw and fail, you can expend 1 Focus Point to reroll it, and you must use the new roll."
+   },
+   {
+    "level": 15,
+    "feature": "Perfect Focus",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you roll Initiative and don’t use Uncanny Metabolism, you regain expended Focus Points until you have 4 if you have 3 or fewer."
+   },
+   {
+    "level": 18,
+    "feature": "Superior Defense",
+    "tracked": false,
+    "onSheet": true,
+    "line": "At the start of your turn, you can expend 3 Focus Points to bolster yourself against harm for 1 minute or until you have the Incapacitated condition."
+   },
+   {
+    "level": 3,
+    "feature": "Hand of Harm",
+    "tracked": false,
+    "onSheet": false,
+    "line": "Once per turn when you hit a creature with an Unarmed Strike and deal damage, you can expend 1 Focus Point to deal extra Necrotic damage equal to one roll of your Martial Arts die plus your Wisdom modifier."
+   },
+   {
+    "level": 3,
+    "feature": "Hand of Healing",
+    "tracked": false,
+    "onSheet": false,
+    "line": "As a Magic action, you can expend 1 Focus Point to touch a creature and restore a number of Hit Points equal to a roll of your Martial Arts die plus your Wisdom modifier."
+   },
+   {
+    "level": 11,
+    "feature": "Flurry of Healing and Harm",
+    "tracked": false,
+    "onSheet": false,
+    "line": "When you use Flurry of Blows, you can replace each of the Unarmed Strikes with a use of Hand of Healing without expending Focus Points for the healing."
+   },
+   {
+    "level": 17,
+    "feature": "Hand of Ultimate Mercy",
+    "tracked": true,
+    "onSheet": false,
+    "line": "As a Magic action, you can touch the corpse of a creature that died within the past 24 hours and expend 5 Focus Points."
+   }
+  ]
+ },
+ {
+  "sheet": "Monk__warrior-of-the-open-hand.md",
+  "cls": "Monk",
+  "sub": "Warrior of the Open Hand",
+  "level": 20,
+  "controls": 432,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Focus Points 20 (short)",
+   "Uncanny Metabolism 1 (long)",
+   "Wholeness of Body 1 (long)"
+  ],
+  "spellLevels": 0,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "New Feature",
+    "max": 1,
+    "used": 0,
+    "recovery": "short"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 2,
+    "feature": "Monk’s Focus",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can expend these points to enhance or fuel certain Monk features."
+   },
+   {
+    "level": 2,
+    "feature": "Uncanny Metabolism",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you roll Initiative, you can regain all expended Focus Points."
+   },
+   {
+    "level": 3,
+    "feature": "Deflect Attacks",
+    "tracked": false,
+    "onSheet": true,
+    "line": "If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force."
+   },
+   {
+    "level": 3,
+    "feature": "Monk Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Monk level or lower."
+   },
+   {
+    "level": 5,
+    "feature": "Stunning Strike",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Once per turn when you hit a creature with a Monk weapon or an Unarmed Strike, you can expend 1 Focus Point to attempt a stunning strike."
+   },
+   {
+    "level": 10,
+    "feature": "Heightened Focus",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can expend 1 Focus Point to use Flurry of Blows and make three Unarmed Strikes with it instead of two."
+   },
+   {
+    "level": 14,
+    "feature": "Disciplined Survivor",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Additionally, whenever you make a saving throw and fail, you can expend 1 Focus Point to reroll it, and you must use the new roll."
+   },
+   {
+    "level": 15,
+    "feature": "Perfect Focus",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you roll Initiative and don’t use Uncanny Metabolism, you regain expended Focus Points until you have 4 if you have 3 or fewer."
+   },
+   {
+    "level": 18,
+    "feature": "Superior Defense",
+    "tracked": false,
+    "onSheet": true,
+    "line": "At the start of your turn, you can expend 3 Focus Points to bolster yourself against harm for 1 minute or until you have the Incapacitated condition."
+   },
+   {
+    "level": 6,
+    "feature": "Wholeness of Body",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 17,
+    "feature": "Quivering Palm",
+    "tracked": false,
+    "onSheet": false,
+    "line": "When you hit a creature with an Unarmed Strike, you can expend 4 Focus Points to start these imperceptible vibrations, which last for a number of days equal to your Monk level."
+   }
+  ]
+ },
+ {
+  "sheet": "Paladin__oath-of-the-noble-genies.md",
+  "cls": "Paladin",
+  "sub": "Oath of the Noble Genies",
+  "level": 20,
+  "controls": 462,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Lay on Hands (HP pool) 100 (long)",
+   "Paladin's Smite (free cast) 1 (long)",
+   "Channel Divinity 3 (long)",
+   "Faithful Steed (free cast) 1 (long)",
+   "Elemental Rebuke 1 (long)",
+   "Noble Scion 1 (long)"
+  ],
+  "spellLevels": 5,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Lay On Hands",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You have a pool of healing power that replenishes when you finish a Long Rest."
+   },
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended slots when you finish a Long Rest."
+   },
+   {
+    "level": 1,
+    "feature": "Weapon Mastery",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
+   },
+   {
+    "level": 2,
+    "feature": "Paladin's Smite",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can cast it without expending a spell slot, but you must finish a Long Rest before you can cast it this way again."
+   },
+   {
+    "level": 3,
+    "feature": "Channel Divinity",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You regain one of its expended uses when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Paladin Subclass",
+    "tracked": true,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Paladin level or lower."
+   },
+   {
+    "level": 5,
+    "feature": "Faithful Steed",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can also cast the spell once without expending a spell slot, and you regain your ability to do so when you finish a Long Rest."
+   },
+   {
+    "level": 9,
+    "feature": "Abjure Foes",
+    "tracked": false,
+    "onSheet": true,
+    "line": "As a Magic action, you can expend one use of this class's Channel Divinity to overwhelm foes with awe."
+   },
+   {
+    "level": 14,
+    "feature": "Restoring Touch",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You must expend 5 Hit Points from the healing pool of Lay On Hands for each of these conditions you remove; those points don't also restore Hit Points to the creature."
+   },
+   {
+    "level": 3,
+    "feature": "Elemental Smite",
+    "tracked": true,
+    "onSheet": true,
+    "line": "Immediately after you cast Divine Smite , you can expend one use of your Channel Divinity and invoke one of the following effects."
+   },
+   {
+    "level": 15,
+    "feature": "Elemental Rebuke",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can use this feature a number of times equal to your Charisma modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 20,
+    "feature": "Noble Scion",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you use this feature, you can’t use it again until you finish a Long Rest."
+   }
+  ]
+ },
+ {
+  "sheet": "Ranger__gloom-stalker.md",
+  "cls": "Ranger",
+  "sub": "Gloom Stalker",
+  "level": 20,
+  "controls": 455,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Favored Enemy (free Hunter's Mark) 6 (long)",
+   "Tireless 1 (long)",
+   "Nature's Veil 1 (long)",
+   "Dread Ambusher 1 (long)"
+  ],
+  "spellLevels": 5,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended slots when you finish a Long Rest."
+   },
+   {
+    "level": 1,
+    "feature": "Favored Enemy",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can cast it twice without expending a spell slot, and you regain all expended uses of this ability when you finish a Long Rest."
+   },
+   {
+    "level": 1,
+    "feature": "Weapon Mastery",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
+   },
+   {
+    "level": 3,
+    "feature": "Ranger Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Ranger level or lower."
+   },
+   {
+    "level": 10,
+    "feature": "Tireless",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can use this action a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 14,
+    "feature": "Nature's Veil",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Dread Ambusher",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can use this benefit only once per turn, you can use it a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+   }
+  ]
+ },
+ {
+  "sheet": "Rogue__arcane-trickster.md",
+  "cls": "Rogue",
+  "sub": "Arcane Trickster",
+  "level": 20,
+  "controls": 443,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Stroke of Luck 1 (short)",
+   "Spell Thief 1 (long)"
+  ],
+  "spellLevels": 3,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Weapon Mastery",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
+   },
+   {
+    "level": 3,
+    "feature": "Rogue Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Rogue level or lower."
+   },
+   {
+    "level": 20,
+    "feature": "Stroke of Luck",
+    "tracked": true,
+    "onSheet": true,
+    "line": "Once you use this feature, you can't use it again until you finish a Short or Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": false,
+    "line": "You regain all expended spell slots when you finish a Long Rest."
+   },
+   {
+    "level": 17,
+    "feature": "Spell Thief",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you steal a spell with this feature, you can't use this feature again until you finish a Long Rest."
+   }
+  ]
+ },
+ {
+  "sheet": "Rogue__soulknife.md",
+  "cls": "Rogue",
+  "sub": "Soulknife",
+  "level": 20,
+  "controls": 443,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Stroke of Luck 1 (short)",
+   "Psionic Energy Dice 12 (long)",
+   "Psychic Veil 1 (long)",
+   "Rend Mind 1 (long)"
+  ],
+  "spellLevels": 0,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 13,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Weapon Mastery",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
+   },
+   {
+    "level": 3,
+    "feature": "Rogue Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Rogue level or lower."
+   },
+   {
+    "level": 20,
+    "feature": "Stroke of Luck",
+    "tracked": true,
+    "onSheet": true,
+    "line": "Once you use this feature, you can't use it again until you finish a Short or Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Psionic Power",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Some of your powers expend a Psionic Energy Die, as specified in the power's description, and you can't use the power if it requires you to use a die when your Psionic Energy Dice are all expended."
+   },
+   {
+    "level": 9,
+    "feature": "Soul Blades",
+    "tracked": false,
+    "onSheet": false,
+    "line": "If this causes the attack to hit, the die is expended."
+   },
+   {
+    "level": 13,
+    "feature": "Psychic Veil",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you use this feature, you can't do so again until you finish a Long Rest unless you expend a Psionic Energy Die (no action required) to restore your use of it."
+   },
+   {
+    "level": 17,
+    "feature": "Rend Mind",
+    "tracked": false,
+    "onSheet": false,
+    "line": "Once you use this feature, you can't do so again until you finish a Long Rest unless you expend three Psionic Energy Dice (no action required) to restore your use of it."
+   }
+  ]
+ },
+ {
+  "sheet": "Sorcerer__draconic-sorcery.md",
+  "cls": "Sorcerer",
+  "sub": "Draconic Sorcery",
+  "level": 20,
+  "controls": 465,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Innate Sorcery 2 (long)",
+   "Sorcery Points 20 (long)",
+   "Sorcerous Restoration 1 (long)",
+   "Dragon Wings 1 (long)",
+   "Dragon Companion (free cast) 1 (long)"
+  ],
+  "spellLevels": 9,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 21,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "New Feature",
+    "max": 1,
+    "used": 0,
+    "recovery": "short"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended slots when you finish a Long Rest."
+   },
+   {
+    "level": 1,
+    "feature": "Innate Sorcery",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can use this feature twice, and you regain all expended uses of it when you finish a Long Rest."
+   },
+   {
+    "level": 2,
+    "feature": "Font of Magic",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended Sorcery Points when you finish a Long Rest."
+   },
+   {
+    "level": 3,
+    "feature": "Sorcerer Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Sorcerer level or lower."
+   },
+   {
+    "level": 5,
+    "feature": "Sorcerous Restoration",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you finish a Short Rest, you can regain expended Sorcery Points, but no more than a number equal to half your Sorcerer level (round down)."
+   },
+   {
+    "level": 14,
+    "feature": "Dragon Wings",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you use this feature, you can’t use it again until you finish a Long Rest unless you spend 3 Sorcery Points (no action required) to restore your use of it."
+   },
+   {
+    "level": 18,
+    "feature": "Dragon Companion",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can also cast it once without a spell slot, and you regain the ability to cast it in this way when you finish a Long Rest."
+   }
+  ]
+ },
+ {
+  "sheet": "Warlock__archfey-patron.md",
+  "cls": "Warlock",
+  "sub": "The Archfey",
+  "level": 20,
+  "controls": 456,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Magical Cunning 1 (long)",
+   "Contact Patron (free cast) 1 (long)",
+   "Mystic Arcanum (6th level) 1 (long)",
+   "Mystic Arcanum (7th level) 1 (long)",
+   "Mystic Arcanum (8th level) 1 (long)",
+   "Mystic Arcanum (9th level) 1 (long)",
+   "Steps of the Fey 3 (long)",
+   "Beguiling Defenses 1 (long)"
+  ],
+  "spellLevels": 0,
+  "pact": true,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Pact Magic",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended Pact Magic spell slots when you finish a Short or Long Rest."
+   },
+   {
+    "level": 2,
+    "feature": "Magical Cunning",
+    "tracked": true,
+    "onSheet": true,
+    "line": "At the end of it, you regain expended Pact Magic spell slots but no more than a number equal to half your maximum (round up)."
+   },
+   {
+    "level": 3,
+    "feature": "Warlock Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Warlock level or lower."
+   },
+   {
+    "level": 9,
+    "feature": "Contact Patron",
+    "tracked": true,
+    "onSheet": true,
+    "line": "With this feature, you can cast the spell without expending a spell slot to contact your patron, and you automatically succeed on the spell’s saving throw."
+   },
+   {
+    "level": 11,
+    "feature": "Mystic Arcanum",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can cast your arcanum spell once without expending a spell slot, and you must finish a Long Rest before you can cast it in this way again."
+   },
+   {
+    "level": 20,
+    "feature": "Eldritch Master",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you use your Magical Cunning feature, you regain all your expended Pact Magic spell slots."
+   },
+   {
+    "level": 3,
+    "feature": "Steps of the Fey",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can cast Misty Step without expending a spell slot a number of times equal to your Charisma modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 10,
+    "feature": "Beguiling Defenses",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you use this Reaction, you can’t use it again until you finish a Long Rest unless you expend a Pact Magic spell slot (no action required) to restore your use of it."
+   },
+   {
+    "level": 14,
+    "feature": "Bewitching Magic",
+    "tracked": false,
+    "onSheet": false,
+    "line": "Immediately after you cast an Enchantment or Illusion spell using an action and a spell slot, you can cast Misty Step as part of the same action and without expending a spell slot."
+   }
+  ]
+ },
+ {
+  "sheet": "Warlock__undead-patron.md",
+  "cls": "Warlock",
+  "sub": "The Undead",
+  "level": 20,
+  "controls": 456,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Magical Cunning 1 (long)",
+   "Contact Patron (free cast) 1 (long)",
+   "Mystic Arcanum (6th level) 1 (long)",
+   "Mystic Arcanum (7th level) 1 (long)",
+   "Mystic Arcanum (8th level) 1 (long)",
+   "Mystic Arcanum (9th level) 1 (long)",
+   "Form of Dread 3 (long)",
+   "Necrotic Husk 1 (short)"
+  ],
+  "spellLevels": 0,
+  "pact": true,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Pact Magic",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You regain all expended Pact Magic spell slots when you finish a Short or Long Rest."
+   },
+   {
+    "level": 2,
+    "feature": "Magical Cunning",
+    "tracked": true,
+    "onSheet": true,
+    "line": "At the end of it, you regain expended Pact Magic spell slots but no more than a number equal to half your maximum (round up)."
+   },
+   {
+    "level": 3,
+    "feature": "Warlock Subclass",
+    "tracked": false,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Warlock level or lower."
+   },
+   {
+    "level": 9,
+    "feature": "Contact Patron",
+    "tracked": true,
+    "onSheet": true,
+    "line": "With this feature, you can cast the spell without expending a spell slot to contact your patron, and you automatically succeed on the spell’s saving throw."
+   },
+   {
+    "level": 11,
+    "feature": "Mystic Arcanum",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You can cast your arcanum spell once without expending a spell slot, and you must finish a Long Rest before you can cast it in this way again."
+   },
+   {
+    "level": 20,
+    "feature": "Eldritch Master",
+    "tracked": false,
+    "onSheet": true,
+    "line": "When you use your Magical Cunning feature, you regain all your expended Pact Magic spell slots."
+   },
+   {
+    "level": 3,
+    "feature": "Form of Dread",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can transform a number of times equal to your Charisma modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 10,
+    "feature": "Necrotic Husk",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you use this benefit, you can’t use it again until you finish a Short or Long Rest."
+   }
+  ]
+ },
+ {
+  "sheet": "Wizard__conjurer.md",
+  "cls": "Wizard",
+  "sub": "School of Conjuration (Conjurer)",
+  "level": 20,
+  "controls": 462,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Arcane Recovery 1 (long)",
+   "Signature Spells (free casts) 2 (short)",
+   "Benign Transposition 5 (long)",
+   "Splintered Summons 1 (long)"
+  ],
+  "spellLevels": 9,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 3,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can replace one of your cantrips from this feature with another Wizard cantrip of your choice."
+   },
+   {
+    "level": 1,
+    "feature": "Arcane Recovery",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you finish a Short Rest, you can choose expended spell slots to recover."
+   },
+   {
+    "level": 3,
+    "feature": "Arcane Tradition",
+    "tracked": true,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Wizard level or lower."
+   },
+   {
+    "level": 5,
+    "feature": "Memorize Spell",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Short Rest, you can study your spellbook and replace one of the level 1+ Wizard spells you have prepared for your Spellcasting feature with another level 1+ spell from the book."
+   },
+   {
+    "level": 18,
+    "feature": "Spell Mastery",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You always have those spells prepared, and you can cast them at their lowest level without expending a spell slot."
+   },
+   {
+    "level": 20,
+    "feature": "Signature Spells",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You always have these spells prepared, and you can cast each of them once at level 3 without expending a spell slot."
+   },
+   {
+    "level": 3,
+    "feature": "Benign Transposition",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can use this feature a number of times equal to your Intelligence modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+   },
+   {
+    "level": 6,
+    "feature": "Distant Transposition",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Additionally, you can restore one use of it by expending a level 3+ spell slot (no action required)."
+   },
+   {
+    "level": 14,
+    "feature": "Splintered Summons",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you use this feature to modify a spell in this way, you must finish a Long Rest before you can do so again."
+   }
+  ]
+ },
+ {
+  "sheet": "Wizard__illusionist.md",
+  "cls": "Wizard",
+  "sub": "School of Illusion",
+  "level": 20,
+  "controls": 462,
+  "errors": [],
+  "pages": 14,
+  "trackers": [
+   "Arcane Recovery 1 (long)",
+   "Signature Spells (free casts) 2 (short)",
+   "Phantasmal Creatures (free casts) 2 (long)",
+   "Illusory Self 1 (short)"
+  ],
+  "spellLevels": 9,
+  "pact": false,
+  "conditions": 14,
+  "features": [
+   {
+    "name": "sim text",
+    "max": 3,
+    "used": 0,
+    "recovery": "other"
+   },
+   {
+    "name": "sim text",
+    "max": 2,
+    "used": 0,
+    "recovery": "other"
+   }
+  ],
+  "coverage": [
+   {
+    "level": 1,
+    "feature": "Spellcasting",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Long Rest, you can replace one of your cantrips from this feature with another Wizard cantrip of your choice."
+   },
+   {
+    "level": 1,
+    "feature": "Arcane Recovery",
+    "tracked": true,
+    "onSheet": true,
+    "line": "When you finish a Short Rest, you can choose expended spell slots to recover."
+   },
+   {
+    "level": 3,
+    "feature": "Arcane Tradition",
+    "tracked": true,
+    "onSheet": true,
+    "line": "For the rest of your career, you gain each of your subclass’s features that are of your Wizard level or lower."
+   },
+   {
+    "level": 5,
+    "feature": "Memorize Spell",
+    "tracked": false,
+    "onSheet": true,
+    "line": "Whenever you finish a Short Rest, you can study your spellbook and replace one of the level 1+ Wizard spells you have prepared for your Spellcasting feature with another level 1+ spell from the book."
+   },
+   {
+    "level": 18,
+    "feature": "Spell Mastery",
+    "tracked": false,
+    "onSheet": true,
+    "line": "You always have those spells prepared, and you can cast them at their lowest level without expending a spell slot."
+   },
+   {
+    "level": 20,
+    "feature": "Signature Spells",
+    "tracked": true,
+    "onSheet": true,
+    "line": "You always have these spells prepared, and you can cast each of them once at level 3 without expending a spell slot."
+   },
+   {
+    "level": 6,
+    "feature": "Phantasmal Creatures",
+    "tracked": true,
+    "onSheet": false,
+    "line": "You can cast the Illusion version of each spell without expending a spell slot, but casting it without a slot halves the creature’s Hit Points."
+   },
+   {
+    "level": 10,
+    "feature": "Illusory Self",
+    "tracked": true,
+    "onSheet": false,
+    "line": "Once you use this feature, you can't use it again until you finish a Short or Long Rest."
+   }
+  ]
+ }
+]

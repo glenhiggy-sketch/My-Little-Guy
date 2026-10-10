@@ -68,7 +68,16 @@ async function makeWorld(sc) {
 	});
 	fs.writeFileSync(path.join(outDir, "report.md"), md.join("\n"));
 	fs.writeFileSync(path.join(outDir, "report.json"), JSON.stringify({ runId, device: deviceKind, results }, null, 2));
-	if (deviceKind === "ios" && !only.length && !count("fail") && count("pass") && !process.env.SIM_NO_RECORD) { // the release gate (scripts/release.mjs) reads this
+	// The phone ran the PUBLISHED candidate (npm run candidate writes sim/last-candidate.json with its build hash). Only record a pass if the
+	// files in this folder are still exactly that build, otherwise the pass would be for code the phone never ran.
+	let candidateOk = true;
+	if (deviceKind === "ios") {
+		const cf = path.join(__dirname, "last-candidate.json");
+		const cand = fs.existsSync(cf) && JSON.parse(fs.readFileSync(cf, "utf8"));
+		const now = require("../scripts/build-hash")();
+		if (!cand || cand.buildHash !== now) { candidateOk = false; if (!count("fail") && count("pass") && !process.env.SIM_NO_RECORD) console.log("NOT recorded: the files changed since the last candidate" + (cand ? " (" + cand.tag + ")" : "") + " was published, so this run did not test them. Commit, run npm run candidate, install it on the phone, then run again."); }
+	}
+	if (deviceKind === "ios" && candidateOk && !only.length && !count("fail") && count("pass") && !process.env.SIM_NO_RECORD) { // the release gate (scripts/release.mjs) reads this
 		fs.writeFileSync(path.join(__dirname, "last-device-pass.json"), JSON.stringify({ device: "ios", at: new Date().toISOString(), buildHash: require("../scripts/build-hash")(), passed: results.filter((r) => r.status === "pass").map((r) => r.scenario), skipped: results.filter((r) => r.status === "skip").map((r) => r.scenario) }, null, 2) + "\n");
 		console.log("Recorded sim/last-device-pass.json for this build -- commit it, then npm run release.");
 	}
