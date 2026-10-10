@@ -1477,7 +1477,7 @@ class CharacterHubView extends ItemView {
 
     // Heroic Inspiration (2024 rules): you either have it or you don't.
     const inspRow = hpBlock.createDiv({ cls: 'csh-btn-row' });
-    const inspBtn = inspRow.createEl('button', { text: fm.inspiration ? '⭐ Heroic Inspiration: yes' : '☆ Heroic Inspiration: no', cls: 'csh-condition-chip' + (fm.inspiration ? ' active' : ''), attr: { 'aria-label': 'Heroic Inspiration' } });
+    const inspBtn = inspRow.createEl('button', { text: fm.inspiration ? '⭐ Heroic Inspiration: yes' : '☆ Heroic Inspiration: no', cls: 'csh-condition-chip' + (fm.inspiration ? ' active' : ''), attr: { 'aria-label': fm.inspiration ? 'Heroic Inspiration: yes' : 'Heroic Inspiration: no' } }); // the label carries the state, so a screen reader (and the phone test) hears it
     inspBtn.addEventListener('click', () => { this.updateFrontmatter((f) => { f.inspiration = !f.inspiration; }); });
 
     // Death saves

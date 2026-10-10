@@ -169,8 +169,8 @@ const Modal = { get last() { return H.modal; } };
 		for (let i = 0; i < 6; i++) await press("Increase exhaustion");
 		assert.strictEqual(fm.exhaustion, 6, "capped at 6");
 		await press("Decrease exhaustion"); assert.strictEqual(fm.exhaustion, 5);
-		await press("Heroic Inspiration"); assert.strictEqual(fm.inspiration, true);
-		await press("Heroic Inspiration"); assert.strictEqual(fm.inspiration, false);
+		await press("Heroic Inspiration: no"); assert.strictEqual(fm.inspiration, true);
+		await press("Heroic Inspiration: yes"); assert.strictEqual(fm.inspiration, false);
 		assert.strictEqual(C.hitDieFor({ class: "Barbarian" }), 12); assert.strictEqual(C.hitDieFor({ class: "Sorcerer" }), 6); assert.strictEqual(C.hitDieFor({ class: "Paladin", hit_die: 9 }), 9);
 		// the coin fields live on the Inventory page
 		const dot = [...view.contentEl.querySelectorAll("button.csh-dot")].find((b) => (b.getAttribute("aria-label") || "").includes("Inventory"));

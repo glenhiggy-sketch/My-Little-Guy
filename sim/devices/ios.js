@@ -177,6 +177,10 @@ class IosDevice {
 						if (after !== null && before !== null && after === before + "9") { atEnd = true; break; }
 					}
 					for (let i = 0; atEnd && i < 14 && (await read()) !== ""; i++) { await this.tapAt(del.x, del.y); await this.wait(250); }
+					if (!atEnd || (await read()) !== "") { // could not prove the caret position (or the field would not empty): clear it through WDA instead of typing into the old number
+						try { await this.sess("POST", `/element/${await find()}/clear`, {}); await this.wait(500); } catch (e) { /* the retry below will try again */ }
+						await this.sess("POST", `/element/${await find()}/click`, {}); await this.wait(800);
+					}
 				}
 				for (const ch of String(value)) {
 					const find1 = async () => (await this.keyCenter(ch === " " ? "space" : ch)) || (await this.keyCenter(ch.toUpperCase()));

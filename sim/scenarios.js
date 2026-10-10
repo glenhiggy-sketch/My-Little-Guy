@@ -172,7 +172,7 @@ module.exports = [
 			await device.open(); await device.type("HP", 2); await device.goToPage("Combat");
 			await step("I can see my hit dice and spend one", async () => { has(await device.text(), "Hit Dice: 3 / 3"); await device.tap("Spend a hit die"); await device.waitForText("Hit Dice: 2 / 3", 15000); });
 			await step("I can raise my exhaustion", async () => { await device.tap("Increase exhaustion"); await device.waitForText("Exhaustion: 1 / 6", 15000); });
-			await step("I can take Heroic Inspiration", async () => { await device.tap("Heroic Inspiration"); await device.waitForText("Heroic Inspiration: yes", 15000); });
+			await step("I can take Heroic Inspiration", async () => { await device.tap("Heroic Inspiration: no"); await device.waitForText("Heroic Inspiration: yes", 15000); });
 		},
 	},
 	{
