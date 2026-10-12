@@ -16,7 +16,7 @@ def features(f):
     out = []
     for m in re.finditer(r"(?:^|\n)\s*Level (\d+): ([^\n]+)", t):
         lvl, name = int(m.group(1)), re.sub(r"\s+", " ", m.group(2)).strip()
-        if lvl <= 20 and not re.search(r"Subclass$|Subclass Feature|Ability Score Improvement", name): out.append((lvl, name))
+        if lvl <= 20 and not re.search(r"Subclass$|Subclass Feature|Ability Score Improvement|^Arcane Tradition$", name): out.append((lvl, name))
     return out
 
 def norm(s): return re.sub(r"[^a-z]", "", s.lower())

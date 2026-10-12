@@ -10,3 +10,14 @@ sim/audit/l20/
 sim/audit/form/
 sim/last-candidate.json
 sim/audit/use-everything.*of*.json
+sim/audit/wiki-snapshot/
+sim/audit/l20-local/
+# vault / wiki inventories used by sim/audit tooling: local only, never published
+sim/audit/content-manifest.json
+sim/audit/plugin-vault-*.json
+sim/audit/restructure-log.json
+sim/audit/rules-vs-wiki.json
+sim/audit/uses-rows.json
+sim/audit/vault-registry.json
+sim/audit/wiki-class-tables.json
+sim/audit/manifest_rows.json

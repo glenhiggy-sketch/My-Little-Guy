@@ -559,8 +559,38 @@ function parseSheetBody(body) {
   try {
     const traits = [];
     const cfMatch = body.match(/\*\*Class Features \(([^)]+)\):\*\*[ \t]*(.+)/i);
-    if (cfMatch) {
+    // Newer sheets add "**Feature Details:**" with one bullet per class/subclass feature: "- **Name** (Scope, level N; 3 uses per Long Rest): text".
+    // When present each becomes its own trait with its description; the bare name list is then redundant.
+    const fdIdx = body.search(/\*\*Feature Details:\*\*/i);
+    let details = 0;
+    if (fdIdx !== -1) {
+      const block = body.slice(fdIdx).split(/\r?\n/).slice(1);
+      for (const line of block) {
+        if (!/^-\s/.test(line)) break;
+        const m = line.match(/^-\s*\*\*(.+?)\*\*\s*\(([^)]*)\)\s*(?::\s*(.*))?$/);
+        if (!m) continue;
+        const meta = m[2].split(';')[0].trim();                       // "School of Illusion, level 3" or "level 1"
+        const scope = meta.replace(/,?\s*level\s*\d+$/i, '').trim();
+        const lvl = (meta.match(/level\s*(\d+)/i) || [])[1];
+        const uses = m[2].includes(';') ? m[2].split(';').slice(1).join(';').trim() : '';
+        traits.push({
+          name: m[1].trim(),
+          source: `${scope || (cfMatch ? cfMatch[1] : 'Class')}${lvl ? ` (level ${lvl})` : ''}`,
+          description: [m[3] || '', uses ? `Uses: ${uses}.` : ''].filter(Boolean).join(' ').trim(),
+        });
+        details++;
+      }
+    }
+    if (cfMatch && !details) {
       traits.push({ name: `Class Features (${cfMatch[1]})`, source: 'Class', description: cfMatch[2].trim() });
+    }
+    const resMatch = body.match(/<!--\s*kadria-resources\s+(\[.*?\])\s*-->/s);
+    if (resMatch) {
+      try {
+        const list = JSON.parse(resMatch[1]);
+        out.resources = list.filter((r) => r && r.name && Number(r.max) > 0)
+          .map((r) => ({ name: String(r.name), max: Number(r.max), used: 0, recovery: r.recovery === 'short' ? 'short' : 'long' }));
+      } catch (e) { /* ignore a malformed block */ }
     }
 
     const stMatch = body.match(/\*\*Species Traits \(([^)]+)\):\*\*/i);
@@ -801,7 +831,7 @@ async function syncPush(request, info, fields) {
 
 const SYNC_CORE = {
   parseSyncInfo, inventoryToText, textToInventory, normSlots, buildPushFields, pushHash, applyPlayerOwned,
-  applyDmPublished, mergeAwards, resolveAward, syncStatusText, syncPull, syncPush, SYNC_PLAYER_KEYS, classTrackers, hitDieFor,
+  applyDmPublished, mergeAwards, resolveAward, syncStatusText, syncPull, syncPush, SYNC_PLAYER_KEYS, classTrackers, hitDieFor, parseSheetBody,
 };
 
 const STANDARD_DICE = [4, 6, 8, 10, 12, 20, 100];
@@ -1069,6 +1099,8 @@ class CharacterHubView extends ItemView {
 
     this.isSyncing = true;
     const linked = !!parseSyncInfo(content);
+    const sheetResources = parsed.resources;                     // the sheet's own limited-use list; not a frontmatter key itself
+    delete parsed.resources;
     await this.writeFrontmatter((fm) => {
       const before = linked ? pushHash(buildPushFields(fm)) : null;
       // Once a character has synced with the sheet, its player-owned values in the note ARE the last known sheet values: the
@@ -1079,7 +1111,10 @@ class CharacterHubView extends ItemView {
         if (guard && SYNC_PLAYER_KEYS.includes(k) && fm[k] !== undefined) return;
         fm[k] = v;
       });
-      if (fm.features === undefined) { const tr = classTrackers(fm); if (tr.length) fm.features = tr; } // first time only: never overwrite the player's used counts
+      if (fm.features === undefined) { // first time only: never overwrite the player's used counts
+        const tr = sheetResources && sheetResources.length ? sheetResources.map((r) => ({ ...r })) : classTrackers(fm);
+        if (tr.length) fm.features = tr;
+      }
       if (linked && fromEdit && pushHash(buildPushFields(fm)) !== before) fm.sync_dirty = true;
     });
 

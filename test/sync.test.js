@@ -33,6 +33,34 @@ const Modal = { get last() { return H.modal; } };
 		assert.deepStrictEqual(J(f), { hp: 0, hpMax: 20, ac: 15, gold: 12.35, inventory: "x x3", spellSlots: '{"1":{"used":4,"max":4}}' });
 	});
 
+	await ok("a sheet with Feature Details gives one trait per feature, with its description and uses", () => {
+		const sheet = [
+			"| Character Name | Player Name | Class & Subclass | Species | Level | Background | Alignment |", "|---|---|---|---|---|---|---|",
+			"| Test | Me | Wizard (School of Illusion) | Human | 10 | Sage | |", "",
+			"**Class Features (Wizard):** Wizard: Spellcasting, School of Illusion: Illusory Self", "",
+			"**Feature Details:**",
+			"- **Spellcasting** (level 1): You cast Wizard spells with Intelligence.",
+			"- **Illusory Self** (School of Illusion, level 10; 1 use per Short or Long Rest): Reaction: an attack against you misses.",
+			"- **Psionic Energy Dice** (level 3; 4 uses per Long Rest)",
+			'<!-- kadria-resources [{"name":"Illusory Self","max":1,"recovery":"short"},{"name":"Psionic Energy Dice","max":4,"recovery":"long"},{"name":"Bad","max":0,"recovery":"long"}] -->', "",
+			"**Species Traits (Human):**", "- **Resourceful.** You gain Heroic Inspiration after a Long Rest.", "",
+		].join(String.fromCharCode(10));
+		const r = C.parseSheetBody(sheet);
+		const names = r.traits.map((t) => t.name);
+		assert.deepStrictEqual(names, ["Spellcasting", "Illusory Self", "Psionic Energy Dice", "Resourceful"]);
+		const ill = r.traits.find((t) => t.name === "Illusory Self");
+		assert.strictEqual(ill.source, "School of Illusion (level 10)");
+		assert(ill.description.startsWith("Reaction: an attack against you misses.") && ill.description.includes("Uses: 1 use per Short or Long Rest"), ill.description);
+		assert.strictEqual(r.traits.find((t) => t.name === "Resourceful").source, "Species (Human)");
+		assert.deepStrictEqual(J(r.resources), [{ name: "Illusory Self", max: 1, used: 0, recovery: "short" }, { name: "Psionic Energy Dice", max: 4, used: 0, recovery: "long" }]);
+	});
+	await ok("an older sheet (no Feature Details, no resource block) still gives the one Class Features trait and no resources", () => {
+		const nl = String.fromCharCode(10);
+		const r = C.parseSheetBody(["**Class Features (Fighter):** Fighter: Second Wind, Fighter: Action Surge", "", "**Species Traits (Human):**", "- **Resourceful.** x", ""].join(nl));
+		assert.deepStrictEqual(r.traits.map((t) => t.name), ["Class Features (Fighter)", "Resourceful"]);
+		assert.strictEqual(r.resources, undefined);
+	});
+
 	// ---- the view against the real server logic
 	await ok("opening a linked sheet shows the sync bar, pulls once, and is not dirty", async () => {
 		await view.onOpen(); await tick();
