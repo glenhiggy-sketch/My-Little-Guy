@@ -31,10 +31,19 @@ async function post(body) {
 }
 const hook = async (op, extra) => { const r = await post({ action: "testhook", secret: secret(), op, ...extra }); if (!r.ok) throw new Error(`test hook ${op}: ${r.error || JSON.stringify(r)}`); return r; };
 
-async function waitForFile(file, ms = 120000) {
-	const end = Date.now() + ms;
-	while (Date.now() < end) { if (fs.existsSync(file)) return; await new Promise((r) => setTimeout(r, 2000)); }
-	throw new Error("the generated sheet never appeared in " + DRIVE_DIR + " (is Google Drive for desktop running?)");
+// The sheet normally arrives through the Google Drive for desktop mount. When the mount is not syncing, read the same file through the
+// test hook's "file" op (test characters only) and keep it in a local temp folder instead.
+async function sheetPath(persona, fileName, ms = 25000) {
+	const mounted = path.join(DRIVE_DIR, fileName), end = Date.now() + ms;
+	while (Date.now() < end) { if (fs.existsSync(mounted)) return mounted; await new Promise((r) => setTimeout(r, 2000)); }
+	const dir = path.join(require("os").tmpdir(), "kadria-sim-sheets"); fs.mkdirSync(dir, { recursive: true });
+	const local = path.join(dir, fileName);
+	for (let i = 0; i < 20; i++) {
+		const r = await post({ action: "testhook", secret: secret(), op: "file", name: persona.character, player: persona.player });
+		if (r.ok) { fs.writeFileSync(local, r.text, "utf8"); return local; }
+		await new Promise((res) => setTimeout(res, 3000));
+	}
+	throw new Error("the generated sheet is neither in " + DRIVE_DIR + " nor readable through the test hook");
 }
 
 async function makeLiveWorld({ runId }) {
@@ -43,12 +52,12 @@ async function makeLiveWorld({ runId }) {
 	const persona = { player: "ZZSTRESS_sim" + tag, character: "ZZSTRESS_Sim " + tag, species: "Elf", cls: "Wizard", level: 3, background: "Sage", alignment: "Neutral Good" };
 	await buildCharacter(persona); // the real form, a fresh character every time
 	const fileName = `${persona.character} - ${persona.player}.md`;
-	await waitForFile(path.join(DRIVE_DIR, fileName));
-	const info = JSON.parse(/<!-- kadria-sync (\{.*?\}) -->/.exec(fs.readFileSync(path.join(DRIVE_DIR, fileName), "utf8"))[1]);
+	const sheetFile = await sheetPath(persona, fileName);
+	const info = JSON.parse(/<!-- kadria-sync (\{.*?\}) -->/.exec(fs.readFileSync(sheetFile, "utf8"))[1]);
 
 	const world = {
 		kind: "live",
-		character: { name: persona.character, player: persona.player, file: fileName, path: path.join(DRIVE_DIR, fileName) },
+		character: { name: persona.character, player: persona.player, file: fileName, path: sheetFile },
 		async sheetRow() {
 			let r;
 			for (let attempt = 0; ; attempt++) {   // the Apps Script endpoint can be slow or answer with an HTML error page

@@ -1,7 +1,7 @@
 {
   "device": "ios",
-  "at": "2026-10-10T16:01:25.061Z",
-  "buildHash": "4f42705906c4e3de3deee54b713613663a15a0ae22c95ba9e058e10260c12534",
+  "at": "2026-10-13T00:47:34.171Z",
+  "buildHash": "be9ad2bb2f53d723c381eb52871a0e9105535f62ca74787c8c84538373ee71f6",
   "passed": [
     "open-and-orient",
     "play-a-fight",

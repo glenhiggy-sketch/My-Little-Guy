@@ -32,7 +32,8 @@ class Sheet {
 function makeEnv() {
 	const ss = { sheets: {}, active: null, getSheetByName(n) { return this.sheets[n] || null; }, insertSheet(n) { return (this.sheets[n] = new Sheet(n)); }, deleteSheet(s) { delete this.sheets[s.name]; } };
 	const driveFiles = [];
-	const folder = { getFiles() { let i = 0; return { hasNext: () => i < driveFiles.length, next: () => driveFiles[i++] }; } };
+	const iter = (list) => { let i = 0; return { hasNext: () => i < list.length, next: () => list[i++] }; };
+	const folder = { getFiles() { return iter(driveFiles); }, getFilesByName(n) { return iter(driveFiles.filter((f) => f.getName() === n)); } };
 	// driveFiles entries: { getName(), setTrashed(b) }
 	const props = { LOOKUP_SECRET: "s3cret" };
 	const ui = {

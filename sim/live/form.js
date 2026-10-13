@@ -17,11 +17,16 @@ async function getFormFrame(page) {
 async function buildCharacter(p) {
 	let chromium;
 	try { ({ chromium } = require("playwright")); } catch (e) { throw new Error("Playwright is needed for the live world: npm i --no-save playwright && npx playwright install chromium"); }
-	const browser = await chromium.launch();
+	// SIM_PIN_IP: pin Apps Script's hosts to one working Google address when this network blocks the ones DNS returns (see DEPLOY.md).
+	const pin = process.env.SIM_PIN_IP;
+	const browser = await chromium.launch(pin ? { args: [`--host-resolver-rules=MAP script.google.com ${pin}, MAP script.googleusercontent.com ${pin}`] } : {});
 	try {
-		const page = await browser.newPage();
-		await page.goto(FORM_URL);
-		const frame = await getFormFrame(page);
+		let page, frame;
+		for (let load = 0; ; load++) {   // Google's front ends sometimes stall a load on a bad route: a person would just reload
+			page = await browser.newPage();
+			try { await page.goto(FORM_URL, { timeout: 60000 }); frame = await getFormFrame(page); break; }
+			catch (e) { await page.close(); if (load >= 3) throw e; }
+		}
 		await frame.locator("#characterName").fill(p.character);
 		await frame.locator("#playerName").fill(p.player);
 		await frame.locator("#alignment").selectOption({ label: p.alignment });

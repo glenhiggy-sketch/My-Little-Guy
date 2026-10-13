@@ -11,6 +11,7 @@
  *   op "award"    {name, player, amount, reason?}               add a Draft row on Gold Awards
  *   op "publish"                                                publish drafts + awards (test data only)
  *   op "state"    {name, player}                                read back a test character's row, draft and published values
+ *   op "file"     {name, player}                                the generated .md text of a test character (when the Drive mount is not syncing)
  *   op "cleanup"                                                delete every test character/award/log row and trash their Drive files
  */
 const TEST_PLAYER_PREFIX = "ZZSTRESS_";
@@ -27,6 +28,7 @@ function testHook_(body) {
 		if (body.op === "award") return jsonOutput_(testAward_(body));
 		if (body.op === "publish") return jsonOutput_(testPublish_());
 		if (body.op === "state") return jsonOutput_(testState_(body));
+		if (body.op === "file") return jsonOutput_(testFile_(body));
 		if (body.op === "cleanup") return jsonOutput_(testCleanup_());
 		return jsonOutput_({ ok: false, error: "unknown op" });
 	} finally {
@@ -83,6 +85,15 @@ function testState_(b) {
 		draft: { party: o["Party"], conditions: o["Conditions"], notes: o["DM Notes"] },
 		published: publishedFor_(o["Character ID"]),
 	};
+}
+
+/** The generated sheet's text for a TEST character, for simulators whose Drive mount is not syncing. Test players only. */
+function testFile_(b) {
+	const t = readTable_(getCharactersSheet_());
+	if (findTestRow_(null, t, b.name, b.player) < 0) return { ok: false, error: "no such test character" };
+	const files = getOrCreateDriveFolder_().getFilesByName(String(b.name) + " - " + String(b.player) + ".md");
+	if (!files.hasNext()) return { ok: false, error: "no sheet file yet" };
+	return { ok: true, text: files.next().getBlob().getDataAsString() };
 }
 
 function deleteMatchingRows_(sheet, predicate) {

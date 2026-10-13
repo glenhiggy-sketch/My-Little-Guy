@@ -11,7 +11,7 @@ const post = (b) => JSON.parse(JSON.stringify(S.doPost({ postData: { contents: J
 const hook = (b) => post({ action: "testhook", secret: "hook-secret", ...b });
 const form = (name, player) => ({ characterName: name, playerName: player, species: "Elf", background: "Sage", className: "Wizard", alignment: "Neutral Good" });
 const char = { level: 1, hp: 8, ac: 12, equipment: [], spellSlots: [0, 0, 0, 0, 0, 0, 0, 0, 0] };
-const file = (name) => { const f = { name, trashed: false, getName: () => name, setTrashed: (b) => { f.trashed = b; } }; driveFiles.push(f); return f; };
+const file = (name, text) => { const f = { name, trashed: false, getName: () => name, setTrashed: (b) => { f.trashed = b; }, getBlob: () => ({ getDataAsString: () => text || "" }) }; driveFiles.push(f); return f; };
 let n = 0; const ok = (name, fn) => { fn(); n++; console.log("  ok  " + name); };
 
 const T = S.upsertDatabaseRow_(form("Testy", "ZZSTRESS_sim1"), char);
@@ -49,6 +49,15 @@ ok("publish is refused when a real DM draft is pending", () => {
 	const res = hook({ op: "publish" });
 	assert.strictEqual(res.ok, false); assert.match(res.error, /non-test/);
 	assert.strictEqual(S.pullCharacter_({ id: REAL.id, token: REAL.token }).dm.party, "");
+});
+
+ok("file returns a test character's sheet text, and nobody else's", () => {
+	file("Testy - ZZSTRESS_sim1.md", "SHEET TEXT"); file("Realone - Erin.md", "PRIVATE");
+	const r = hook({ op: "file", name: "Testy", player: "ZZSTRESS_sim1" });
+	assert.deepStrictEqual([r.ok, r.text], [true, "SHEET TEXT"]);
+	assert.strictEqual(hook({ op: "file", name: "Realone", player: "Erin" }).ok, false);
+	assert.strictEqual(hook({ op: "file", name: "Testy", player: "ZZSTRESS_nope" }).ok, false);
+	driveFiles.length = 0;
 });
 
 ok("cleanup removes only test rows and test files", () => {
