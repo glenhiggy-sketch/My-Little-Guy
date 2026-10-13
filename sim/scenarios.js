@@ -383,3 +383,16 @@ module.exports.push(...[
 	{ label: "artificer-wizard-druid", species: "Dwarf", background: "Artisan",
 	  classes: [{ cls: "Artificer", subclass: "Artillerist", level: 8 }, { cls: "Wizard", subclass: "Bladesinger", level: 6 }, { cls: "Druid", subclass: "Circle of the Moon", level: 6 }] },
 ].map(l20Scenario));
+
+// The other nine classes at level 20, each with a different, unusual main subclass (new resource counters, summons, pools).
+module.exports.push(...[
+	{ cls: "Artificer", subclass: "Alchemist", species: "Gnome", background: "Scribe" },
+	{ cls: "Bard", subclass: "College of Glamour", species: "Faerie", background: "Entertainer" },
+	{ cls: "Cleric", subclass: "Trickery Domain", species: "Tiefling", background: "Charlatan" },
+	{ cls: "Druid", subclass: "Circle of the Stars", species: "Goliath", background: "Hermit" },
+	{ cls: "Monk", subclass: "Warrior of Shadow", species: "Halfling", background: "Wayfarer" },
+	{ cls: "Ranger", subclass: "Fey Wanderer", species: "Elf", background: "Guide" },
+	{ cls: "Rogue", subclass: "Soulknife", species: "Human", background: "Criminal" },
+	{ cls: "Sorcerer", subclass: "Clockwork Sorcery", species: "Dragonborn", background: "Noble" },
+	{ cls: "Warlock", subclass: "The Undead", species: "Dwarf", background: "Acolyte" },
+].map(l20Scenario));
