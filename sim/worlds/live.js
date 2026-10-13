@@ -46,10 +46,10 @@ async function sheetPath(persona, fileName, ms = 25000) {
 	throw new Error("the generated sheet is neither in " + DRIVE_DIR + " nor readable through the test hook");
 }
 
-async function makeLiveWorld({ runId }) {
+async function makeLiveWorld({ runId, persona: over }) {
 	secret(); // fail early with the helpful message
 	const tag = String(Date.now()).slice(-7) + Math.floor(Math.random() * 10); // unique per world: scenarios in one run must not share a character (or a note on the phone)
-	const persona = { player: "ZZSTRESS_sim" + tag, character: "ZZSTRESS_Sim " + tag, species: "Elf", cls: "Wizard", level: 3, background: "Sage", alignment: "Neutral Good" };
+	const persona = { player: "ZZSTRESS_sim" + tag, character: "ZZSTRESS_Sim " + tag, species: "Elf", cls: "Wizard", level: 3, background: "Sage", alignment: "Neutral Good", ...(over || {}) };
 	await buildCharacter(persona); // the real form, a fresh character every time
 	const fileName = `${persona.character} - ${persona.player}.md`;
 	const sheetFile = await sheetPath(persona, fileName);

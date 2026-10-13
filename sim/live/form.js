@@ -19,7 +19,7 @@ async function buildCharacter(p) {
 	try { ({ chromium } = require("playwright")); } catch (e) { throw new Error("Playwright is needed for the live world: npm i --no-save playwright && npx playwright install chromium"); }
 	// SIM_PIN_IP: pin Apps Script's hosts to one working Google address when this network blocks the ones DNS returns (see DEPLOY.md).
 	const pin = process.env.SIM_PIN_IP;
-	const browser = await chromium.launch(pin ? { args: [`--host-resolver-rules=MAP script.google.com ${pin}, MAP script.googleusercontent.com ${pin}`] } : {});
+	const browser = await chromium.launch(pin ? { args: [`--host-resolver-rules=MAP script.google.com ${pin}, MAP *.googleusercontent.com ${pin}`] } : {});
 	try {
 		let page, frame;
 		for (let load = 0; ; load++) {   // Google's front ends sometimes stall a load on a bad route: a person would just reload
@@ -34,6 +34,12 @@ async function buildCharacter(p) {
 		await frame.locator("#background").selectOption({ label: p.background });
 		await frame.locator("#classRows select").first().selectOption({ label: p.cls });
 		if (p.level > 1) { const lvl = frame.locator("#classRows input").first(); await lvl.fill(String(p.level)); await lvl.press("Tab"); }
+		if (p.subclass) {   // the subclass list appears once the level allows one: choose it by name, like a person scanning the list
+			const sel = frame.locator("#classRows select").nth(1);
+			const idx = await sel.evaluate((s, label) => { let k = -1; [...s.options].forEach((o, i) => { if (k < 0 && o.text.includes(label)) k = i; }); return k; }, p.subclass);
+			if (idx < 0) throw new Error("the form does not offer the subclass " + p.subclass);
+			await sel.selectOption({ index: idx });
+		}
 		await frame.locator("#notes").fill(NOTE);
 		let last = "";
 		for (let attempt = 0; attempt < 14; attempt++) {

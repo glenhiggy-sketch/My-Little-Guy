@@ -21,10 +21,10 @@ function checkBugsFile() {
 	return [...fs.readFileSync(f, "utf8").matchAll(/scenario:\s*`([^`]+)`/g)].map((m) => m[1]).filter((n) => !names.has(n));
 }
 
-const DEVICE_CAPS = { dom: ["offline", "commands", "fake-world", "panel-first"], ios: ["commands"] }; // keep in step with each device's `capabilities`
+const DEVICE_CAPS = { dom: ["offline", "commands", "fake-world", "panel-first"], ios: process.env.SIM_L20 ? ["commands", "live-l20"] : ["commands"] }; // SIM_L20=1 adds the level 20 build-through-the-form scenarios; keep in step with each device's `capabilities`
 async function makeWorld(sc) {
 	if (deviceKind === "dom") return require("./devices/dom").makeDomWorld(sc.world);
-	if (deviceKind === "ios") return require("./devices/ios").makeIosWorld({ runId, outDir });
+	if (deviceKind === "ios") return require("./devices/ios").makeIosWorld({ runId, outDir, persona: sc.persona });
 	throw new Error("unknown --device " + deviceKind);
 }
 

@@ -228,11 +228,11 @@ class IosDevice {
 	async screenshot(file) { const b64 = await this.sess("GET", "/screenshot"); fs.writeFileSync(file, Buffer.from(b64, "base64")); return file; }
 }
 
-async function makeIosWorld({ runId, outDir }) {
+async function makeIosWorld({ runId, outDir, persona }) {
 	const cfg = loadConfig();
 	if (!cfg.udid || !cfg.xcodeOrgId) throw new Error("sim/ios.config.json needs udid and xcodeOrgId (see sim/ios.config.example.json)");
 	const device = new IosDevice(cfg, outDir);
-	const world = await makeLiveWorld({ runId });
+	const world = await makeLiveWorld({ runId, persona });
 	device.character = world.character; // the note the phone must open
 	await device.install(world.character.file, require("fs").readFileSync(world.character.path, "utf8"));
 	return { device, world };

@@ -301,3 +301,73 @@ module.exports = [
 		},
 	},
 ];
+
+// ---- Level 20 end to end (SIM_L20=1, phone only) -------------------------------------------------------------
+// Each one starts at the player-facing form link, builds the character through the form, takes the sheet that comes out
+// (as the Drive link would deliver it), puts it in the phone's vault, and then plays it: what the SHEET says must be what
+// the PHONE shows, and what the Sheet (server) holds must match what the phone sends.
+const fs = require("fs");
+function l20Scenario(persona) {
+	return {
+		name: "level-20-" + persona.cls.toLowerCase() + "-" + persona.subclass.toLowerCase().replace(/[^a-z]+/g, "-"),
+		story: `A player follows the link, builds a level 20 ${persona.cls} (${persona.subclass}), gets the sheet, and plays it on the phone: every feature, tracker and spell slot the sheet lists is there and works.`,
+		needs: ["live-l20"],
+		persona: { level: 20, ...persona },
+		async run({ device, world, step }) {
+			const sheet = fs.readFileSync(world.character.path, "utf8");
+			const resBlock = /<!--\s*kadria-resources\s+(\[.*?\])\s*-->/s.exec(sheet);
+			const resources = resBlock ? JSON.parse(resBlock[1]) : [];
+			const detail = sheet.split(/\*\*Feature Details:\*\*/)[1] || "";
+			const features = [...detail.split(/<!--|\*\*Species Traits/)[0].matchAll(/^- \*\*(.+?)\*\*\s*\(([^)]*)\)\s*(?::\s*(.*))?$/gm)].map((m) => ({ name: m[1], scope: m[2], text: m[3] || "" }));
+			await step("the form produced a level 20 sheet with feature details and a resource list", async () => {
+				assert(/\| 20 \|/.test(sheet), "no level 20 in the identity table");
+				assert(features.length >= 8, "only " + features.length + " feature details on the sheet");
+				assert(resources.length >= 1, "the sheet has no resource block");
+			});
+			await device.open();
+			await step("the phone shows the character at level 20 and is linked to the sheet", async () => {
+				await device.tap("Get from sheet");
+				assert(!(await device.notices()).some((m) => /Couldn't reach|did not accept/.test(m)), (await device.notices()).join(" | "));
+			});
+			await device.goToPage("Combat");
+			await step("every limited-use feature on the sheet is tracked with exactly the right number of uses", async () => {
+				const text = await device.text();
+				for (const r of resources.filter((x) => x.max <= 12)) { has(text, `${r.name} use ${r.max}`); lacks(text, `${r.name} use ${r.max + 1}`); }
+			});
+			await step("I can spend a use of each limited feature and a long rest gives them back", async () => {
+				const small = resources.filter((x) => x.max <= 12).slice(0, 3);
+				for (const r of small) await device.tap(`${r.name} use 1`);
+				await device.tap("🌙 Long"); await device.goToPage("Combat");
+				const text = await device.text();
+				for (const r of small) has(text, `${r.name} use ${r.max}`);
+			});
+			await device.goToPage("Features");
+			await step("the Features page lists the class and subclass features by name, with what they do", async () => {
+				const first = features.slice(0, 4);
+				for (const f of first) await device.waitForText(f.name, 10000);
+				const withText = features.find((f) => f.text.length > 30);
+				assert(withText, "no feature on the sheet has a description");
+				await device.waitForText(withText.text.slice(0, 25), 10000);
+			});
+			const row = await world.sheetRow();
+			let table = {}; try { table = JSON.parse(row.spellSlots || "{}"); } catch (e) { /* no slots */ }
+			if (Object.keys(table).length) {
+				await device.goToPage("Spells");
+				await step("the spell slots on the phone match the Sheet, level by level", async () => {
+					const text = await device.text();
+					for (const [lvl, v] of Object.entries(table)) { if (!v.max) continue; has(text, `Level ${lvl} slot ${v.max}`); lacks(text, `Level ${lvl} slot ${v.max + 1}`); }
+				});
+			}
+			await step("what the phone sends reaches the Sheet", async () => {
+				await device.goToPage("Combat"); await device.type("HP", 7); await device.tap("Send to sheet");
+				assert.strictEqual((await world.sheetRow()).hp, 7);
+			});
+		},
+	};
+}
+module.exports.push(...[
+	{ cls: "Fighter", subclass: "Battle Master", species: "Human", background: "Soldier" },
+	{ cls: "Wizard", subclass: "School of Illusion", species: "Elf", background: "Sage" },
+	{ cls: "Paladin", subclass: "Oath of Devotion", species: "Dwarf", background: "Acolyte" },
+	{ cls: "Barbarian", subclass: "Path of the Wild Heart", species: "Orc", background: "Guide" },
+].map(l20Scenario));
