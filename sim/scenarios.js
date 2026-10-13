@@ -309,10 +309,10 @@ module.exports = [
 const fs = require("fs");
 function l20Scenario(persona) {
 	return {
-		name: "level-20-" + persona.cls.toLowerCase() + "-" + persona.subclass.toLowerCase().replace(/[^a-z]+/g, "-"),
-		story: `A player follows the link, builds a level 20 ${persona.cls} (${persona.subclass}), gets the sheet, and plays it on the phone: every feature, tracker and spell slot the sheet lists is there and works.`,
+		name: persona.classes ? "complex-" + persona.label : "level-20-" + persona.cls.toLowerCase() + "-" + persona.subclass.toLowerCase().replace(/[^a-z]+/g, "-"),
+		story: `A player follows the link, builds a ${persona.classes ? "multiclass " + persona.classes.map((c) => `${c.cls} ${c.level}`).join(" / ") : `level 20 ${persona.cls} (${persona.subclass})`}, gets the sheet, and plays it on the phone: every feature, tracker and spell slot the sheet lists is there and works.`,
 		needs: ["live-l20"],
-		persona: { level: 20, ...persona },
+		persona: persona.classes ? persona : { level: 20, ...persona },
 		async run({ device, world, step }) {
 			const sheet = fs.readFileSync(world.character.path, "utf8");
 			const resBlock = /<!--\s*kadria-resources\s+(\[.*?\])\s*-->/s.exec(sheet);
@@ -320,7 +320,7 @@ function l20Scenario(persona) {
 			const detail = sheet.split(/\*\*Feature Details:\*\*/)[1] || "";
 			const features = [...detail.split(/<!--|\*\*Species Traits/)[0].matchAll(/^- \*\*(.+?)\*\*\s*\(([^)]*)\)\s*(?::\s*(.*))?$/gm)].map((m) => ({ name: m[1], scope: m[2], text: m[3] || "" }));
 			await step("the form produced a level 20 sheet with feature details and a resource list", async () => {
-				assert(/\| 20 \|/.test(sheet), "no level 20 in the identity table");
+				if (persona.classes) { for (const c of persona.classes) assert(sheet.includes(c.cls), "the identity table lacks " + c.cls); } else assert(/\| 20 \|/.test(sheet), "no level 20 in the identity table");
 				assert(features.length >= 8, "only " + features.length + " feature details on the sheet");
 				assert(resources.length >= 1, "the sheet has no resource block");
 			});
@@ -370,4 +370,16 @@ module.exports.push(...[
 	{ cls: "Wizard", subclass: "School of Illusion", species: "Elf", background: "Sage" },
 	{ cls: "Paladin", subclass: "Oath of Devotion", species: "Dwarf", background: "Acolyte" },
 	{ cls: "Barbarian", subclass: "Path of the Wild Heart", species: "Orc", background: "Guide" },
+].map(l20Scenario));
+
+// The most complicated characters the form allows: four classes each, so every mixed-casting and mixed-resource rule is in play.
+module.exports.push(...[
+	{ label: "fighter-wizard-cleric-warlock", species: "Human", background: "Sage",
+	  classes: [{ cls: "Fighter", subclass: "Battle Master", level: 5 }, { cls: "Wizard", subclass: "School of Evocation", level: 5 }, { cls: "Cleric", subclass: "Life Domain", level: 5 }, { cls: "Warlock", subclass: "The Fiend", level: 5 }] },
+	{ label: "sorcerer-warlock-paladin-bard", species: "Faerie", background: "Harper",
+	  classes: [{ cls: "Sorcerer", subclass: "Draconic Sorcery", level: 6 }, { cls: "Warlock", subclass: "The Archfey", level: 6 }, { cls: "Paladin", subclass: "Oath of Devotion", level: 6 }, { cls: "Bard", subclass: "College of Lore", level: 2 }] },
+	{ label: "barbarian-monk-rogue-ranger", species: "Orc", background: "Guide",
+	  classes: [{ cls: "Barbarian", subclass: "Path of the Berserker", level: 5 }, { cls: "Monk", subclass: "Warrior of the Open Hand", level: 5 }, { cls: "Rogue", subclass: "Assassin", level: 5 }, { cls: "Ranger", subclass: "Hunter", level: 5 }] },
+	{ label: "artificer-wizard-druid", species: "Dwarf", background: "Artisan",
+	  classes: [{ cls: "Artificer", subclass: "Artillerist", level: 8 }, { cls: "Wizard", subclass: "Bladesinger", level: 6 }, { cls: "Druid", subclass: "Circle of the Moon", level: 6 }] },
 ].map(l20Scenario));

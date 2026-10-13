@@ -32,12 +32,19 @@ async function buildCharacter(p) {
 		await frame.locator("#alignment").selectOption({ label: p.alignment });
 		await frame.locator("#species").selectOption({ label: p.species });
 		await frame.locator("#background").selectOption({ label: p.background });
-		await frame.locator("#classRows select").first().selectOption({ label: p.cls });
-		if (p.level > 1) { const lvl = frame.locator("#classRows input").first(); await lvl.fill(String(p.level)); await lvl.press("Tab"); }
-		if (p.subclass) {   // the subclass list appears once the level allows one: choose it by name, like a person scanning the list
-			const sel = frame.locator("#classRows select").nth(1);
-			const idx = await sel.evaluate((s, label) => { let k = -1; [...s.options].forEach((o, i) => { if (k < 0 && o.text.includes(label)) k = i; }); return k; }, p.subclass);
-			if (idx < 0) throw new Error("the form does not offer the subclass " + p.subclass);
+		// one or several classes: p.classes = [{ cls, subclass, level }] (or the single cls/subclass/level of a simple persona)
+		const plan = p.classes || [{ cls: p.cls, subclass: p.subclass, level: p.level }];
+		const rows = frame.locator("#classRows > div");
+		for (let i = 0; i < plan.length; i++) {
+			if (i > 0) await frame.locator("#addClassBtn").click();
+			await rows.nth(i).locator("select").first().selectOption({ label: plan[i].cls });   // rows are re-rendered after every change: locate again each time
+			if (plan[i].level > 1) { const lvl = rows.nth(i).locator("input").first(); await lvl.fill(String(plan[i].level)); await lvl.press("Tab"); }
+		}
+		for (let i = 0; i < plan.length; i++) {
+			if (!plan[i].subclass) continue;   // the subclass list appears once the level allows one: choose it by name, like a person scanning the list
+			const sel = rows.nth(i).locator("select").nth(1);
+			const idx = await sel.evaluate((s, label) => { let k = -1; [...s.options].forEach((o, j) => { if (k < 0 && o.text.includes(label)) k = j; }); return k; }, plan[i].subclass);
+			if (idx < 0) throw new Error("the form does not offer the subclass " + plan[i].subclass + " for " + plan[i].cls);
 			await sel.selectOption({ index: idx });
 		}
 		await frame.locator("#notes").fill(NOTE);
@@ -54,7 +61,8 @@ async function buildCharacter(p) {
 				const have = await frame.locator('#skillGrid input[type="checkbox"]:checked:not(:disabled)').count();
 				for (let i = have; i < want; i++) await frame.locator('#skillGrid input[type="checkbox"]:not(:checked):not(:disabled)').first().click();
 			} else if (/subclass/i.test(text)) {
-				await frame.locator("#classRows select").nth(1).selectOption({ index: 1 });
+				const rws = frame.locator("#classRows > div");   // the first row that still has none chosen
+				for (let i = 0; i < (await rws.count()); i++) { const sel = rws.nth(i).locator("select").nth(1); if (!(await sel.inputValue()) && (await sel.locator("option").count()) > 1) { await sel.selectOption({ index: 1 }); break; } }
 			} else if (/cantrip|spell|metamagic|invocation|infusion|maneuver/i.test(text)) {
 				const btns = frame.locator('#spellCard button:has-text("Assign Random"), #maneuversCard button:has-text("Assign Random")');
 				for (let i = 0; i < (await btns.count()); i++) if (await btns.nth(i).isVisible()) await btns.nth(i).click();
