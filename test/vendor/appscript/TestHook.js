@@ -91,9 +91,11 @@ function testState_(b) {
 function testFile_(b) {
 	const t = readTable_(getCharactersSheet_());
 	if (findTestRow_(null, t, b.name, b.player) < 0) return { ok: false, error: "no such test character" };
-	const files = getOrCreateDriveFolder_().getFilesByName(String(b.name) + " - " + String(b.player) + ".md");
+	const pdf = b.kind === "pdf";   // the printed sheet, for decoding its QR in a simulation
+	const files = getOrCreateDriveFolder_().getFilesByName(String(b.name) + " - " + String(b.player) + (pdf ? ".pdf" : ".md"));
 	if (!files.hasNext()) return { ok: false, error: "no sheet file yet" };
-	return { ok: true, text: files.next().getBlob().getDataAsString() };
+	const blob = files.next().getBlob();
+	return pdf ? { ok: true, base64: Utilities.base64Encode(blob.getBytes()) } : { ok: true, text: blob.getDataAsString() };
 }
 
 function deleteMatchingRows_(sheet, predicate) {

@@ -46,13 +46,14 @@ function makeEnv() {
 	};
 	const ctx = vm.createContext({
 		SpreadsheetApp: { getActiveSpreadsheet: () => ss, getUi: () => ui, getActiveSheet: () => ss.active },
-		Utilities: { getUuid: () => crypto.randomUUID() },
+		Utilities: { getUuid: () => crypto.randomUUID(), base64Encode: (b) => Buffer.from(b).toString("base64") },
 		LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
 		PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props[k] || null }) },
 		ScriptApp: { getService: () => ({ getUrl: () => "https://script.google.com/macros/s/TEST/exec" }) },
 		Logger: { log() {} },
 		jsonOutput_: (o) => o,
 		getOrCreateDriveFolder_: () => folder,
+		DriveApp: { getFileById(id) { const f = driveFiles.find((x) => x.id === id); if (!f) throw new Error("not found"); return f; } },
 		SHEET_NAME: "Submissions",
 		Date, JSON, Math, Number, String, Object, Array, isFinite, parseInt, RegExp,
 	});

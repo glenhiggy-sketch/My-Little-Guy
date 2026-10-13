@@ -55,6 +55,9 @@ ok("file returns a test character's sheet text, and nobody else's", () => {
 	file("Testy - ZZSTRESS_sim1.md", "SHEET TEXT"); file("Realone - Erin.md", "PRIVATE");
 	const r = hook({ op: "file", name: "Testy", player: "ZZSTRESS_sim1" });
 	assert.deepStrictEqual([r.ok, r.text], [true, "SHEET TEXT"]);
+	file("Testy - ZZSTRESS_sim1.pdf", "PDFBYTES").getBlob = () => ({ getBytes: () => Buffer.from("%PDF-test"), getDataAsString: () => "" });
+	const pr = hook({ op: "file", kind: "pdf", name: "Testy", player: "ZZSTRESS_sim1" });
+	assert(pr.ok && Buffer.from(pr.base64, "base64").toString() === "%PDF-test");
 	assert.strictEqual(hook({ op: "file", name: "Realone", player: "Erin" }).ok, false);
 	assert.strictEqual(hook({ op: "file", name: "Testy", player: "ZZSTRESS_nope" }).ok, false);
 	driveFiles.length = 0;

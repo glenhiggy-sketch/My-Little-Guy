@@ -7,10 +7,11 @@ const crypto = require("crypto");
 const assert = require("assert");
 
 const { ss, driveFiles, ctx } = require("./test_fakes").makeEnv();
+vm.runInContext(fs.readFileSync(__dirname + "/QrCode.js", "utf8"), ctx);
 vm.runInContext(fs.readFileSync(__dirname + "/Sync.js", "utf8"), ctx);
 const S = vm.runInContext("({upsertDatabaseRow_, pullCharacter_, pushCharacter_, doPost, characterLookup_, leaderboardData_, withSyncComment_, " +
-	"wipeCharacterEntriesDryRun, wipeAndRebuildCharacterData, getCharactersSheet_, getAwardsSheet_, getPublishedSheet_, CHARACTERS_HEADERS, ensureTab_})", ctx);
-for (const k of ["pullCharacter_", "pushCharacter_", "doPost", "characterLookup_", "leaderboardData_"]) { const f = S[k]; S[k] = (...a) => JSON.parse(JSON.stringify(f(...a))); } // cross-realm objects -> plain
+	"playLink_, playQr_, noteForCharacter_, noteJsonp_, wipeCharacterEntriesDryRun, wipeAndRebuildCharacterData, getCharactersSheet_, getAwardsSheet_, getPublishedSheet_, CHARACTERS_HEADERS, ensureTab_})", ctx);
+for (const k of ["pullCharacter_", "pushCharacter_", "doPost", "characterLookup_", "leaderboardData_", "noteForCharacter_"]) { const f = S[k]; S[k] = (...a) => JSON.parse(JSON.stringify(f(...a))); } // cross-realm objects -> plain
 const H = S.CHARACTERS_HEADERS, col = (h) => H.indexOf(h);
 
 const form = (name, player, extra) => Object.assign({ characterName: name, playerName: player, species: "Elf", background: "Sage", className: "Wizard", alignment: "Neutral Good" }, extra);
@@ -140,5 +141,46 @@ ok("after the wipe a fresh submission works and old tokens are dead", () => {
 ok("a tab with unexpected headers is refused, not silently misread", () => {
 	ss.getSheetByName("Characters").set(1, 3, "Wrong");
 	assert.throws(() => S.getCharactersSheet_(), /unexpected headers/);
+});
+// ---- the player link: QR for the PDF and the note for the landing page
+ss.getSheetByName("Characters").set(1, 3, "Player Name");   // the previous check broke a header on purpose
+ok("play link carries id and token after the #", () => {
+	const l = S.playLink_({ id: "C0123456789", token: "ab".repeat(20) });
+	assert(l.startsWith("https://glenmorganshaw.github.io/kadria-intake/play/#C0123456789.") && l.endsWith("ab".repeat(20)));
+	assert.strictEqual(S.playLink_(null), "");
+});
+ok("QR matrix is square and has the three finder patterns", () => {
+	const q = S.playQr_({ id: "C0123456789", token: "ab".repeat(20) });
+	assert(q && q.modules.length >= 29 && q.modules.every((r) => r.length === q.modules.length));
+	const n = q.modules.length, finder = (r0, c0) => [0, 6].every((d) => [0, 1, 2, 3, 4, 5, 6].every((k) => q.modules[r0 + d][c0 + k] === 1 && q.modules[r0 + k][c0 + d] === 1));
+	assert(finder(0, 0) && finder(0, n - 7) && finder(n - 7, 0), "finder patterns missing");
+	assert.strictEqual(S.playQr_(null), null);
+});
+const fileId = "1AbCdEfGhIjKlMnOpQrStUvWxYz";
+driveFiles.push({ id: fileId, getName: () => "Aelen - Erin.md", getBlob: () => ({ getDataAsString: () => "# Aelen <!-- kadria-sync {} -->" }) });
+ok("note endpoint returns the note for the right id and token only", () => {
+	const g = S.upsertDatabaseRow_(form("Noteful", "Erin"), char(1, 8));
+	const sh = S.getCharactersSheet_(); let row = 0;
+	for (let r = 2; r <= sh.getLastRow(); r++) if (sh.cell(r, 1) === g.id) row = r;
+	sh.set(row, H.indexOf("Sheet File") + 1, "https://drive.google.com/file/d/" + fileId + "/view?usp=drivesdk");
+	const good = S.noteForCharacter_({ id: g.id, token: g.token });
+	assert(good.ok && good.fileName === "Aelen - Erin.md" && /kadria-sync/.test(good.text));
+	assert.strictEqual(S.noteForCharacter_({ id: g.id, token: "wrong" }).ok, false);
+	assert.strictEqual(S.noteForCharacter_({ id: "Cnope", token: g.token }).ok, false);
+});
+ok("note as a script-tag call: callback(json), and only for a plain callback name", () => {
+	const g = S.upsertDatabaseRow_(form("Jsonp", "Erin"), char(1, 8));
+	const sh = S.getCharactersSheet_(); let row = 0;
+	for (let r = 2; r <= sh.getLastRow(); r++) if (sh.cell(r, 1) === g.id) row = r;
+	sh.set(row, H.indexOf("Sheet File") + 1, "https://drive.google.com/file/d/" + fileId + "/view");
+	const js = S.noteJsonp_({ id: g.id, token: g.token, callback: "kcb123" });
+	assert(/^kcb123\(\{"ok":true,"fileName":"Aelen - Erin\.md"/.test(js) && js.endsWith(");"), js.slice(0, 80));
+	assert.strictEqual(S.noteJsonp_({ id: g.id, token: g.token, callback: "alert(1)//" }), null);
+	assert(/"ok":false/.test(S.noteJsonp_({ id: g.id, token: "bad", callback: "cb" })));
+});
+ok("a character with no note yet is answered, not an error", () => {
+	const h = S.upsertDatabaseRow_(form("Fresh", "Erin"), char(1, 8));
+	const r = S.noteForCharacter_({ id: h.id, token: h.token });
+	assert.strictEqual(r.ok, false); assert.match(r.error, /no note/);
 });
 console.log("\n" + n + " checks passed");

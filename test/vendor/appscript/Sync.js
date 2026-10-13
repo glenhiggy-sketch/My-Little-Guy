@@ -386,6 +386,62 @@ function doPost(e) {
 	return jsonOutput_({ ok: false, error: "unknown action" });
 }
 
+// ---------------------------------------------------------------- the player link (QR on the PDF, landing page, note download)
+
+/** Where the QR code on a character's PDF leads. The id and token sit after the # so they never reach a server log. */
+const KADRIA_PLAY_PAGE_URL = "https://glenmorganshaw.github.io/kadria-intake/play/";
+
+function playLink_(info) {
+	if (!info || !info.id || !info.token) return "";
+	return KADRIA_PLAY_PAGE_URL + "#" + info.id + "." + info.token;
+}
+
+/** The QR matrix for a character's play link, shaped for PdfFiller's block: { modules: [[0|1,...],...], url }. null if it cannot be made. */
+function playQr_(info) {
+	try {
+		const url = playLink_(info);
+		if (!url || typeof qrcode !== "function") return null;
+		const q = qrcode(0, "L");
+		q.addData(url);
+		q.make();
+		const n = q.getModuleCount(), rows = [];
+		for (let r = 0; r < n; r++) {
+			const row = [];
+			for (let c = 0; c < n; c++) row.push(q.isDark(r, c) ? 1 : 0);
+			rows.push(row);
+		}
+		return { modules: rows, url: url };
+	} catch (e) {
+		return null;
+	}
+}
+
+/** GET ?action=note &id &token -> the character's generated note (the .md in Drive), for the landing page. Same trust as pull: id + token. */
+function noteData_(params) {
+	const t = readTable_(getCharactersSheet_());
+	const hit = authCharacter_(t, params.id, params.token);
+	if (!hit) return { ok: false, error: "not found or bad token" };
+	const url = String(hit.row[t.idx["Sheet File"]] || "");
+	const m = /\/d\/([A-Za-z0-9_-]+)/.exec(url) || /[?&]id=([A-Za-z0-9_-]+)/.exec(url);
+	if (!m) return { ok: false, error: "no note yet" };
+	try {
+		const file = DriveApp.getFileById(m[1]);
+		return { ok: true, fileName: file.getName(), text: file.getBlob().getDataAsString() };
+	} catch (e) {
+		return { ok: false, error: "note unavailable" };
+	}
+}
+
+function noteForCharacter_(params) { return jsonOutput_(noteData_(params)); }
+
+/** The same answer as a script-tag (JSONP) call: callback(...), or null when the callback name is not a plain identifier.
+ *  Used by the play page because iOS Safari is strict about cross-origin fetches to Apps Script. */
+function noteJsonp_(params) {
+	const cb = String((params && params.callback) || "");
+	if (!/^[A-Za-z_$][A-Za-z0-9_$]{0,40}$/.test(cb)) return null;
+	return cb + "(" + JSON.stringify(noteData_(params)) + ");";
+}
+
 // ---------------------------------------------------------------- the wipe (editor-run only, no web endpoint)
 
 function isCharacterFile_(file) {

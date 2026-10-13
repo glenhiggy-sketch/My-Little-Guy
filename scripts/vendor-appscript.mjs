@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const src = process.env.APPSCRIPT_DIR || "B:/New folder/Second Brain.vault/_Agent-Only/code/kadria-appscript";
 const dest = join(dirname(fileURLToPath(import.meta.url)), "..", "test", "vendor", "appscript");
-const files = ["Sync.js", "Publish.js", "TestHook.js", "test_fakes.js", "Sync.test.js", "Publish.test.js", "TestHook.test.js"];
+const files = ["Sync.js", "QrCode.js", "Publish.js", "TestHook.js", "test_fakes.js", "Sync.test.js", "Publish.test.js", "TestHook.test.js"];
 if (!existsSync(join(src, "Sync.js"))) { console.error("Apps Script project not found at " + src + " (set APPSCRIPT_DIR)"); process.exit(1); }
 mkdirSync(dest, { recursive: true });
 for (const f of files) copyFileSync(join(src, f), join(dest, f));
