@@ -101,11 +101,11 @@ This is a politically restricted post.
 
 5.  A strong sense of the social media landscape, including emerging trends, features and channels, particularly those used by a younger audience.
 
-2.  **Skills**
+> **2. Skills**
 
 1.  Excellent interpersonal and communication skills, with the ability to earn the trust and respect of colleagues
 
-2.  [T]{.underline}the ability to exercise discretion, judgement and confidentiality when dealing with politicians
+2.  The ability to exercise discretion, judgement and confidentiality when dealing with politicians
 
 3.  Excellent written skills, with the ability to accurately summarise and convey complex information in plain English, applying correct grammar, punctuation, spelling and inclusive language.
 
@@ -127,6 +127,6 @@ This is a politically restricted post.
 
 4.  Committed to keeping up to date with new technologies, tools and industry best practice through active CPD.
 
-4.  **Qualifications**
+> **4. Qualifications**
 
 1.  A minimum of 5 GCSEs at grade 4 or above, or equivalent, ideally including English and Maths.
