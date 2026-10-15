@@ -97,6 +97,34 @@ const KIT = {
 		attacks: [["Quarterstaff (Shillelagh)", "+7", "1d8+4 bludgeoning"], ["Sickle", "+2", "1d4-1 slashing"]] },
 };
 
+// ---- the title page (beginner summary) ------------------------------------------------------------------------------------------------
+const COVER = {
+	"Brakka Stonefist": { complexity: "Moderate",
+		summary: "A bare-knuckle brawler. You punch things, dodge blows and get stronger the longer a fight goes on. Tough, hard to hit and happy to stand at the front.",
+		turns: ["Attack with your fists: Unarmed Strike, +5 to hit, 1d6+3 damage.", "Every hit you land, or attack you avoid, earns Flow points. Spend them on Tricks (a bonus action).", "When something hits you in melee, use your reaction: Cross Counter cuts the damage."] },
+	"Varga Ironhide": { complexity: "Simple",
+		summary: "A tough warrior who flies into a rage. You hit very hard, shrug off damage and are hard to knock down. The easiest character in the set to play.",
+		turns: ["Bonus action: Rage, on your first turn of a fight. It adds +2 damage and makes you resist most damage.", "Attack with your greataxe: +5 to hit, 1d12+3 damage.", "Reckless Attack gives you advantage when you want to hit more often."] },
+	"Tansy Underbough": { complexity: "Moderate",
+		summary: "A quick, sneaky expert. You scout ahead, open locks and deal big damage once a turn with Sneak Attack.",
+		turns: ["Attack with your rapier or shortbow: +5 to hit. If you have advantage, or an ally is next to the target, add Sneak Attack: 2d6, once a turn.", "Bonus action: Cunning Action to Hide, Dash or Disengage.", "Out of combat you are the party's expert: Stealth, Perception and thieves' tools."] },
+	"Kavaxis Dawnmantle": { complexity: "Moderate",
+		summary: "A holy knight in heavy armor. Hard to hurt, heals friends and adds radiant power to your sword. A good first fighter that can also cast a little.",
+		turns: ["Attack with your longsword: +5 to hit, 1d8+3 damage.", "After a hit you can spend a spell slot to Divine Smite for +2d8 radiant damage.", "Lay on Hands heals up to 15 hit points in total; Cure Wounds heals more."] },
+	"Brenna Hearthward": { complexity: "Moderate",
+		summary: "A front-line healer in heavy armor. You keep everyone on their feet and still hit back with holy magic.",
+		turns: ["Bonus action: Healing Word heals an ally who is down, from a distance.", "Action: Sacred Flame (1d8, no spell slot) or Guiding Bolt (4d6) to hurt an enemy.", "Spirit Weapon is a bonus-action attack every turn once it is cast."] },
+	"Thalior Venn": { complexity: "Involved",
+		summary: "A scholar of fire and force. You deal big damage from range but are fragile, so stay behind your friends.",
+		turns: ["Cast Fire Bolt every turn: +5 to hit, 1d10 fire damage, never runs out.", "Spend spell slots on Magic Missile (never misses) and Sleep. Cast Mage Armor before a fight.", "Reaction: Shield when you are about to be hit."] },
+	"Marlowe Vesper": { complexity: "Moderate",
+		summary: "A charming support character. You encourage friends, heal them, and cast spells that confuse or hold enemies.",
+		turns: ["Bonus action: Bardic Inspiration gives an ally a d6 to add to a roll.", "Action: Vicious Mockery (1d6) or a spell such as Dissonant Whispers (3d6).", "Bonus action: Healing Word heals someone at range."] },
+	"Fennick Mossgrove": { complexity: "Moderate",
+		summary: "A nature caster with healing, control of the battlefield and an animal form.",
+		turns: ["Action: Produce Flame (+5, 1d8 fire) or hit with your staff (Shillelagh: +5, 1d8+3).", "Entangle or Moonbeam (save DC 13) to control where enemies can go.", "Bonus action: Wild Shape into a beast for extra hit points (two uses a rest)."] },
+};
+
 // ---- the page-1 quick reference: real attack bonuses, DCs and damage dice, computed from the built character ---------------------------
 const mod = (n) => Math.floor((n - 10) / 2);
 const sgn = (n) => (n >= 0 ? "+" + n : "" + n);
@@ -190,7 +218,12 @@ async function main() {
 		ctx.Utilities = { base64Decode: (b64) => Array.from(Buffer.from(b64, "base64")), newBlob: (bytes, type, name) => ({ bytes, type, name, getBytes: () => bytes }) };
 		ctx.Uint8Array = Uint8Array; ctx.Buffer = Buffer; ctx.TextEncoder = TextEncoder; ctx.TextDecoder = TextDecoder;
 		for (const f of ["PdfLib.js", "PdfTemplates.js", "PdfFiller.js"]) vm.runInContext(fs.readFileSync(path.join(DIR, f), "utf8"), ctx, { filename: f });
-		const blob = await ctx.kadriaBuildFilledPdfBlob(character, p.name + ".pdf");
+		const cv = COVER[p.name];
+		const pdfChar = Object.assign({}, character, {
+			playerNotes: `Pregen character, level ${LEVEL}`,   // short on purpose: a long note adds a near-empty page; the tips are on the title page
+			coverPage: { classLine: p.cls, raceLine: p.species, name: p.name, detail: `${p.sub}  |  Level ${LEVEL}  |  ${p.background} background`, summary: cv.summary, turns: cv.turns, complexity: cv.complexity },
+		});
+		const blob = await ctx.kadriaBuildFilledPdfBlob(pdfChar, p.name + ".pdf");
 		fs.writeFileSync(path.join(OUT, p.file + ".pdf"), Buffer.from(blob.getBytes ? blob.getBytes() : blob.bytes));
 		const a = character.abilities || {};
 		index.push({ p, character, warnings: filled.warnings || [] });
