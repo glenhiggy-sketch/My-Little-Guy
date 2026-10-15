@@ -7,7 +7,7 @@ const vm = require("vm"), fs = require("fs"), path = require("path");
 const { load } = require("./local-build");
 const DIR = process.env.APPSCRIPT_DIR || "B:/New folder/Second Brain.vault/_Agent-Only/code/kadria-appscript";
 const OUT = process.argv[2] || "B:/New folder/Second Brain.vault/projects/kadria-universe/Kadria/pregens";
-const LEVEL = Number(process.env.PREGEN_LEVEL || 5);
+const LEVEL = Number(process.env.PREGEN_LEVEL || 3);
 
 // ---- the eight: four martial, four casters (Paladin is the martial who casts) -------------------------------------------------------
 const P = [
@@ -35,42 +35,47 @@ const P = [
 	  scores: { Strength: 15, Dexterity: 10, Constitution: 13, Intelligence: 8, Wisdom: 12, Charisma: 14 }, bg: { mode: "2/1", plus2: "Strength", plus1: "Constitution" },
 	  skills: ["Insight", "Persuasion"], tool: "Dice Set", asi: [{ plus2: "Strength" }], style: "Defense",
 	  masteries: ["Longsword", "Warhammer"],
-	  spells: { cantrips: [], spells: ["Bless", "Cure Wounds", "Command", "Divine Favor", "Lesser Restoration", "Find Steed"] },
+	  spellsBy: { 3: { cantrips: [], spells: ["Bless", "Cure Wounds", "Command", "Divine Favor"] },
+	            5: { cantrips: [], spells: ["Bless", "Cure Wounds", "Command", "Divine Favor", "Lesser Restoration", "Find Steed"] } },
 	  role: "Martial caster / defender and healer", blurb: "Sword-and-shield knight who heals in a pinch and smites for extra radiance.",
 	  tips: ["Divine Smite: spend a spell slot after a hit for extra radiant damage.", "Lay On Hands is a pool of healing you can touch to spend.", "Oath spells are always prepared."],
 	  choices: "Dragonborn: Draconic Ancestry = Gold (fire breath). Fighting Style: Defense. Oath of Devotion spells, always prepared: Protection from Evil and Good, Shield of Faith (3rd level); Aid, Zone of Truth (5th)." },
 	{ file: "05 Brenna Hearthward - Cleric (Life)", name: "Brenna Hearthward", cls: "Cleric", sub: "Life Domain", species: "Dwarf", background: "Acolyte", align: "Neutral Good",
 	  scores: { Strength: 13, Dexterity: 10, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 12 }, bg: { mode: "2/1", plus2: "Wisdom", plus1: "Charisma" },
 	  skills: ["Medicine", "Persuasion"], tool: "Calligrapher's Supplies", asi: [{ feat: "War Caster", inc: "Wisdom" }],
-	  spells: { cantrips: ["Guidance", "Sacred Flame", "Spare the Dying", "Thaumaturgy"],
-	            spells: ["Healing Word", "Guiding Bolt", "Shield of Faith", "Sanctuary", "Command", "Spiritual Weapon", "Spirit Guardians", "Dispel Magic", "Protection from Evil and Good"] },
+	  spellsBy: { 3: { cantrips: ["Guidance", "Sacred Flame", "Spare the Dying"], spells: ["Healing Word", "Guiding Bolt", "Shield of Faith", "Sanctuary", "Command", "Spiritual Weapon"] },
+	            5: { cantrips: ["Guidance", "Sacred Flame", "Spare the Dying", "Thaumaturgy"],
+	                 spells: ["Healing Word", "Guiding Bolt", "Shield of Faith", "Sanctuary", "Command", "Spiritual Weapon", "Spirit Guardians", "Dispel Magic", "Protection from Evil and Good"] } },
 	  role: "Caster / healer", blurb: "The party's healer and anchor, in heavy armor. Healing Word from range keeps everyone standing.",
 	  tips: ["Healing Word is a bonus action: heal a downed ally and still act.", "Spiritual Weapon is a bonus-action attack every turn.", "Channel Divinity: Preserve Life heals a crowd at once."],
 	  choices: "Dwarf: Dwarven Resilience, Stonecunning. Divine Order: Protector. Magic Initiate (Cleric): cantrips Light and Mending, spell Bane. Life Domain spells, always prepared: Aid, Bless, Cure Wounds, Lesser Restoration; Mass Healing Word, Revivify at 5th." },
 	{ file: "06 Thalior Venn - Wizard (Evocation)", name: "Thalior Venn", cls: "Wizard", sub: "School of Evocation", species: "Elf", background: "Sage", align: "Neutral Good",
 	  scores: { Strength: 8, Dexterity: 13, Constitution: 14, Intelligence: 15, Wisdom: 12, Charisma: 10 }, bg: { mode: "2/1", plus2: "Intelligence", plus1: "Constitution" },
 	  skills: ["Arcana", "Investigation"], tool: "Calligrapher's Supplies", asi: [{ plus2: "Intelligence" }],
-	  spells: { cantrips: ["Fire Bolt", "Mage Hand", "Light", "Ray of Frost"],
-	            spells: ["Magic Missile", "Shield", "Mage Armor", "Sleep", "Detect Magic", "Misty Step", "Scorching Ray", "Fireball", "Counterspell"] },
+	  spellsBy: { 3: { cantrips: ["Fire Bolt", "Mage Hand", "Ray of Frost"], spells: ["Magic Missile", "Shield", "Mage Armor", "Sleep", "Detect Magic", "Misty Step"] },
+	            5: { cantrips: ["Fire Bolt", "Mage Hand", "Light", "Ray of Frost"],
+	                 spells: ["Magic Missile", "Shield", "Mage Armor", "Sleep", "Detect Magic", "Misty Step", "Scorching Ray", "Fireball", "Counterspell"] } },
 	  role: "Caster / damage and control", blurb: "Glass cannon with the answer to most problems. Sculpt Spells keeps allies safe from your own fireballs.",
 	  tips: ["Keep Shield and Counterspell for your reactions.", "Sculpt Spells: protect allies from your area spells.", "Arcane Recovery restores slots after a short rest."],
 	  choices: "Elf: Elven Lineage = High Elf (Prestidigitation). Scholar: Arcana. Magic Initiate (Wizard): cantrips Minor Illusion and Shocking Grasp, spell Find Familiar." },
 	{ file: "07 Marlowe Vesper - Bard (Lore)", name: "Marlowe Vesper", cls: "Bard", sub: "College of Lore", species: "Tiefling", background: "Entertainer", align: "Chaotic Good",
 	  scores: { Strength: 8, Dexterity: 14, Constitution: 13, Intelligence: 10, Wisdom: 12, Charisma: 15 }, bg: { mode: "2/1", plus2: "Charisma", plus1: "Dexterity" },
 	  skills: ["Persuasion", "Insight", "Deception"], tool: "Lute", asi: [{ feat: "Inspiring Leader", inc: "Charisma" }], expertise: ["Persuasion", "Insight"],
-	  spells: { cantrips: ["Vicious Mockery", "Minor Illusion", "Mending"],
-	            spells: ["Healing Word", "Dissonant Whispers", "Faerie Fire", "Hideous Laughter", "Heroism", "Hold Person", "Invisibility", "Hypnotic Pattern", "Dispel Magic"] },
+	  spellsBy: { 3: { cantrips: ["Vicious Mockery", "Minor Illusion"], spells: ["Healing Word", "Dissonant Whispers", "Faerie Fire", "Hideous Laughter", "Hold Person", "Invisibility"] },
+	            5: { cantrips: ["Vicious Mockery", "Minor Illusion", "Mending"],
+	                 spells: ["Healing Word", "Dissonant Whispers", "Faerie Fire", "Hideous Laughter", "Heroism", "Hold Person", "Invisibility", "Hypnotic Pattern", "Dispel Magic"] } },
 	  role: "Caster / support and face", blurb: "Talker, healer and buffer. Bardic Inspiration turns a miss into a hit for any ally.",
 	  tips: ["Bardic Inspiration is a bonus action: give an ally a die to add to a roll.", "Cutting Words (Lore) uses a die to shrink an enemy's roll.", "Vicious Mockery is a free ranged attack and a debuff."],
 	  choices: "Tiefling: Fiendish Legacy = Infernal (fire resistance, Fire Bolt; Hellish Rebuke at 3rd level, Darkness at 5th). Musician: Lute, Flute, Drum." },
 	{ file: "08 Fennick Mossgrove - Druid (Land)", name: "Fennick Mossgrove", cls: "Druid", sub: "Circle of the Land", species: "Gnome", background: "Hermit", align: "Neutral",
 	  scores: { Strength: 8, Dexterity: 13, Constitution: 14, Intelligence: 12, Wisdom: 15, Charisma: 10 }, bg: { mode: "2/1", plus2: "Wisdom", plus1: "Constitution" },
 	  skills: ["Nature", "Perception"], tool: "Herbalism Kit", asi: [{ plus2: "Wisdom" }],
-	  spells: { cantrips: ["Guidance", "Produce Flame", "Shillelagh"],
-	            spells: ["Entangle", "Goodberry", "Healing Word", "Faerie Fire", "Moonbeam", "Pass without Trace", "Lesser Restoration", "Call Lightning", "Plant Growth"] },
+	  spellsBy: { 3: { cantrips: ["Guidance", "Produce Flame"], spells: ["Entangle", "Goodberry", "Healing Word", "Faerie Fire", "Moonbeam", "Pass without Trace"] },
+	            5: { cantrips: ["Guidance", "Produce Flame", "Shillelagh"],
+	                 spells: ["Entangle", "Goodberry", "Healing Word", "Faerie Fire", "Moonbeam", "Pass without Trace", "Lesser Restoration", "Call Lightning", "Plant Growth"] } },
 	  role: "Caster / control and utility", blurb: "Nature's problem-solver: terrain control, healing, scouting and a Wild Shape when it counts.",
 	  tips: ["Wild Shape: turn into a beast as a bonus action for extra hit points and mobility.", "Entangle and Moonbeam control a fight from a distance.", "Circle spells come with your land type (Temperate)."],
-	  choices: "Gnome: Gnomish Lineage = Forest Gnome. Primal Order: Magician. Land Type: Temperate (its circle spells are always prepared)." },
+	  choices: "Gnome: Gnomish Lineage = Forest Gnome. Primal Order: Magician (extra cantrip: Shillelagh). Land Type: Temperate (its circle spells are always prepared)." },
 ];
 
 // Curated kits, attack lines and AC (the generator picks the best armor a class is proficient with; these are what the character actually carries).
@@ -91,6 +96,36 @@ const KIT = {
 	"Fennick Mossgrove": { ac: null, equipment: ["Leather Armor", "Wooden Shield", "Quarterstaff (druidic focus)", "Sickle", "Herbalism Kit", "Explorer's Pack", "9 GP"],
 		attacks: [["Quarterstaff (Shillelagh)", "+7", "1d8+4 bludgeoning"], ["Sickle", "+2", "1d4-1 slashing"]] },
 };
+
+// ---- the page-1 quick reference: real attack bonuses, DCs and damage dice, computed from the built character ---------------------------
+const mod = (n) => Math.floor((n - 10) / 2);
+const sgn = (n) => (n >= 0 ? "+" + n : "" + n);
+function quickRef(p, ch) {
+	const A = ch.abilities, pb = ch.profBonus, lvl = LEVEL;
+	const str = mod(A.Strength), dex = mod(A.Dexterity), con = mod(A.Constitution);
+	const sa = { Cleric: "Wisdom", Wizard: "Intelligence", Bard: "Charisma", Druid: "Wisdom", Paladin: "Charisma" }[p.cls];
+	const sm = sa ? mod(A[sa]) : 0, dc = 8 + pb + sm, sAtk = sgn(pb + sm);
+	const melee = (name, m, die, type) => [name, sgn(pb + m), die + (m ? sgn(m) : "") + " " + type];
+	const save = (name, ab, dice, type) => [name, "DC " + dc + " " + ab, dice + " " + type];
+	switch (p.cls) {
+		case "Pugilist": { const m = Math.max(str, dex); return [melee("Unarmed Strike", m, "1d6", "bludgeoning"), melee("Javelin", m, "1d6", "piercing"),
+			["Cross Counter", "react.", "-1d10" + sgn(con + lvl) + " dmg"]]; }
+		case "Barbarian": return [melee("Greataxe", str, "1d12", "slashing"), melee("Handaxe", str, "1d6", "slashing"), melee("Javelin", str, "1d6", "piercing"),
+			["Rage bonus", "raging", "+" + (lvl >= 16 ? 4 : lvl >= 9 ? 3 : 2)]];
+		case "Rogue": return [melee("Rapier", dex, "1d8", "piercing"), melee("Shortbow", dex, "1d6", "piercing"), melee("Dagger", dex, "1d4", "piercing"),
+			["Sneak Attack", "1/turn", Math.ceil(lvl / 2) + "d6"]];
+		case "Paladin": return [melee("Longsword", str, "1d8", "slashing"), melee("Javelin", str, "1d6", "piercing"),
+			["Divine Smite", "on hit", "2d8 radiant"], ["Lay on Hands", "pool", 5 * lvl + " HP"]];
+		case "Cleric": return [save("Sacred Flame", "Dex", "1d8", "radiant"), ["Guiding Bolt", sAtk, "4d6 radiant"], ["Spirit Weapon", sAtk, "1d8" + sgn(sm) + " force"],
+			melee("Mace", str, "1d6", "bludgeoning")];
+		case "Wizard": return [["Fire Bolt", sAtk, "1d10 fire"], ["Magic Missile", "auto-hit", "3 x (1d4+1) force"], ["Ray of Frost", sAtk, "1d8 cold"],
+			melee("Dagger", dex, "1d4", "piercing")];
+		case "Bard": return [save("Vicious Mockery", "Wis", "1d6", "psychic"), melee("Rapier", dex, "1d8", "piercing"), save("Diss. Whispers", "Wis", "3d6", "psychic"),
+			["Bardic Insp.", "bonus", "d6 to ally"]];
+		case "Druid": return [["Produce Flame", sAtk, "1d8 fire"], melee("Shillelagh", sm, "1d8", "bludgeoning"), save("Moonbeam", "Con", "2d10", "radiant")];
+	}
+	return [];
+}
 
 // ---- the Pugilist's rules text, from the vault note ---------------------------------------------------------------------------------
 function pugilistRules() {
@@ -124,7 +159,8 @@ async function main() {
 		const subclass = classData.subclasses.find((s) => s.name === p.sub && s.edition === "2024") || classData.subclasses.find((s) => s.name === p.sub);
 		if (!subclass) throw new Error(`unknown subclass ${p.cls}: ${p.sub} (have ${classData.subclasses.map((s) => s.name).join(", ")})`);
 		const entry = { classData, subclass, level: LEVEL, asiChoices: p.asi || [] };
-		if (p.spells) { entry.explicitCantrips = p.spells.cantrips; entry.explicitSpells = p.spells.spells; }
+		const sp = p.spellsBy && (p.spellsBy[LEVEL] || p.spellsBy[5]);
+		if (sp) { entry.explicitCantrips = sp.cantrips; entry.explicitSpells = sp.spells; }
 		if (p.style) entry.explicitFightingStyle = p.style;
 		const cc = {};
 		if (p.masteries) cc["Weapon Mastery"] = p.masteries;
@@ -145,11 +181,7 @@ async function main() {
 		if (kit) {
 			character.equipment = kit.equipment;
 			if (kit.ac) character.ac = kit.ac;
-			if (kit.attacks) {
-				const cantripNames = new Set((character.cantrips || []).map((s) => s.name));
-				const keep = (character.attacksQuickRef || []).filter((e) => cantripNames.has(e.name));
-				character.attacksQuickRef = kit.attacks.map(([name, atkBonus, damage]) => ({ name, atkBonus, damage })).concat(keep);
-			}
+			character.attacksQuickRef = quickRef(p, character).map(([name, atkBonus, damage]) => ({ name, atkBonus, damage }));
 		}
 		const template = character.isSpellcaster ? ctx.KADRIA_CASTER_TEMPLATE : ctx.KADRIA_MARTIAL_TEMPLATE;
 		const filled = ctx.kadriaFillTemplate(template, character);
