@@ -21,6 +21,8 @@ If your character sheet is a hand-formatted markdown document (tables, `‚òê`/`‚ò
 
 ## Installation
 
+Stuck? See [TROUBLESHOOTING.md](TROUBLESHOOTING.md): Restricted mode, enabling the plugin, spells not showing, sync errors.
+
 ### On desktop (or if you can drop files directly into the vault)
 
 1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/glenhiggy-sketch/My-Little-Guy/releases/latest).
