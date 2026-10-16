@@ -436,10 +436,40 @@ function noteForCharacter_(params) { return jsonOutput_(noteData_(params)); }
 
 /** The same answer as a script-tag (JSONP) call: callback(...), or null when the callback name is not a plain identifier.
  *  Used by the play page because iOS Safari is strict about cross-origin fetches to Apps Script. */
-function noteJsonp_(params) {
+function noteJsonp_(params) { return jsonpWrap_(params, noteData_); }
+
+function jsonpWrap_(params, dataFn) {
 	const cb = String((params && params.callback) || "");
 	if (!/^[A-Za-z_$][A-Za-z0-9_$]{0,40}$/.test(cb)) return null;
-	return cb + "(" + JSON.stringify(noteData_(params)) + ");";
+	return cb + "(" + JSON.stringify(dataFn(params)) + ");";
+}
+
+/** GET ?action=find &q -> the notes of characters whose character name or player name equals q (case-insensitive, whole name).
+ *  The play page's backstop when a link fails. Read only: the kadria-sync comment (its id and token allow writing) is cut out of
+ *  the note, so a copy found by name does not sync until the player scans their sheet's QR. Needs 3+ letters, answers at most
+ *  5 characters, and allows 40 searches per 10 minutes for the whole script. */
+function findData_(params) {
+	const q = String((params && params.q) || "").trim().toLowerCase();
+	if (q.length < 3 || q.length > 80) return { ok: false, error: "type at least 3 letters" };
+	try {
+		const cache = CacheService.getScriptCache(), n = Number(cache.get("kfind") || 0);
+		if (n >= 40) return { ok: false, error: "too many searches, try again in a few minutes" };
+		cache.put("kfind", String(n + 1), 600);
+	} catch (e) { /* no cache here: no limit */ }
+	const t = readTable_(getCharactersSheet_());
+	const matches = [];
+	t.rows.forEach(function (row) {
+		if (matches.length >= 5) return;
+		const cn = String(row[t.idx["Character Name"]] || ""), pn = String(row[t.idx["Player Name"]] || "");
+		if (cn.trim().toLowerCase() !== q && pn.trim().toLowerCase() !== q) return;
+		const m = /\/d\/([A-Za-z0-9_-]+)/.exec(String(row[t.idx["Sheet File"]] || ""));
+		if (!m) return;
+		try {
+			const file = DriveApp.getFileById(m[1]);
+			matches.push({ characterName: cn, playerName: pn, fileName: file.getName(), text: file.getBlob().getDataAsString().replace(/<!-- kadria-sync [\s\S]*? -->\s*/g, "") });
+		} catch (e) { /* note unavailable: skip it */ }
+	});
+	return { ok: true, matches: matches };
 }
 
 // ---------------------------------------------------------------- the wipe (editor-run only, no web endpoint)

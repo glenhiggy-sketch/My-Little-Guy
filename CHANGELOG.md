@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.16.0
+- Fix: **passive Perception, Insight and Investigation** are now worked out from your current ability scores and skill proficiencies every time (they used to show the number printed on the sheet, so they never followed a change). They are listed on the Abilities page.
+- New: the **Short** button opens a Short Rest dialog: spend hit dice one at a time (each rolls the die plus Constitution and heals you), see exactly what comes back, then finish the rest. Hover over the button on a computer for the same list without opening it.
+- New: a short rest gives back one use of Rage, Second Wind, Channel Divinity and Wild Shape (not all of them), everything tracked as a short-rest feature in full, and Pact Magic slots; Arcane Recovery and Sorcerous Restoration are explained with your numbers. Hit dice are tracked per die size for a multiclass character.
+- Change: **no duplicates**. Temp HP, damage, healing and the hit dice count now live only in the pinned bar at the top; the Rest page is gone (Short and Long are in the bar); the Combat page no longer repeats them.
+- New: **Languages** are their own field at the top of the Proficiencies page, one chip per language (a sheet line like "Common and Giant" becomes two), with a list to pick from. What you edit is kept and the printed sheet no longer puts it back. Sheets from the new Character Intake carry the player's chosen languages on a `**Languages:**` line.
+- Fix: **armor and weapon training** are filled in from your class (a multiclass gets the multiclass subset); the sheet does not print them, so those lists were always empty.
+- New: the Background page explains what a background does and shows what yours gave you (ability boosts, skills, tool, Origin feat).
+- Fix: you can no longer **level past 20**, single class or multiclass; the Level Up button turns off at 20 and the proficiency bonus stops at +6.
+
 ## 1.15.0
 - New: the Features & Traits page lists each class and subclass feature as its own card with what it does and how often it can be used, when the sheet was made by the new Character Intake (older sheets keep the single Class Features line).
 - New: the trackers for limited-use features come from the sheet itself when it carries a `kadria-resources` block; older sheets keep using the built-in table.

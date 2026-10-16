@@ -135,7 +135,7 @@ function rollCheck(label, modifier) {
 
 function getProficiencyBonus(fm) {
   if (typeof fm.proficiency_bonus === 'number') return fm.proficiency_bonus;
-  const level = getTotalLevel(fm);
+  const level = Math.min(getTotalLevel(fm), MAX_LEVEL);
   return Math.floor((level - 1) / 4) + 2;
 }
 
@@ -347,6 +347,172 @@ const CLASS_RESOURCES = {
 // Hit die size per class (2024 rules), used when the sheet does not say.
 const HIT_DIE = { barbarian: 12, fighter: 10, paladin: 10, ranger: 10, artificer: 8, bard: 8, cleric: 8, druid: 8, monk: 8, rogue: 8, warlock: 8, sorcerer: 6, wizard: 6 };
 function hitDieFor(fm) { return Number(fm.hit_die) || HIT_DIE[String(fm.class || '').toLowerCase().trim()] || 8; }
+
+// ---- derived values the panel works out live (pure functions, covered by test/derived.test.js) ----
+const MAX_LEVEL = 20;
+
+// A skill's total from the current ability score and proficiency choice, so ticking a proficiency changes it (and the passives) at once.
+function skillTotal(fm, id) {
+  const def = SKILLS.find((s) => s.id === id);
+  if (!def) return 0;
+  const s = (fm.skills || {})[id] || {};
+  const score = ((fm.abilities || {})[s.ability || def.ability] || {}).score;
+  return abilityMod(score ?? 10) + Math.floor(getProficiencyBonus(fm) * (PROF_MULT[s.prof || 'none'] ?? 0));
+}
+function passiveScore(fm, id) { return 10 + skillTotal(fm, id); }
+
+// Hit dice by die size. A multiclass character has one pool per die size; `hit_dice_spent` maps die size -> dice spent.
+// Older notes kept a single `hit_dice_used` counter: treat it as spent from the biggest die first.
+function hitDicePools(fm) {
+  const classes = getClassList(fm);
+  const totals = {};
+  if (classes.length > 1) {
+    classes.forEach((c) => {
+      const die = HIT_DIE[String(c.name || '').toLowerCase().trim()] || 8;
+      totals[die] = (totals[die] || 0) + (Number(c.level) || 0);
+    });
+  } else {
+    totals[hitDieFor(fm)] = Number(fm.hit_dice_total) || getTotalLevel(fm, classes);
+  }
+  const dice = Object.keys(totals).map(Number).sort((a, b) => b - a);
+  const spent = {};
+  if (fm.hit_dice_spent && typeof fm.hit_dice_spent === 'object') {
+    dice.forEach((d) => { spent[d] = Number(fm.hit_dice_spent[d]) || 0; });
+  } else {
+    let n = Number(fm.hit_dice_used) || 0;
+    dice.forEach((d) => { spent[d] = Math.min(n, totals[d]); n -= spent[d]; });
+  }
+  return dice.map((die) => {
+    const spentN = Math.min(totals[die], spent[die] || 0);
+    return { die, total: totals[die], spent: spentN, left: totals[die] - spentN };
+  });
+}
+// Writes the pools back (frontmatter `f`), keeping the old single counter in step.
+function setHitDiceSpent(f, pools) {
+  f.hit_dice_spent = {};
+  pools.forEach((p) => { f.hit_dice_spent[p.die] = p.spent; });
+  f.hit_dice_used = pools.reduce((n, p) => n + p.spent, 0);
+}
+function spendHitDie(f, die) {
+  const pools = hitDicePools(f);
+  const p = pools.find((x) => x.die === die);
+  if (!p || p.left <= 0) return false;
+  p.spent += 1;
+  setHitDiceSpent(f, pools);
+  return true;
+}
+// A long rest gives back half your total hit dice (at least one), the biggest dice first.
+function recoverHitDice(f) {
+  const pools = hitDicePools(f);
+  let back = Math.max(1, Math.floor(pools.reduce((n, p) => n + p.total, 0) / 2));
+  pools.forEach((p) => { const r = Math.min(back, p.spent); p.spent -= r; back -= r; });
+  setHitDiceSpent(f, pools);
+}
+
+// Features that give back ONE use (not all of them) on a short rest, 2024 rules. Everything else tracked as "short" comes back in full.
+const SHORT_REST_ONE_USE = ['rage', 'second wind', 'channel divinity', 'wild shape'];
+// Class features that are things you DO during a short rest rather than uses that tick back.
+function shortRestChoices(fm) {
+  const out = [];
+  const lv = (name) => getClassList(fm).filter((c) => String(c.name).toLowerCase() === name).reduce((n, c) => n + (Number(c.level) || Number(fm.level) || 0), 0);
+  const wiz = lv('wizard');
+  if (wiz > 0) out.push(`Arcane Recovery: once a day, get back spell slots totalling up to ${Math.ceil(wiz / 2)} levels (none above 5th level).`);
+  const sorc = lv('sorcerer');
+  if (sorc >= 5) out.push(`Sorcerous Restoration: once a day, get back up to ${Math.floor(sorc / 2)} Sorcery Points.`);
+  return out;
+}
+// What a short rest will do, for the hover window and the Short Rest dialog.
+function shortRestPreview(fm) {
+  const feats = Array.isArray(fm.features) ? fm.features : [];
+  const full = [];
+  const one = [];
+  feats.forEach((ft) => {
+    const name = String(ft.name || '').trim();
+    if (!name) return;
+    const spent = Number(ft.used) || 0;
+    const isOne = SHORT_REST_ONE_USE.some((k) => name.toLowerCase().startsWith(k));
+    if (ft.recovery === 'short') full.push({ name, spent, max: Number(ft.max) || 0 });
+    else if (isOne && ft.recovery === 'long') one.push({ name, spent, max: Number(ft.max) || 0 });
+  });
+  return { hitDice: hitDicePools(fm), full, one, pact: !!fm.pact_slots, choices: shortRestChoices(fm) };
+}
+// Applies a short rest to frontmatter `f`: full features, one use of the partial ones, pact slots. (Hit dice are spent separately.)
+function applyShortRest(f) {
+  if (f.pact_slots) f.pact_slots.used = 0;
+  (f.resources || []).forEach((r) => { if (r.recovery === 'short') r.used = 0; });
+  (f.features || []).forEach((ft) => {
+    const name = String(ft.name || '').toLowerCase();
+    if (ft.recovery === 'short') ft.used = 0;
+    else if (ft.recovery === 'long' && SHORT_REST_ONE_USE.some((k) => name.startsWith(k))) ft.used = Math.max(0, (Number(ft.used) || 0) - 1);
+  });
+}
+
+// 2024 starting armor and weapon training by class, and what you gain by multiclassing into it. Used to fill the Proficiencies page
+// when the sheet does not list them. Classes not listed here (homebrew) are left for the player to fill in.
+const CLASS_TRAINING = {
+  barbarian: { base: [['Light', 'Medium', 'Shields'], ['Simple', 'Martial']], mc: [['Shields'], ['Simple', 'Martial']] },
+  bard: { base: [['Light'], ['Simple']], mc: [['Light'], []] },
+  cleric: { base: [['Light', 'Medium', 'Shields'], ['Simple']], mc: [['Light', 'Medium', 'Shields'], []] },
+  druid: { base: [['Light', 'Shields'], ['Simple']], mc: [['Light', 'Shields'], []] },
+  fighter: { base: [['Light', 'Medium', 'Heavy', 'Shields'], ['Simple', 'Martial']], mc: [['Light', 'Medium', 'Shields'], ['Simple', 'Martial']] },
+  monk: { base: [[], ['Simple', 'Martial (Light property)']], mc: [[], []] },
+  paladin: { base: [['Light', 'Medium', 'Heavy', 'Shields'], ['Simple', 'Martial']], mc: [['Light', 'Medium', 'Shields'], ['Simple', 'Martial']] },
+  ranger: { base: [['Light', 'Medium', 'Shields'], ['Simple', 'Martial']], mc: [['Light', 'Medium', 'Shields'], ['Simple', 'Martial']] },
+  rogue: { base: [['Light'], ['Simple', 'Martial (Finesse or Light)']], mc: [['Light'], []] },
+  sorcerer: { base: [[], ['Simple']], mc: [[], []] },
+  warlock: { base: [['Light'], ['Simple']], mc: [['Light'], []] },
+  wizard: { base: [[], ['Simple']], mc: [[], []] },
+  artificer: { base: [['Light', 'Medium', 'Shields'], ['Simple']], mc: [['Light', 'Medium', 'Shields'], []] },
+};
+function classTraining(fm) {
+  const classes = getClassList(fm);
+  const armor = [];
+  const weapons = [];
+  let known = false;
+  classes.forEach((c, i) => {
+    const t = CLASS_TRAINING[String(c.name || '').toLowerCase().trim()];
+    if (!t) return;
+    known = true;
+    const [a, w] = i === 0 ? t.base : t.mc;
+    a.forEach((x) => { if (!armor.includes(x)) armor.push(x); });
+    w.forEach((x) => { if (!weapons.includes(x)) weapons.push(x); });
+  });
+  return known ? { armor: armor.map((x) => (x === 'Shields' ? x : x + ' armor')), weapons: weapons.map((x) => x + ' weapons') } : null;
+}
+
+// What each background grants (from Character Intake's background data). e = rules edition; a = the three abilities it can raise (2024);
+// s = skill proficiencies; t = tool proficiency; f = the Origin feat (2024) or the background feature (2014).
+const BACKGROUND_INFO = {"acolyte":{"e":2024,"a":["Int","Wis","Cha"],"s":["Insight","Religion"],"t":"Calligrapher's Supplies","f":"Magic Initiate (Cleric)"},"charlatan":{"e":2024,"a":["Dex","Con","Cha"],"s":["Deception","Sleight of Hand"],"t":"Forgery Kit","f":"Skilled"},"criminal":{"e":2024,"a":["Dex","Con","Int"],"s":["Sleight of Hand","Stealth"],"t":"Thieves' Tools","f":"Alert"},"entertainer":{"e":2024,"a":["Str","Dex","Cha"],"s":["Acrobatics","Performance"],"t":"Musical Instrument (one type)","f":"Musician"},"folk hero":{"e":2014,"s":["Animal Handling","Survival"],"t":"One Artisan's Tools, Vehicles (Land)","f":"Rustic Hospitality"},"guild artisan":{"e":2014,"s":["Insight","Persuasion"],"t":"One Artisan's Tools","f":"Guild Membership"},"hermit":{"e":2024,"a":["Con","Wis","Cha"],"s":["Medicine","Religion"],"t":"Herbalism Kit","f":"Healer"},"noble":{"e":2024,"a":["Str","Int","Cha"],"s":["History","Persuasion"],"t":"Gaming Set (one type)","f":"Skilled"},"outlander":{"e":2014,"s":["Athletics","Survival"],"t":"One Musical Instrument","f":"Wanderer"},"sage":{"e":2024,"a":["Con","Int","Wis"],"s":["Arcana","History"],"t":"Calligrapher's Supplies","f":"Magic Initiate (Wizard)"},"sailor":{"e":2024,"a":["Str","Dex","Wis"],"s":["Acrobatics","Perception"],"t":"Navigator's Tools","f":"Tavern Brawler"},"soldier":{"e":2024,"a":["Str","Dex","Con"],"s":["Athletics","Intimidation"],"t":"Gaming Set (one type)","f":"Savage Attacker"},"urchin":{"e":2014,"s":["Sleight of Hand","Stealth"],"t":"Disguise Kit, Thieves' Tools","f":"City Secrets"},"artisan":{"e":2024,"a":["Str","Dex","Int"],"s":["Investigation","Persuasion"],"t":"Artisan's Tools (one type)","f":"Crafter"},"farmer":{"e":2024,"a":["Str","Con","Wis"],"s":["Animal Handling","Nature"],"t":"Carpenter's Tools","f":"Tough"},"guard":{"e":2024,"a":["Str","Int","Wis"],"s":["Athletics","Perception"],"t":"Gaming Set (one type)","f":"Alert"},"guide":{"e":2024,"a":["Dex","Con","Wis"],"s":["Stealth","Survival"],"t":"Cartographer's Tools","f":"Magic Initiate (Druid)"},"merchant":{"e":2024,"a":["Con","Int","Cha"],"s":["Animal Handling","Persuasion"],"t":"Navigator's Tools","f":"Lucky"},"scribe":{"e":2024,"a":["Dex","Int","Wis"],"s":["Investigation","Perception"],"t":"Calligrapher's Supplies","f":"Skilled"},"wayfarer":{"e":2024,"a":["Dex","Wis","Cha"],"s":["Insight","Stealth"],"t":"Thieves' Tools","f":"Lucky"},"aberrant heir":{"e":2024,"a":["Str","Con","Cha"],"s":["History","Intimidation"],"t":"Disguise Kit","f":"Aberrant Dragonmark"},"agent of the ninth quill":{"e":2024,"a":["Dex","Int","Cha"],"s":["Arcana","Sleight of Hand"],"t":"Thieves’ Tools","f":"Arcane Infiltrator"},"archaeologist":{"e":2024,"a":["Dex","Int","Wis"],"s":["History","Survival"],"t":"Cartographer’s Tools","f":"Skilled"},"bejeweled conclave spy":{"e":2024,"a":["Dex","Wis","Cha"],"s":["Deception","Perception"],"t":"Disguise Kit","f":"Arcane Eloquence"},"carouser":{"e":2024,"a":["Dex","Int","Cha"],"s":["Deception","Persuasion"],"t":"Gaming Set (one type)","f":"Tireless Reveler"},"chondathan freebooter":{"e":2024,"a":["Str","Dex","Wis"],"s":["Athletics","Sleight of Hand"],"t":"Weaver’s Tools","f":"Skilled"},"cosmic dawn experiment":{"e":2024,"a":["Str","Dex","Con"],"s":["Athletics","Survival"],"t":"Choose one kind of Artisan’s Tools","f":"Transmuted Anatomy"},"covenant of the grave recruit":{"e":2024,"a":["Str","Int","Wis"],"s":["History","Medicine"],"t":"Herbalism Kit","f":"Arcane Undertaker"},"crucible storm chaser":{"e":2024,"a":["Str","Con","Int"],"s":["Athletics","Nature"],"t":"Glassblower’s Tools","f":"Arcane Overload"},"dead magic dweller":{"e":2024,"a":["Str","Con","Wis"],"s":["Medicine","Survival"],"t":"Leatherworker’s Tools","f":"Healer"},"dragon cultist":{"e":2024,"a":["Dex","Con","Int"],"s":["Deception","Stealth"],"t":"Calligrapher’s Supplies","f":"Cult of the Dragon Initiate"},"emerald enclave caretaker":{"e":2024,"a":["Con","Int","Wis"],"s":["Nature","Survival"],"t":"Herbalism Kit","f":"Emerald Enclave Fledgling"},"familiar trainer":{"e":2024,"a":["Con","Int","Wis"],"s":["Animal Handling","Arcana"],"t":"Gaming Set (one type)","f":"Familiar Friend"},"flaming fist mercenary":{"e":2024,"a":["Str","Con","Cha"],"s":["Intimidation","Perception"],"t":"Smith’s Tools","f":"Tough"},"genie touched":{"e":2024,"a":["Dex","Wis","Cha"],"s":["Perception","Persuasion"],"t":"Glassblower’s Tools","f":"Magic Initiate (Wizard)"},"harper":{"e":2024,"a":["Dex","Int","Cha"],"s":["Performance","Sleight of Hand"],"t":"Disguise Kit","f":"Harper Agent"},"haunted one":{"e":2024,"a":["Con","Wis","Cha"],"s":["Arcana","Survival"],"t":"Gaming Set (one type)","f":"Survivor"},"horizon weaver initiate":{"e":2024,"a":["Dex","Con","Wis"],"s":["Acrobatics","Survival"],"t":"Weaver’s Tools","f":"Portal Jumper"},"house agent":{"e":2024,"a":["Str","Int","Cha"],"s":["Investigation","Persuasion"],"t":"Choose one kind of Artisan’s Tools","f":"Lucky"},"house cannith heir":{"e":2024,"a":["Str","Dex","Int"],"s":["Investigation","Sleight of Hand"],"t":"Choose one kind of Artisan’s Tools","f":"Mark of Making"},"house deneith heir":{"e":2024,"a":["Str","Con","Wis"],"s":["Insight","Perception"],"t":"Gaming Set (one type)","f":"Mark of Sentinel"},"house ghallanda heir":{"e":2024,"a":["Dex","Wis","Cha"],"s":["Insight","Persuasion"],"t":"Cook’s Utensils","f":"Mark of Hospitality"},"house jorasco heir":{"e":2024,"a":["Dex","Con","Wis"],"s":["Medicine","Stealth"],"t":"Herbalism Kit","f":"Mark of Healing"},"house kundarak heir":{"e":2024,"a":["Str","Con","Int"],"s":["Arcana","Investigation"],"t":"Thieves’ Tools","f":"Mark of Warding"},"house lyrandar heir":{"e":2024,"a":["Str","Dex","Cha"],"s":["Acrobatics","Nature"],"t":"Navigator’s Tools","f":"Mark of Storm"},"house medani heir":{"e":2024,"a":["Dex","Int","Wis"],"s":["Insight","Investigation"],"t":"Disguise Kit","f":"Mark of Detection"},"house orien heir":{"e":2024,"a":["Dex","Con","Int"],"s":["Acrobatics","Athletics"],"t":"Cartographer’s Tools","f":"Mark of Passage"},"house phiarlan heir":{"e":2024,"a":["Dex","Wis","Cha"],"s":["Deception","Stealth"],"t":"Disguise Kit","f":"Mark of Shadow"},"house sivis heir":{"e":2024,"a":["Int","Wis","Cha"],"s":["History","Perception"],"t":"Calligrapher’s Supplies","f":"Mark of Scribing"},"house tharashk heir":{"e":2024,"a":["Con","Int","Wis"],"s":["Perception","Survival"],"t":"Gaming Set (one type)","f":"Mark of Finding"},"house thuranni heir":{"e":2024,"a":["Dex","Int","Cha"],"s":["Performance","Stealth"],"t":"Musical Instrument (one type)","f":"Mark of Shadow"},"house vadalis heir":{"e":2024,"a":["Con","Wis","Cha"],"s":["Animal Handling","Nature"],"t":"Herbalism Kit","f":"Mark of Handling"},"ice fisher":{"e":2024,"a":["Str","Dex","Con"],"s":["Animal Handling","Athletics"],"t":"Woodcarver’s Tools","f":"Alert"},"inquisitive":{"e":2024,"a":["Con","Int","Cha"],"s":["Insight","Investigation"],"t":"Thieves’ Tools","f":"Alert"},"investigator":{"e":2024,"a":["Int","Wis","Cha"],"s":["Insight","Investigation"],"t":"Disguise Kit","f":"Sharp Eye"},"knight of the gauntlet":{"e":2024,"a":["Str","Int","Wis"],"s":["Athletics","Medicine"],"t":"Smith’s Tools","f":"Tyro of the Gauntlet"},"lords' alliance vassal":{"e":2024,"a":["Str","Int","Cha"],"s":["Insight","Persuasion"],"t":"Calligrapher’s Supplies","f":"Lords’ Alliance Agent"},"lorwyn expert":{"e":2024,"a":["Str","Con","Wis"],"s":["Athletics","Nature"],"t":"Cartographer’s Tools","f":"Child of the Sun"},"mist wanderer":{"e":2024,"a":["Dex","Con","Wis"],"s":["Survival","Stealth"],"t":"Choose one kind of Artisan’s Tools","f":"A Dark Gift feat of your choice (see “Feats” later in this chapter; Mist Walker is recommended)"},"moonwell pilgrim":{"e":2024,"a":["Con","Wis","Cha"],"s":["Nature","Performance"],"t":"Painter’s Supplies","f":"Magic Initiate (Druid)"},"mulhorandi tomb raider":{"e":2024,"a":["Dex","Con","Int"],"s":["Investigation","Religion"],"t":"Mason’s Tools","f":"Lucky"},"mythalkeeper":{"e":2024,"a":["Int","Wis","Cha"],"s":["Arcana","History"],"t":"Jeweler’s Tools","f":"Crafter"},"pact seeker":{"e":2024,"a":["Con","Int","Cha"],"s":["Arcana","Persuasion"],"t":"Calligrapher’s Supplies","f":"Choose one Planar Pact"},"phantasmic circus trouper":{"e":2024,"a":["Dex","Con","Cha"],"s":["Deception","Performance"],"t":"Disguise Kit","f":"Arcane Artist"},"purple dragon squire":{"e":2024,"a":["Str","Wis","Cha"],"s":["Animal Handling","Insight"],"t":"Navigator’s Tools","f":"Purple Dragon Rook"},"rashemi wanderer":{"e":2024,"a":["Str","Con","Cha"],"s":["Intimidation","Perception"],"t":"Cartographer’s Tools","f":"Tough"},"seer apprentice":{"e":2024,"a":["Int","Wis","Cha"],"s":["History","Insight"],"t":"Navigator’s Tools","f":"Arcane Omens"},"shadowmasters exile":{"e":2024,"a":["Dex","Int","Cha"],"s":["Acrobatics","Stealth"],"t":"Thieves’ Tools","f":"Savage Attacker"},"shadowmoor expert":{"e":2024,"a":["Dex","Int","Cha"],"s":["Acrobatics","Deception"],"t":"Glassblower’s Tools","f":"Shadowmoor Hexer"},"spellfire initiate":{"e":2024,"a":["Con","Int","Cha"],"s":["Arcana","Perception"],"t":"Gaming Set (one type)","f":"Spellfire Spark"},"spirit medium":{"e":2024,"a":["Con","Int","Wis"],"s":["Insight","Religion"],"t":"Gaming Set (one type)","f":"Dark Gift feat of your choice (see “Feats”; Gathered Whispers is recommended)"},"vampire devotee":{"e":2024,"a":["Str","Con","Cha"],"s":["Persuasion","Stealth"],"t":"Cook’s Utensils","f":"Vampire’s Plaything"},"vampire survivor":{"e":2024,"a":["Dex","Con","Wis"],"s":["Insight","Religion"],"t":"Woodcarver’s Tools","f":"Vampire Hunter"},"ward of the sheltering hands":{"e":2024,"a":["Con","Wis","Cha"],"s":["Insight","Medicine"],"t":"Cook’s Utensils","f":"Arcane Safeguard"},"zhentarim mercenary":{"e":2024,"a":["Str","Dex","Cha"],"s":["Intimidation","Perception"],"t":"Forgery Kit","f":"Zhentarim Ruffian"}};
+
+const STANDARD_LANGUAGES = ['Common', 'Common Sign Language', 'Draconic', 'Dwarvish', 'Elvish', 'Giant', 'Gnomish', 'Goblin', 'Halfling', 'Orc',
+  'Abyssal', 'Celestial', 'Deep Speech', 'Druidic', 'Infernal', 'Primordial', 'Sylvan', "Thieves' Cant", 'Undercommon'];
+// Every known language named in a piece of sheet text, one entry each, in the order they are written.
+function languagesIn(text) {
+  const s = String(text || '');
+  const lower = s.toLowerCase();
+  const hits = [];
+  STANDARD_LANGUAGES.concat(['Aquan', 'Auran', 'Ignan', 'Terran', 'Gith', 'Sphinx', 'Leonin', 'Sign Language']).forEach((name) => {
+    let from = 0;
+    const n = name.toLowerCase();
+    for (;;) {
+      const at = lower.indexOf(n, from);
+      if (at < 0) break;
+      const before = at === 0 ? ' ' : lower[at - 1];
+      const after = lower[at + n.length] || ' ';
+      if (!/[a-z']/.test(before) && !/[a-z]/.test(after)) hits.push({ at, name, len: n.length });
+      from = at + n.length;
+    }
+  });
+  hits.sort((a, b) => a.at - b.at || b.len - a.len);
+  const out = [];
+  let end = -1;
+  hits.forEach((h) => {
+    if (h.at < end) return; // "Common Sign Language" swallows "Common" and "Sign Language"
+    end = h.at + h.len;
+    if (!out.includes(h.name)) out.push(h.name);
+  });
+  return out;
+}
 function classTrackers(fm) {
   const lv = Number(fm.level) || 1;
   const table = CLASS_RESOURCES[String(fm.class || '').toLowerCase().trim()];
@@ -606,7 +772,10 @@ function parseSheetBody(body) {
         const traitName = bm[1].trim();
         const desc = bm[2].trim();
         if (/^languages$/i.test(traitName)) {
-          desc.split(',').forEach((l) => { const t = l.trim(); if (t) languages.push(t); });
+          // One entry per language ("Common and Giant." becomes two); anything we do not recognise ("one language of your choice") is kept as written.
+          const named = languagesIn(desc);
+          named.forEach((l) => { if (!languages.includes(l)) languages.push(l); });
+          if (!named.length) desc.replace(/\.$/, '').split(/,| and /).forEach((l) => { const t = l.trim(); if (t && !languages.includes(t)) languages.push(t); });
           continue;
         }
         traits.push({ name: traitName, source: `Species (${speciesName})`, description: desc });
@@ -625,6 +794,13 @@ function parseSheetBody(body) {
   } catch (e) { /* ignore */ }
 
   try {
+    // A "**Languages:** Common, Elvish" line (written by Character Intake) is the player's own list and wins over what the species trait says.
+    const langLine = body.match(/^\*\*Languages:\*\*[ \t]*(.+)$/im);
+    if (langLine) {
+      const listed = [];
+      langLine[1].split(',').forEach((l) => { const t = l.trim(); if (t && !listed.includes(t)) listed.push(t); });
+      if (listed.length) out.proficiencies = Object.assign({ armor: [], weapons: [], tools: [] }, out.proficiencies, { languages: listed });
+    }
     const toolsLine = body.match(/Languages & Proficiencies:\*\*[ \t]*(.+)/i);
     if (toolsLine) {
       const tools = toolsLine[1].split(',').map((t) => t.trim()).filter(Boolean);
@@ -675,6 +851,17 @@ function parseSheetBody(body) {
       }
     }
     if (warnings.length) out._parse_warnings = warnings;
+  } catch (e) { /* ignore */ }
+
+  // The sheet does not list armor and weapon training, so fill it from the class (every language and tool already comes from the sheet).
+  try {
+    const training = classTraining(out);
+    if (training) {
+      const prof = Object.assign({ armor: [], weapons: [], tools: [], languages: [] }, out.proficiencies);
+      if (!prof.armor.length) prof.armor = training.armor;
+      if (!prof.weapons.length) prof.weapons = training.weapons;
+      out.proficiencies = prof;
+    }
   } catch (e) { /* ignore */ }
 
   return out;
@@ -832,6 +1019,8 @@ async function syncPush(request, info, fields) {
 const SYNC_CORE = {
   parseSyncInfo, inventoryToText, textToInventory, normSlots, buildPushFields, pushHash, applyPlayerOwned,
   applyDmPublished, mergeAwards, resolveAward, syncStatusText, syncPull, syncPush, SYNC_PLAYER_KEYS, classTrackers, hitDieFor, parseSheetBody,
+  skillTotal, passiveScore, hitDicePools, spendHitDie, recoverHitDice, shortRestPreview, applyShortRest, classTraining, languagesIn,
+  getTotalLevel, getProficiencyBonus, MAX_LEVEL, BACKGROUND_INFO,
 };
 
 const STANDARD_DICE = [4, 6, 8, 10, 12, 20, 100];
@@ -899,6 +1088,49 @@ class DiceModal extends Modal {
 
   onClose() {
     this.contentEl.empty();
+  }
+}
+
+// The Short Rest dialog: spend hit dice (each roll heals), see exactly what comes back, then finish the rest.
+class ShortRestModal extends Modal {
+  constructor(app, view) {
+    super(app);
+    this.view = view;
+  }
+
+  onOpen() { this.draw(); }
+
+  draw() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl('h2', { text: '🔥 Short Rest' });
+    const fm = this.view.liveFm(this.view.file);
+    contentEl.createDiv({ cls: 'csh-rest-line', text: `HP ${fm.hp ?? 0} / ${fm.hp_max ?? 0}` });
+
+    const pools = hitDicePools(fm);
+    const diceBox = contentEl.createDiv({ cls: 'csh-rest-dice' });
+    pools.forEach((p) => {
+      const row = diceBox.createDiv({ cls: 'csh-modal-row' });
+      row.createEl('span', { text: `d${p.die}: ${p.left} of ${p.total} left ` });
+      const btn = row.createEl('button', { text: `Spend one (d${p.die})`, attr: { 'aria-label': `Spend a d${p.die} hit die` } });
+      btn.disabled = p.left <= 0 || (fm.hp ?? 0) >= (fm.hp_max ?? 0);
+      btn.addEventListener('click', async () => {
+        await this.view.spendHitDieFor(p.die);
+        this.draw();
+      });
+    });
+
+    contentEl.createEl('h4', { text: 'When you finish' });
+    this.view.renderShortRestPreview(contentEl, fm);
+
+    const actions = contentEl.createDiv({ cls: 'csh-modal-row' });
+    const done = actions.createEl('button', { text: 'Finish short rest', cls: 'mod-cta' });
+    done.addEventListener('click', async () => {
+      await this.view.doShortRest();
+      this.close();
+    });
+    const cancel = actions.createEl('button', { text: 'Cancel' });
+    cancel.addEventListener('click', () => this.close());
   }
 }
 
@@ -990,7 +1222,6 @@ class CharacterHubView extends ItemView {
       { title: '📖 Background', render: (root, fm) => this.renderBackgroundWidget(root, fm) },
       { title: '📝 Notes', render: (root, fm) => this.renderNotesWidget(root, fm) },
       { title: '🐾 Extras: Creatures', render: (root, fm) => this.renderCreaturesWidget(root, fm) },
-      { title: '🌙 Rest', render: (root, fm) => this.renderRestWidget(root, fm) },
       { title: '⬆️ Level Up', render: (root, fm) => this.renderLevelUpWidget(root, fm) },
     ];
   }
@@ -1109,6 +1340,13 @@ class CharacterHubView extends ItemView {
       const guard = synced && (fm.sync_dirty || !fromEdit);
       Object.entries(parsed).forEach(([k, v]) => {
         if (guard && SYNC_PLAYER_KEYS.includes(k) && fm[k] !== undefined) return;
+        // A proficiency list the player has edited by hand (languages, armor, weapons, tools) is theirs: the sheet does not put it back.
+        if (k === 'proficiencies' && fm.proficiencies && fm.proficiencies_edited) {
+          const merged = Object.assign({}, v);
+          Object.keys(fm.proficiencies_edited).forEach((list) => { if (fm.proficiencies_edited[list] && Array.isArray(fm.proficiencies[list])) merged[list] = fm.proficiencies[list]; });
+          fm[k] = merged;
+          return;
+        }
         fm[k] = v;
       });
       if (fm.features === undefined) { // first time only: never overwrite the player's used counts
@@ -1359,10 +1597,51 @@ class CharacterHubView extends ItemView {
       this.updateFrontmatter((f) => { f.ac = Number(acInput.value) || 10; });
     });
 
+    // Quick access: everything here lives ONLY here (temp HP, damage and healing, hit dice, rests, dice). The pages below do not repeat it.
+    const quickRow = el.createDiv({ cls: 'csh-hp-row csh-quick-row' });
+    quickRow.createEl('span', { text: '✨ Temp: ' });
+    const tempInput = quickRow.createEl('input', { type: 'number', cls: 'csh-hp-input', attr: { 'aria-label': 'Temp HP' } });
+    tempInput.value = String(fm.temp_hp ?? 0);
+    tempInput.addEventListener('change', () => {
+      this.updateFrontmatter((f) => { f.temp_hp = Math.max(0, Number(tempInput.value) || 0); });
+    });
+    const amountInput = quickRow.createEl('input', { type: 'number', cls: 'csh-hp-input', placeholder: 'Amt', attr: { 'aria-label': 'Damage or healing amount' } });
+    const dmgBtn = quickRow.createEl('button', { text: '🗡️', cls: 'csh-header-rest-btn', attr: { 'aria-label': 'Damage', title: 'Damage' } });
+    const healBtn = quickRow.createEl('button', { text: '💚', cls: 'csh-header-rest-btn', attr: { 'aria-label': 'Heal', title: 'Heal' } });
+    dmgBtn.addEventListener('click', () => {
+      const amt = Number(amountInput.value) || 0;
+      if (amt <= 0) return;
+      this.updateFrontmatter((f) => {
+        let remaining = amt;
+        const temp = f.temp_hp || 0;
+        if (temp > 0) {
+          const absorbed = Math.min(temp, remaining);
+          f.temp_hp = temp - absorbed;
+          remaining -= absorbed;
+        }
+        f.hp = Math.max(0, (f.hp || 0) - remaining);
+      });
+    });
+    healBtn.addEventListener('click', () => {
+      const amt = Number(amountInput.value) || 0;
+      if (amt <= 0) return;
+      this.updateFrontmatter((f) => { f.hp = Math.min(f.hp_max || 0, (f.hp || 0) + amt); });
+    });
+    const dice = hitDicePools(fm);
+    quickRow.createEl('span', {
+      cls: 'csh-muted csh-hd-chip',
+      text: '🎲 ' + dice.map((p) => `${p.left}/${p.total} d${p.die}`).join(' + '),
+      attr: { 'aria-label': 'Hit dice left' },
+    });
+
     const toolRow = el.createDiv({ cls: 'csh-header-tool-row' });
-    const shortBtn = toolRow.createEl('button', { text: '🔥 Short', cls: 'csh-header-rest-btn' });
-    shortBtn.addEventListener('click', () => this.doShortRest());
-    const longBtn = toolRow.createEl('button', { text: '🌙 Long', cls: 'csh-header-rest-btn' });
+    const shortBtn = toolRow.createEl('button', { text: '🔥 Short', cls: 'csh-header-rest-btn', attr: { 'aria-label': 'Short rest' } });
+    shortBtn.addEventListener('click', () => { this.hideRestPopover(); this.openShortRest(); });
+    shortBtn.addEventListener('mouseenter', () => this.showRestPopover(shortBtn));
+    shortBtn.addEventListener('mouseleave', () => this.hideRestPopover());
+    shortBtn.addEventListener('focus', () => this.showRestPopover(shortBtn));
+    shortBtn.addEventListener('blur', () => this.hideRestPopover());
+    const longBtn = toolRow.createEl('button', { text: '🌙 Long', cls: 'csh-header-rest-btn', attr: { 'aria-label': 'Long rest' } });
     longBtn.addEventListener('click', () => this.doLongRest());
     const diceInput = toolRow.createEl('input', { type: 'text', cls: 'csh-dice-input', placeholder: '1d20+5' });
     const rollBtn = toolRow.createEl('button', { text: '🎲 Roll', cls: 'csh-header-rest-btn' });
@@ -1410,12 +1689,62 @@ class CharacterHubView extends ItemView {
     this.pages[this.pageIndex].render(pageBody, fm);
   }
 
-  async doShortRest() {
+  // Fills `el` with what a short rest does for this character (shared by the hover window and the Short Rest dialog).
+  renderShortRestPreview(el, fm) {
+    const p = shortRestPreview(fm);
+    const line = (text) => el.createDiv({ cls: 'csh-rest-line', text });
+    line('Hit Dice (spend any of them for HP): ' + p.hitDice.map((d) => `${d.left} of ${d.total} d${d.die}`).join(', '));
+    if (p.pact) line('Pact Magic slots: all come back.');
+    const fmt = (f) => `${f.name}${f.max ? ` (${f.spent}/${f.max} used)` : ''}`;
+    if (p.full.length) line('Back in full: ' + p.full.map(fmt).join(', '));
+    if (p.one.length) line('One use back: ' + p.one.map(fmt).join(', '));
+    p.choices.forEach(line);
+    if (!p.full.length && !p.one.length && !p.pact && !p.choices.length) line('No class features come back on a short rest.');
+  }
+
+  showRestPopover(anchor) {
+    this.hideRestPopover();
+    const file = this.file;
+    if (!file) return;
+    const pop = document.body.createDiv({ cls: 'csh-popover', attr: { role: 'tooltip' } });
+    pop.createDiv({ cls: 'csh-popover-title', text: '🔥 Short rest' });
+    this.renderShortRestPreview(pop, this.liveFm(file));
+    const r = anchor.getBoundingClientRect();
+    const width = Math.min(320, window.innerWidth - 16);
+    pop.style.width = width + 'px';
+    pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) + 'px';
+    pop.style.top = (r.bottom + 6) + 'px';
+    this._restPopover = pop;
+  }
+
+  hideRestPopover() {
+    if (this._restPopover) { this._restPopover.remove(); this._restPopover = null; }
+  }
+
+  openShortRest() {
+    if (!this.file) return;
+    new ShortRestModal(this.app, this).open();
+  }
+
+  // Spend one hit die: roll it, add the Constitution modifier, heal.
+  async spendHitDieFor(die) {
+    const fm = this.liveFm(this.file);
+    const con = abilityMod(((fm.abilities || {}).con || {}).score ?? 10);
+    const roll = 1 + Math.floor(Math.random() * die);
+    const heal = Math.max(0, roll + con);
+    let spent = false;
     await this.updateFrontmatter((f) => {
-      if (f.pact_slots) f.pact_slots.used = 0;
-      (f.resources || []).forEach((r) => { if (r.recovery === 'short') r.used = 0; });
-      (f.features || []).forEach((ft) => { if (ft.recovery === 'short') ft.used = 0; });
+      if (!spendHitDie(f, die)) return;
+      spent = true;
+      f.hp = Math.min(f.hp_max || 0, (f.hp || 0) + heal);
     });
+    if (spent) new Notice(`d${die}: rolled ${roll}${con >= 0 ? ' + ' : ' - '}${Math.abs(con)} = ${heal} HP`);
+    else new Notice(`No d${die} hit dice left.`);
+    return spent;
+  }
+
+  async doShortRest() {
+    await this.updateFrontmatter((f) => { applyShortRest(f); });
     new Notice('Short rest complete.');
   }
 
@@ -1428,87 +1757,19 @@ class CharacterHubView extends ItemView {
       if (f.pact_slots) f.pact_slots.used = 0;
       (f.resources || []).forEach((r) => { r.used = 0; });
       (f.features || []).forEach((ft) => { ft.used = 0; });
-      if (typeof f.hit_dice_used === 'number') {
-        const total = f.hit_dice_total || f.level || 1;
-        f.hit_dice_used = Math.max(0, f.hit_dice_used - Math.max(1, Math.floor(total / 2)));
-      }
+      recoverHitDice(f);
       if (typeof f.exhaustion === 'number' && f.exhaustion > 0) f.exhaustion -= 1;
       if (f.death_saves) f.death_saves = { successes: 0, failures: 0 };
     });
     new Notice('Long rest complete — HP, spell slots, and features restored.');
   }
 
-  renderRestWidget(root, fm) {
-    const sec = root.createDiv({ cls: 'csh-section' });
-    const btnRow = sec.createDiv({ cls: 'csh-btn-row' });
-
-    const shortBtn = btnRow.createEl('button', { text: '🔥 Short Rest', cls: 'csh-rest-btn' });
-    shortBtn.addEventListener('click', () => this.doShortRest());
-
-    const longBtn = btnRow.createEl('button', { text: '🌙 Long Rest', cls: 'csh-rest-btn csh-long' });
-    longBtn.addEventListener('click', () => this.doLongRest());
-  }
-
   renderCombatWidget(root, fm) {
     const sec = root.createDiv({ cls: 'csh-section' });
 
-    // Health (current HP & AC live in the top bar — this block covers what's unique to combat)
+    // HP, AC, temp HP, damage and healing, hit dice and rests all live in the pinned bar at the top and are not repeated here.
     const hpBlock = sec.createDiv({ cls: 'csh-combat-block' });
-    hpBlock.createEl('h4', { text: '❤️ Health' });
-
-    const tempRow = hpBlock.createDiv({ cls: 'csh-hp-row' });
-    tempRow.createEl('span', { text: '✨ Temp HP: ' });
-    const tempInput = tempRow.createEl('input', { type: 'number', cls: 'csh-hp-input' });
-    tempInput.value = String(fm.temp_hp ?? 0);
-    tempInput.addEventListener('change', () => {
-      this.updateFrontmatter((f) => { f.temp_hp = Number(tempInput.value) || 0; });
-    });
-
-    const dmgRow = hpBlock.createDiv({ cls: 'csh-btn-row' });
-    const amountInput = dmgRow.createEl('input', { type: 'number', cls: 'csh-hp-input', placeholder: 'Amt' });
-    const dmgBtn = dmgRow.createEl('button', { text: '🗡️ Damage', cls: 'csh-rest-btn' });
-    const healBtn = dmgRow.createEl('button', { text: '💚 Heal', cls: 'csh-rest-btn csh-long' });
-    dmgBtn.addEventListener('click', () => {
-      const amt = Number(amountInput.value) || 0;
-      if (amt <= 0) return;
-      this.updateFrontmatter((f) => {
-        let remaining = amt;
-        const temp = f.temp_hp || 0;
-        if (temp > 0) {
-          const absorbed = Math.min(temp, remaining);
-          f.temp_hp = temp - absorbed;
-          remaining -= absorbed;
-        }
-        f.hp = Math.max(0, (f.hp || 0) - remaining);
-      });
-    });
-    healBtn.addEventListener('click', () => {
-      const amt = Number(amountInput.value) || 0;
-      if (amt <= 0) return;
-      this.updateFrontmatter((f) => {
-        const max = f.hp_max || 0;
-        f.hp = Math.min(max, (f.hp || 0) + amt);
-      });
-    });
-
-    // Hit Dice: spend one to heal (die + Constitution modifier); half the total (at least 1) come back on a long rest.
-    const hdTotal = Number(fm.hit_dice_total) || Number(fm.level) || 1;
-    const hdLeft = Math.max(0, hdTotal - (Number(fm.hit_dice_used) || 0));
-    const hdDie = hitDieFor(fm);
-    const hdRow = hpBlock.createDiv({ cls: 'csh-hp-row' });
-    hdRow.createEl('span', { text: `🎲 Hit Dice: ${hdLeft} / ${hdTotal} (d${hdDie}) ` });
-    const hdBtn = hdRow.createEl('button', { text: 'Spend a hit die', cls: 'csh-rest-btn', attr: { 'aria-label': 'Spend a hit die' } });
-    hdBtn.addEventListener('click', () => {
-      if (hdLeft <= 0) { new Notice('No hit dice left. A long rest gives back half of them.'); return; }
-      const roll = 1 + Math.floor(Math.random() * hdDie);
-      const con = Math.floor((Number(fm.abilities && fm.abilities.con && fm.abilities.con.score) || 10) / 2 - 5);
-      const heal = Math.max(0, roll + con);
-      this.updateFrontmatter((f) => {
-        f.hit_dice_used = (Number(f.hit_dice_used) || 0) + 1;
-        f.hp = Math.min(f.hp_max || 0, (f.hp || 0) + heal);
-      });
-      new Notice(`Hit die: rolled ${roll}${con >= 0 ? ' + ' : ' - '}${Math.abs(con)} = ${heal} HP`);
-    });
+    hpBlock.createEl('h4', { text: '⭐ Inspiration' });
 
     // Heroic Inspiration (2024 rules): you either have it or you don't.
     const inspRow = hpBlock.createDiv({ cls: 'csh-btn-row' });
@@ -1667,10 +1928,17 @@ class CharacterHubView extends ItemView {
     sec.createEl('div', { cls: 'csh-muted', text: `Current Level ${level} · Proficiency +${prof}` });
 
     const btn = sec.createEl('button', { text: '⬆️ Level Up', cls: 'csh-levelup-btn' });
+    // Level 20 is the ceiling for the whole character, however many classes it has.
+    if (level >= MAX_LEVEL) {
+      btn.disabled = true;
+      sec.createEl('div', { cls: 'csh-muted', text: `Level ${MAX_LEVEL} is the highest level, so there is nothing left to level up.` });
+    }
     btn.addEventListener('click', () => {
+      if (level >= MAX_LEVEL) { new Notice(`Level ${MAX_LEVEL} is the highest level.`); return; }
       new LevelUpModal(this.app, fm, classes, async (hpGain, classIndex) => {
         let newLevel = level + 1;
         await this.updateFrontmatter((f) => {
+          if (getTotalLevel(f) >= MAX_LEVEL) { newLevel = MAX_LEVEL; return; }
           if (Array.isArray(f.classes) && f.classes.length) {
             const target = f.classes[classIndex];
             if (target && typeof target === 'object') {
@@ -1683,11 +1951,12 @@ class CharacterHubView extends ItemView {
             f.level = (f.level || 1) + 1;
           }
           newLevel = f.level;
-          f.proficiency_bonus = Math.floor((f.level - 1) / 4) + 2;
+          f.proficiency_bonus = Math.floor((Math.min(f.level, MAX_LEVEL) - 1) / 4) + 2;
           f.hp_max = (f.hp_max || 0) + hpGain;
           f.hp = (f.hp || 0) + hpGain;
           if (f.hit_dice_total !== undefined) f.hit_dice_total = (f.hit_dice_total || 0) + 1;
         });
+        if (newLevel >= MAX_LEVEL && level >= MAX_LEVEL) { new Notice(`Level ${MAX_LEVEL} is the highest level.`); return; }
         new Notice(`Leveled up to ${newLevel}!`);
         if (MILESTONE_LEVELS.includes(newLevel)) {
           new Notice('Milestone level — remember your Ability Score Improvement / Feat.');
@@ -1876,7 +2145,7 @@ class CharacterHubView extends ItemView {
   }
 
   // Reusable tag/chip list editor (used for defenses, languages, tools, etc).
-  renderChipEditor(container, items, onChange) {
+  renderChipEditor(container, items, onChange, suggestions) {
     const grid = container.createDiv({ cls: 'csh-condition-grid' });
     items.forEach((item, idx) => {
       const chip = grid.createEl('button', { text: item, cls: 'csh-condition-chip active' });
@@ -1888,6 +2157,12 @@ class CharacterHubView extends ItemView {
     });
     const addRow = container.createDiv({ cls: 'csh-add-row' });
     const input = addRow.createEl('input', { type: 'text', placeholder: 'Add...' });
+    if (suggestions && suggestions.length) {
+      const listId = 'csh-list-' + Math.random().toString(36).slice(2, 8);
+      input.setAttr('list', listId);
+      const dl = addRow.createEl('datalist', { attr: { id: listId } });
+      suggestions.filter((x) => !items.includes(x)).forEach((x) => dl.createEl('option', { value: x }));
+    }
     const addBtn = addRow.createEl('button', { text: '+' });
     const add = () => {
       const v = input.value.trim();
@@ -1944,10 +2219,12 @@ class CharacterHubView extends ItemView {
     const senses = fm.senses || {};
     sec.createEl('h4', { text: '👁️ Senses' });
     const sensesBlock = sec.createDiv();
-    const passivePerception = senses.passive_perception ?? (10 + abilityMod((abilities.wis || {}).score ?? 10));
-    sensesBlock.createEl('div', { cls: 'csh-muted', text: `Passive Perception: ${passivePerception}` });
+    // Worked out from the current scores and skill proficiencies every time, so they follow any change (the sheet's printed number does not).
+    [['perception', 'Perception'], ['insight', 'Insight'], ['investigation', 'Investigation']].forEach(([id, label]) => {
+      sensesBlock.createEl('div', { cls: 'csh-muted', text: `Passive ${label}: ${passiveScore(fm, id)}`, attr: { 'aria-label': `Passive ${label}` } });
+    });
     if (senses.darkvision) sensesBlock.createEl('div', { cls: 'csh-muted', text: `Darkvision: ${senses.darkvision}ft` });
-    if (senses.other) sensesBlock.createEl('div', { cls: 'csh-muted', text: senses.other });
+    if (senses.other && !/^passive /i.test(String(senses.other))) sensesBlock.createEl('div', { cls: 'csh-muted', text: senses.other });
   }
 
   renderSkillsWidget(root, fm) {
@@ -2129,11 +2406,17 @@ class CharacterHubView extends ItemView {
   renderProficienciesWidget(root, fm) {
     const sec = root.createDiv({ cls: 'csh-section' });
     const prof = fm.proficiencies || {};
-    [['armor', '🥋 Armor'], ['weapons', '⚔️ Weapons'], ['tools', '🛠️ Tools'], ['languages', '🗣️ Languages']].forEach(([key, label]) => {
+    // Languages first, one chip per language, each one editable (tap a chip to remove it, type or pick from the list to add one).
+    // Anything edited here is remembered as the player's own, so re-reading the printed sheet never puts it back.
+    [['languages', '🗣️ Languages', STANDARD_LANGUAGES], ['armor', '🥋 Armor'], ['weapons', '⚔️ Weapons'], ['tools', '🛠️ Tools']].forEach(([key, label, suggestions]) => {
       sec.createEl('h4', { text: label });
       this.renderChipEditor(sec, prof[key] || [], (list) => {
-        this.updateFrontmatter((f) => { f.proficiencies = f.proficiencies || {}; f.proficiencies[key] = list; });
-      });
+        this.updateFrontmatter((f) => {
+          f.proficiencies = f.proficiencies || {};
+          f.proficiencies[key] = list;
+          f.proficiencies_edited = Object.assign({}, f.proficiencies_edited, { [key]: true });
+        });
+      }, suggestions);
     });
   }
 
@@ -2147,6 +2430,31 @@ class CharacterHubView extends ItemView {
     bgInput.addEventListener('change', () => {
       this.updateFrontmatter((f) => { f.background = bgInput.value; });
     });
+
+    // What a background actually does, and what this character's one gave them.
+    const info = BACKGROUND_INFO[String(fm.background || '').toLowerCase().trim()];
+    const ctx = sec.createDiv({ cls: 'csh-background-context' });
+    ctx.createEl('h4', { text: '❔ What your background does' });
+    ctx.createEl('div', {
+      cls: 'csh-muted',
+      text: 'Your background is who you were before adventuring. In the 2024 rules it gives you a fixed package: a boost to three abilities, two skills, one tool, an Origin feat, and starting gear. The numbers from it are already worked into your sheet, so there is nothing to apply by hand.',
+    });
+    if (info) {
+      const rows = [];
+      if (info.a && info.a.length) rows.push(['Ability boost', `+2/+1 or +1/+1/+1 across ${info.a.join(', ')}`]);
+      if (info.s && info.s.length) rows.push(['Skills', info.s.join(', ')]);
+      if (info.t) rows.push(['Tool', info.t]);
+      if (info.f) rows.push([info.e === 2014 ? 'Feature' : 'Origin feat', info.f]);
+      const list = ctx.createDiv({ cls: 'csh-bg-grants' });
+      rows.forEach(([k, v]) => {
+        const r = list.createDiv({ cls: 'csh-bg-grant' });
+        r.createEl('strong', { text: k + ': ' });
+        r.createEl('span', { text: v });
+      });
+      if (info.e === 2014) ctx.createEl('div', { cls: 'csh-muted', text: 'This is a 2014 background: it gives a feature instead of an Origin feat.' });
+    } else if (fm.background) {
+      ctx.createEl('div', { cls: 'csh-muted', text: `No details are stored for "${fm.background}". Check the Features & Traits page for what it gave you.` });
+    }
 
     [
       ['personality_traits', '🙂 Personality Traits'],

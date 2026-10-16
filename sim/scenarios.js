@@ -169,8 +169,14 @@ module.exports = [
 		name: "hit-dice-exhaustion-and-inspiration",
 		story: "After a fight I spend a hit die to heal, mark my exhaustion, and note that I have Heroic Inspiration: all of it is on my sheet and I can use it.",
 		async run({ device, step }) {
-			await device.open(); await device.type("HP", 2); await device.goToPage("Combat");
-			await step("I can see my hit dice and spend one", async () => { has(await device.text(), "Hit Dice: 3 / 3"); await device.tap("Spend a hit die"); await device.waitForText("Hit Dice: 2 / 3", 15000); });
+			await device.open(); await device.type("HP", 2);
+			await step("my hit dice sit in the pinned bar", async () => has(await device.text(), "3/3 d6"));
+			await step("Short Rest opens a dialog where I spend one hit die and finish the rest", async () => {
+				await device.tap("Short rest"); has(await device.text(), "3 of 3 left");
+				await device.tap("Spend a d6 hit die"); await device.waitForText("2 of 3 left", 15000);
+				await device.tap("Finish short rest"); await device.waitForText("2/3 d6", 15000);
+			});
+			await step("the Combat page does not repeat the bar's controls", async () => { await device.goToPage("Combat"); lacks(await device.text(), "Spend a hit die"); lacks(await device.text(), "Damage"); });
 			await step("I can raise my exhaustion", async () => { await device.tap("Increase exhaustion"); await device.waitForText("Exhaustion: 1 / 6", 15000); });
 			await step("I can take Heroic Inspiration", async () => { await device.tap("Heroic Inspiration: no"); await device.waitForText("Heroic Inspiration: yes", 15000); });
 		},

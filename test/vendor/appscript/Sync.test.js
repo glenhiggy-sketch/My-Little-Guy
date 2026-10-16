@@ -10,7 +10,7 @@ const { ss, driveFiles, ctx } = require("./test_fakes").makeEnv();
 vm.runInContext(fs.readFileSync(__dirname + "/QrCode.js", "utf8"), ctx);
 vm.runInContext(fs.readFileSync(__dirname + "/Sync.js", "utf8"), ctx);
 const S = vm.runInContext("({upsertDatabaseRow_, pullCharacter_, pushCharacter_, doPost, characterLookup_, leaderboardData_, withSyncComment_, " +
-	"playLink_, playQr_, noteForCharacter_, noteJsonp_, wipeCharacterEntriesDryRun, wipeAndRebuildCharacterData, getCharactersSheet_, getAwardsSheet_, getPublishedSheet_, CHARACTERS_HEADERS, ensureTab_})", ctx);
+	"playLink_, playQr_, noteForCharacter_, noteJsonp_, findData_, jsonpWrap_, wipeCharacterEntriesDryRun, wipeAndRebuildCharacterData, getCharactersSheet_, getAwardsSheet_, getPublishedSheet_, CHARACTERS_HEADERS, ensureTab_})", ctx);
 for (const k of ["pullCharacter_", "pushCharacter_", "doPost", "characterLookup_", "leaderboardData_", "noteForCharacter_"]) { const f = S[k]; S[k] = (...a) => JSON.parse(JSON.stringify(f(...a))); } // cross-realm objects -> plain
 const H = S.CHARACTERS_HEADERS, col = (h) => H.indexOf(h);
 
@@ -182,5 +182,21 @@ ok("a character with no note yet is answered, not an error", () => {
 	const h = S.upsertDatabaseRow_(form("Fresh", "Erin"), char(1, 8));
 	const r = S.noteForCharacter_({ id: h.id, token: h.token });
 	assert.strictEqual(r.ok, false); assert.match(r.error, /no note/);
+});
+ok("find by character name or player name: whole name only, note without the sync token", () => {
+	const g = S.upsertDatabaseRow_(form("Findable Fox", "Pat Player"), char(1, 8));
+	const sh = S.getCharactersSheet_(); let row = 0;
+	for (let r = 2; r <= sh.getLastRow(); r++) if (sh.cell(r, 1) === g.id) row = r;
+	sh.set(row, H.indexOf("Sheet File") + 1, "https://drive.google.com/file/d/" + fileId + "/view");
+	for (const q of ["findable fox", "  PAT PLAYER "]) {
+		const r = JSON.parse(JSON.stringify(S.findData_({ q })));
+		assert(r.ok && r.matches.length === 1 && r.matches[0].characterName === "Findable Fox", q);
+		assert(!/kadria-sync/.test(r.matches[0].text) && /^# Aelen/.test(r.matches[0].text), "sync comment must be cut out");
+	}
+	assert.strictEqual(JSON.parse(JSON.stringify(S.findData_({ q: "fox" }))).matches.length, 0, "part of a name finds nothing");
+	assert.strictEqual(S.findData_({ q: "ab" }).ok, false);
+	const js = S.jsonpWrap_({ q: "findable fox", callback: "kcb9" }, S.findData_);
+	assert(/^kcb9\(\{"ok":true,"matches":\[/.test(js) && !/kadria-sync/.test(js));
+	assert.strictEqual(S.jsonpWrap_({ q: "x", callback: "a(1)" }, S.findData_), null);
 });
 console.log("\n" + n + " checks passed");

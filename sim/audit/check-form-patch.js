@@ -50,6 +50,28 @@ const expect = (ok, msg) => { console.log((ok ? "ok   " : "FAIL ") + msg); if (!
   await p.locator("#rollBtn").click({ force: true }).catch(() => {});
   expect((await p.locator("#rolledHint").textContent()) === first, "the rolled set does not change");
 
+  // languages: the species' own are filled in, the rest are picked, no more than allowed
+  await p.evaluate(() => { const sp = document.getElementById("species"); sp.value = "Dwarf|2024"; sp.dispatchEvent(new Event("change")); });
+  expect(await p.locator("#languagesCard").isVisible(), "choosing a species shows the languages card");
+  expect(/Common/.test(await p.locator("#languagesFixed").textContent()), "Common is already filled in: " + (await p.locator("#languagesFixed").textContent()));
+  const boxes = p.locator("#languagesGrid input[type=checkbox]");
+  await boxes.nth(0).check(); await boxes.nth(1).check();
+  expect(await boxes.nth(2).isDisabled(), "after two picks the rest are locked (2024: Common plus two)");
+  await boxes.nth(1).uncheck();
+  expect(!(await boxes.nth(2).isDisabled()), "unticking one frees a pick");
+
+  // level 20 cap across classes: Fighter 15 leaves 5 for a second class, and then there is no room for a third
+  await p.evaluate(() => {
+    const lvl = document.querySelector("#classesCard input[type=number]");
+    lvl.value = "15"; lvl.dispatchEvent(new Event("change"));
+    document.getElementById("addClassBtn").click();
+  });
+  const second = p.locator("#classRows input[type=number]").nth(0);
+  const levels = await p.evaluate(() => Array.from(document.querySelectorAll("#classRows input[type=number][max]")).filter((i) => i.min === "1").map((i) => i.max));
+  expect(levels.includes("5"), "the second class can take at most 5 levels: " + levels.join(","));
+  await p.evaluate(() => { const all = Array.from(document.querySelectorAll("#classRows input[type=number]")).filter((i) => i.min === "1"); const last = all[all.length - 1]; last.value = "30"; last.dispatchEvent(new Event("change")); });
+  expect(await p.locator("#addClassBtn").isDisabled(), "Add Another Class is disabled once the levels add up to 20");
+
   // spinner: watch the status box while submit runs
   await p.evaluate(() => { window.__spin = false; new MutationObserver((recs) => { if (recs.some((r) => Array.from(r.addedNodes).some((n) => n.classList && n.classList.contains("spinner")))) window.__spin = true; }).observe(document.getElementById("status"), { childList: true, subtree: true }); });
   await p.evaluate(() => document.getElementById("charForm").dispatchEvent(new Event("submit", { cancelable: true })));

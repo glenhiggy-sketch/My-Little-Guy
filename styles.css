@@ -740,3 +740,29 @@
 .csh-award-row span { flex: 1 1 10em; }
 .csh-dm-notes { white-space: pre-wrap; margin-bottom: 10px; }
 .csh-confirm-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+/* Quick-access bar: temp HP, damage/heal, hit dice */
+.csh-quick-row { gap: 6px; }
+.csh-hd-chip { margin-left: auto; white-space: nowrap; }
+
+/* Short rest hover window */
+.csh-popover {
+  position: fixed;
+  z-index: var(--layer-popover, 1000);
+  padding: 10px 12px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-s);
+  font-size: 0.85em;
+  pointer-events: none;
+}
+.csh-popover-title { font-weight: 600; margin-bottom: 4px; }
+.csh-rest-line { margin: 3px 0; }
+.csh-rest-dice .csh-modal-row { gap: 8px; }
+
+/* Background page: what the background does */
+.csh-background-context { margin: 8px 0 12px; }
+.csh-bg-grants { margin-top: 6px; }
+.csh-bg-grant { margin: 2px 0; }
